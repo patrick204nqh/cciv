@@ -44,4 +44,29 @@ export function buildRigging(ship: THREE.Group): void {
 
   line([[0, ZT, ZTZ], [0, DY + 39, -34]], L, ship);
   line([[0, DY + 9, -50], [0, DY + 7, -38]], L, ship);
+
+  // Dolphin striker — vertical strut below bowsprit, roughly at jib boom start
+  line([[0, DY + 2, 52], [0, DY + 8, 58]], D, ship);
+  for (const s of [-1, 1]) {
+    line([[s * 1.5, DY + 4, 55], [0, DY + 8, 58]], L, ship);
+    line([[s * 1.5, DY + 4, 55], [s * 0.5, DY + 1.5, 49]], L, ship);
+  }
+
+  // Futtock shrouds at foremast top — horizontal bands connecting tops to lower shrouds
+  for (const [h, w] of [[DY + 52, 5], [DY + 38, 9]]) {
+    for (const s of [-1, 1]) {
+      line([[s * w, h, FZ], [s * w * 0.3, h - 4, FZ]], D, ship);
+    }
+  }
+  // Futtock shrouds at mainmast top
+  for (const [h, w] of [[DY + 60, 6], [DY + 44, 10]]) {
+    for (const s of [-1, 1]) {
+      line([[s * w, h, MZ], [s * w * 0.3, h - 4, MZ]], D, ship);
+    }
+  }
+
+  // Timberheads (knightheads) — vertical posts at bowsprit base
+  for (const s of [-1, 1]) {
+    line([[s * 0.8, DY + 12, 42], [s * 0.8, DY + 17, 42]], D, ship);
+  }
 }
