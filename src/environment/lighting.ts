@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export function setupLighting(scene: THREE.Scene): void {
-  const sun = new THREE.DirectionalLight(0xffe8b0, 2.1);
+  const sun = new THREE.DirectionalLight(0xfff0d0, 2.8);
   sun.position.set(90, 130, -55); sun.castShadow = true;
   sun.shadow.mapSize.set(3072, 3072);
   sun.shadow.radius = 4;
@@ -10,8 +10,8 @@ export function setupLighting(scene: THREE.Scene): void {
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.02;
   scene.add(sun);
-  scene.add(new THREE.HemisphereLight(0x8ab8d8, 0x1a3040, 0.72));
-  const fill = new THREE.DirectionalLight(0x4878b0, 0.38);
+  scene.add(new THREE.HemisphereLight(0x90c0e0, 0x306080, 1.0));
+  const fill = new THREE.DirectionalLight(0x6090d0, 0.55);
   fill.position.set(-70, -18, 85); scene.add(fill);
   const stern = new THREE.PointLight(0xffcc66, 0.6, 80);
   stern.position.set(0, 18, -35); scene.add(stern);

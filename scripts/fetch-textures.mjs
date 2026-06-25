@@ -59,6 +59,7 @@ async function main() {
 
   for (const [name, texCfg] of Object.entries(textures)) {
     const { asset, maps, wrap } = texCfg;
+    if (!asset) { console.log(`\nSkipping ${name}: no asset field`); continue; }
     console.log(`\nFetching file manifest for ${asset}...`);
     const files = await fetchJson(`${API_BASE}/files/${asset}`);
 

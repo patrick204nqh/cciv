@@ -3,41 +3,6 @@
   "resolution": "2k",
   "format": "jpg",
   "textures": {
-    "mast": {
-      "asset": "oak_veneer_01",
-      "maps": ["diff", "nor_gl", "rough"],
-      "wrap": { "repeatS": 1, "repeatT": 1 }
-    },
-    "hull": {
-      "asset": "fine_grained_wood",
-      "maps": ["diff", "nor_gl", "rough"],
-      "wrap": { "repeatS": 1, "repeatT": 1 }
-    },
-    "deck": {
-      "asset": "wood_planks",
-      "maps": ["diff", "nor_gl", "rough", "ao"],
-      "wrap": { "repeatS": 3.5, "repeatT": 9 }
-    },
-    "sail": {
-      "asset": "hessian_380",
-      "maps": ["diff", "nor_gl", "rough"],
-      "wrap": { "repeatS": 1, "repeatT": 1 }
-    },
-    "iron": {
-      "asset": "corrugated_iron",
-      "maps": ["diff", "nor_gl", "rough", "metal"],
-      "wrap": { "repeatS": 1, "repeatT": 1 }
-    },
-    "copper": {
-      "asset": "rusty_metal_grid",
-      "maps": ["diff", "nor_gl", "rough", "metal"],
-      "wrap": { "repeatS": 3.5, "repeatT": 1 }
-    },
-    "leather": {
-      "asset": "brown_leather",
-      "maps": ["diff", "nor_gl", "rough", "ao"],
-      "wrap": { "repeatS": 1, "repeatT": 1 }
-    },
     "ccivHull": {
       "source": "polyhaven_model",
       "model": "ship_cciv",
@@ -79,6 +44,11 @@
       "model": "ship_cciv",
       "maps": ["diff", "nor_gl", "rough", "metal"],
       "wrap": { "repeatS": 1, "repeatT": 1 }
+    },
+    "water": {
+      "asset": "sea_water",
+      "maps": ["diff", "nor_gl", "rough", "metal", "disp"],
+      "wrap": { "repeatS": 4, "repeatT": 4 }
     }
   }
 }
