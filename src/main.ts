@@ -14,8 +14,8 @@ renderer.toneMappingExposure = 1.15;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0a1828, 0.0032);
-scene.background = new THREE.Color(0x0e1c2a);
+scene.fog = new THREE.FogExp2(0x0d1e30, 0.0028);
+scene.background = new THREE.Color(0x0a1828);
 
 const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000);
 camera.position.set(140, 65, -90);
@@ -23,6 +23,7 @@ camera.position.set(140, 65, -90);
 const controls = createOrbitControls(camera, renderer.domElement);
 
 const ship = createShip();
+ship.position.y = -1.5;
 scene.add(ship);
 
 const ocean = buildEnvironment(scene);
@@ -38,9 +39,9 @@ let t = 0;
 (function loop() {
   requestAnimationFrame(loop);
   t += 0.007;
-  ship.position.y = Math.sin(t * 0.65) * 0.18;
-  ship.rotation.z = Math.sin(t * 0.48) * 0.009;
-  ship.rotation.x = Math.sin(t * 0.37 + 1) * 0.005;
+  ship.position.y = -1.5 + Math.sin(t * 0.65) * 0.25;
+  ship.rotation.z = Math.sin(t * 0.48) * 0.012;
+  ship.rotation.x = Math.sin(t * 0.37 + 1) * 0.008;
 
   const og = ocean.geometry as THREE.PlaneGeometry;
   const positions = og.attributes.position.array as Float32Array;

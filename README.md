@@ -1,13 +1,11 @@
-# HMS Beagle
+# CCIV
 
-Procedural Three.js 3D model of HMS Beagle in her 1831 survey refit configuration. Built with Vite + TypeScript.
+Three.js 3D sailing vessel. Built with Vite + TypeScript.
 
 ```sh
 npm install
 npm run dev
 ```
-
-Based on the Lois Darling hull lines and sail plan reconstruction (1982) and FitzRoy's *Narrative*.
 
 ## Project structure
 
@@ -16,15 +14,16 @@ src/
 ├── main.ts              # Entry point — scene, camera, renderer, animation loop
 ├── geometry.ts          # Shared helpers (cyl, box, addMesh, line)
 ├── ship/                # Ship model library (importable via createShip())
-│   ├── hull.ts, deck.ts, masts.ts, sails.ts
-│   ├── rigging.ts, cannons.ts, deckDetails.ts, boats.ts
-│   └── index.ts         # createShip() — assembles all sub-modules
+│   ├── cciv/            # Extracted vertex data and ship builder
+│   └── index.ts         # createShip() — assembles the ship
 ├── environment/         # Ocean, sky, lighting
-├── textures/            # Procedural canvas textures (copper, deck)
+├── textures/            # Photoscanned PBR textures + procedural fallbacks
 ├── materials/           # Shared materials singleton (M)
 └── controls/            # OrbitControls from three/addons
 ```
 
-## Reference
+## Pipeline
 
-- `docs/references/Darling_HMS_Beagle_A6739.pdf`
+- `scripts/fetch-textures.mjs` — downloads Poly Haven textures, generates `src/textures/sources.ts`
+- `scripts/extract-cciv.mjs` — extracts glTF geometry into Float32Array source files
+- `scripts/textures.config.json` — texture asset configuration
