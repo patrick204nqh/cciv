@@ -1,4 +1,8 @@
+node_modules/
+dist/
+.cache/
 .claude/skills/
 .agents/skills/
 .opencode/skills/
 docs/superpowers/
+*.local.json
