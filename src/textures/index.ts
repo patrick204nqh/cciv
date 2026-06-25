@@ -13,8 +13,9 @@ export function createCopperTexture(): THREE.CanvasTexture {
       const x = Math.random() * w, y = Math.random() * h, r = 8 + Math.random() * 32;
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
       const cols = ['#3a8a6e', '#4a9a7e', '#2a7a5e', '#5aaa88', '#1a6a50', '#6aba98'];
-      g.addColorStop(0, cols[Math.floor(Math.random() * 6)] + Math.random() > 0.5 ? 'cc' : 'dd');
-      g.addColorStop(1, 'transparent');
+      const alpha = Math.random() > 0.5 ? 'cc' : 'dd';
+      g.addColorStop(0, cols[Math.floor(Math.random() * 6)] + alpha);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g; ctx.beginPath();
       ctx.ellipse(x, y, r * (0.4 + Math.random() * 0.8), r * 0.3, Math.random() * Math.PI, 0, Math.PI * 2);
       ctx.fill();
