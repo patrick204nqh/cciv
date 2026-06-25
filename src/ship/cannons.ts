@@ -2,21 +2,51 @@ import * as THREE from 'three';
 import { box, cyl, addMesh } from '../geometry';
 import { M } from '../materials';
 
+function buildCarronade(scale: number): THREE.Group {
+  const g = new THREE.Group();
+  const s = scale;
+
+  // Slide carriage — a wooden bed that the carronade recoils on
+  addMesh(g, box(1.8 * s, 0.25 * s, 1.0 * s), M.wdark, 0, 0, 0);
+
+  // Barrel body — short tapered cylinder
+  const barrel = addMesh(g, cyl(0.22 * s, 0.30 * s, 1.8 * s, 10), M.brass, 0, 0.50 * s, 0);
+  barrel.rotation.x = Math.PI / 2;
+
+  // Muzzle swell — bulb at the front
+  const muzzle = addMesh(g, new THREE.SphereGeometry(0.34 * s, 6, 5), M.brass, 0, 0.50 * s, 1.0 * s);
+  muzzle.scale.set(1, 0.7, 0.9);
+
+  // Cascabel — knob at the breech end
+  addMesh(g, new THREE.SphereGeometry(0.16 * s, 6, 5), M.brass, 0, 0.50 * s, -1.05 * s);
+
+  // Trunnions — pivot pins at the breech side
+  const trun = (sx: number) => {
+    const t = addMesh(g, cyl(0.07 * s, 0.07 * s, 0.30 * s, 6), M.brass, sx * 0.28 * s, 0.42 * s, -0.55 * s);
+    t.rotation.z = Math.PI / 2;
+  };
+  trun(1); trun(-1);
+
+  // Elevating screw bracket at the breech
+  addMesh(g, cyl(0.06 * s, 0.06 * s, 0.35 * s, 6), M.iron, 0, 0.15 * s, -0.8 * s);
+
+  return g;
+}
+
 export function buildCannons(ship: THREE.Group): void {
-  function cannon(x: number, z: number, scale: number, carronade = false) {
-    const g = new THREE.Group();
-    addMesh(g, box(1.35 * scale, 0.68 * scale, 2.1 * scale), M.wdark, 0, 0, 0);
-    const bl = carronade ? 1.8 : 3.0;
-    const bar = addMesh(g, cyl(0.2 * scale, 0.27 * scale, bl * scale), M.brass, 0, 0.54 * scale, 0.15 * scale);
-    bar.rotation.x = Math.PI / 2;
-    for (const wz of [-0.55, 0.55]) for (const wx of [-0.65, 0.65]) {
-      const w = addMesh(g, cyl(0.28 * scale, 0.28 * scale, 0.14 * scale, 8), M.wdark, wx * scale, -0.22 * scale, wz * scale);
-      w.rotation.z = Math.PI / 2;
-    }
-    g.position.set(x, 6.8, z); ship.add(g);
+  const DY = 6;
+
+  // HMS Beagle carried 6 brass carronades — 3 per side
+  const positions: [number, number, number][] = [
+    [-10.0, 0.7, 6],  [10.0, 0.7, 6],
+    [-10.2, 0.7, -2], [10.2, 0.7, -2],
+    [-10.6, 0.7, -7], [10.6, 0.7, -7],
+  ];
+
+  for (const [x, y, z] of positions) {
+    const c = buildCarronade(x < 0 ? 0.9 : 0.9);
+    c.position.set(x, DY + y, z);
+    c.rotation.y = x < 0 ? 0.18 : -0.18;
+    ship.add(c);
   }
-  cannon(-10.4, 10, 0.9); cannon(10.4, 10, 0.9);
-  cannon(-10.4, -2, 0.9); cannon(10.4, -2, 0.9);
-  cannon(-10.8, 4, 1.1); cannon(10.8, 4, 1.1);
-  cannon(0, 38, 0.78, true);
 }

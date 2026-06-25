@@ -1,12 +1,55 @@
 import * as THREE from 'three';
+import { TEXTURES, type TextureSet } from './sources';
 
+const loader = new THREE.TextureLoader();
+
+function loadTexture(path: string): THREE.Texture {
+  const tex = loader.load(path);
+  tex.anisotropy = 4;
+  return tex;
+}
+
+interface LoadedTextureSet {
+  map?: THREE.Texture;
+  normalMap?: THREE.Texture;
+  roughnessMap?: THREE.Texture;
+  metalnessMap?: THREE.Texture;
+  aoMap?: THREE.Texture;
+}
+
+function loadSet(key: string): LoadedTextureSet {
+  const cfg: TextureSet = (TEXTURES as any)[key];
+  if (!cfg) return {};
+  const r: LoadedTextureSet = {};
+  if (cfg.diff) r.map = loadTexture(cfg.diff);
+  if (cfg.nor_gl) r.normalMap = loadTexture(cfg.nor_gl);
+  if (cfg.rough) r.roughnessMap = loadTexture(cfg.rough);
+  if (cfg.metal) r.metalnessMap = loadTexture(cfg.metal);
+  if (cfg.ao) r.aoMap = loadTexture(cfg.ao);
+  Object.values(r).forEach(t => {
+    if (t) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(cfg.wrapS ?? 1, cfg.wrapT ?? 1); }
+  });
+  return r;
+}
+
+export function createCopperTexture() { return loadSet('copper'); }
+export function createDeckTexture() { return loadSet('deck'); }
+export function createSailTexture() { return loadSet('sail'); }
+export function createMastTexture() { return loadSet('mast'); }
+export function createHullTexture() { return loadSet('hull'); }
+export function createIronTexture() { return loadSet('iron'); }
+export function createPinnaceHullTexture() { return loadSet('pinnaceHull'); }
+export function createPinnaceDeckTexture() { return loadSet('pinnaceDeck'); }
+export function createPinnaceSailTexture() { return loadSet('pinnaceSail'); }
+
+// Procedural fallbacks — kept for environments without downloaded textures
 function mkTex(w: number, h: number, fn: (ctx: CanvasRenderingContext2D, w: number, h: number) => void): THREE.CanvasTexture {
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   fn(c.getContext('2d')!, w, h);
   return new THREE.CanvasTexture(c);
 }
 
-export function createCopperTexture(): THREE.CanvasTexture {
+export function createCopperTextureProcedural(): THREE.CanvasTexture {
   const tex = mkTex(512, 256, (ctx, w, h) => {
     ctx.fillStyle = '#1a2e20'; ctx.fillRect(0, 0, w, h);
     for (let i = 0; i < 160; i++) {
@@ -39,7 +82,7 @@ export function createCopperTexture(): THREE.CanvasTexture {
   return tex;
 }
 
-export function createDeckTexture(): THREE.CanvasTexture {
+export function createDeckTextureProcedural(): THREE.CanvasTexture {
   const tex = mkTex(512, 512, (ctx, w, h) => {
     const pw = 30;
     for (let x = 0; x < w; x += pw) {
@@ -69,7 +112,7 @@ export function createDeckTexture(): THREE.CanvasTexture {
   return tex;
 }
 
-export function createSailTexture(): THREE.CanvasTexture {
+export function createSailTextureProcedural(): THREE.CanvasTexture {
   const tex = mkTex(256, 256, (ctx, w, h) => {
     ctx.fillStyle = '#e8dfc4'; ctx.fillRect(0, 0, w, h);
     for (let y = 0; y < h; y += 4) {

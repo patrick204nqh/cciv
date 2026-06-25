@@ -5,7 +5,7 @@
 - **`src/`** — Vite + TypeScript Three.js project. Entry point: `src/main.ts`.
   - `src/ship/` — importable ship model library (one module per subsystem: hull, deck, masts, sails, rigging, cannons, deckDetails, boats). `createShip()` returns a `THREE.Group`.
   - `src/environment/` — ocean, sky, lighting.
-  - `src/textures/` — procedural canvas textures (copper, deck planking).
+  - `src/textures/` — photoscanned PBR textures via Poly Haven pipeline. Procedural canvas fallbacks kept as `*Procedural()` exports.
   - `src/materials/` — all materials as a shared `M` object.
   - `src/controls/` — OrbitControls from three/addons.
   - `src/geometry.ts` — shared helpers (`cyl`, `box`, `addMesh`, `line`).
@@ -32,6 +32,9 @@ ruby bin/dev
 
 # Dry-run to preview what would be synced
 ruby bin/dev --dry-run
+
+# Fetch Poly Haven textures (downloads to public/textures/, generates src/textures/sources.ts)
+node scripts/fetch-textures.mjs
 ```
 
 ## Skill sources (defined in bin/dev)
@@ -53,4 +56,5 @@ Add new sources by appending to `SOURCES` in `bin/dev:19-27`.
 - Skills are symlinked (not copied). Edit in the cache dir at `.cache/skills/<name>/` if you need to modify an upstream skill.
 - Coordinate convention: Y-up, Z-bow(+), X-starboard(-).
 - All textures are procedural (canvas-based) — no external image assets.
+- Texture pipeline: Poly Haven API → `scripts/fetch-textures.mjs` downloads to `public/textures/` and generates `src/textures/sources.ts`. Edit `scripts/textures.config.json` to add/change textures.
 - Ship modules import `M` from `../materials` directly (singleton).

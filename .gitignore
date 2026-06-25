@@ -6,3 +6,4 @@ dist/
 .opencode/skills/
 docs/superpowers/
 *.local.json
+public/textures/
