@@ -65,7 +65,6 @@ export function createWakeEntity(): SceneEntity {
       });
     },
 
-    onBeforeUpdate(_dt: number) {},
     onUpdate(_dt: number) {},
 
     onDetach() {

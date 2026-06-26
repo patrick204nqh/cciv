@@ -5,5 +5,5 @@ export interface MaterialSpec {
   metalness?: number;
   transparent?: boolean;
   alphaTest?: number;
-  side?: 'FrontSide' | 'BackSide' | 'DoubleSide';
+  side?: 'front' | 'back' | 'double';
 }

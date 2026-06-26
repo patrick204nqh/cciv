@@ -31,7 +31,6 @@ export function createSkyEntity(): SceneEntity {
       scene.add(ring);
     },
 
-    onBeforeUpdate(_dt: number) {},
     onUpdate(_dt: number) {},
 
     onDetach() {

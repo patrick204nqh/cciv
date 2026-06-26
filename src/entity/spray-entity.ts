@@ -91,8 +91,6 @@ export function createSprayEntity(): SceneEntity {
       });
     },
 
-    onBeforeUpdate(_dt: number) {},
-
     onUpdate(dt: number) {
       emit();
       emit();

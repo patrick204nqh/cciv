@@ -26,14 +26,7 @@ export interface ProceduralMeshGroup {
   textureKey?: string;
 }
 
-export interface ExternalMeshGroup {
-  name: string;
-  type: 'external';
-  uri: string;
-  textureKey?: string;
-}
-
-export type MeshGroupSpec = ExtractedMeshGroup | ProceduralMeshGroup | ExternalMeshGroup;
+export type MeshGroupSpec = ExtractedMeshGroup | ProceduralMeshGroup;
 
 export interface ModelConfig {
   id: string;

@@ -42,7 +42,6 @@ export function createLightingEntity(): SceneEntity {
       lights.push(deckGlow);
     },
 
-    onBeforeUpdate(_dt: number) {},
     onUpdate(_dt: number) {},
 
     onDetach() {

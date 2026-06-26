@@ -29,7 +29,7 @@ class EntityManager {
 
   update(dt: number): void {
     worldClock.update(dt);
-    for (const entity of this.entities) entity.onBeforeUpdate(dt);
+    for (const entity of this.entities) entity.onBeforeUpdate?.(dt);
     for (const entity of this.entities) entity.onUpdate(dt);
   }
 }

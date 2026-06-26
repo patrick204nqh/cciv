@@ -18,7 +18,7 @@ function buildGeometry(spec: MeshGroupSpec): THREE.BufferGeometry {
     return g;
   }
   if (spec.type === 'procedural') return spec.build();
-  throw new Error(`External mesh groups not yet supported: ${spec.name}`);
+  throw new Error(`Unknown mesh group type: ${(spec as any).type}`);
 }
 
 function toMaterialSpec(
@@ -32,9 +32,9 @@ function toMaterialSpec(
   if (overrides.metalness != null) spec.metalness = overrides.metalness;
   if (overrides.transparent != null) spec.transparent = overrides.transparent;
   if (overrides.alphaTest != null) spec.alphaTest = overrides.alphaTest;
-  if (overrides.side === THREE.DoubleSide) spec.side = 'DoubleSide';
-  else if (overrides.side === THREE.BackSide) spec.side = 'BackSide';
-  else if (overrides.side != null) spec.side = 'FrontSide';
+  if (overrides.side === THREE.DoubleSide) spec.side = 'double';
+  else if (overrides.side === THREE.BackSide) spec.side = 'back';
+  else if (overrides.side != null) spec.side = 'front';
   return spec;
 }
 

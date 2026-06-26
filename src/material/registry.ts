@@ -5,9 +5,9 @@ import type { MaterialSpec } from './types';
 export type QualityLevel = 'low' | 'medium' | 'high';
 
 const SIDE_MAP: Record<string, THREE.Side> = {
-  FrontSide: THREE.FrontSide,
-  BackSide: THREE.BackSide,
-  DoubleSide: THREE.DoubleSide,
+  front: THREE.FrontSide,
+  back: THREE.BackSide,
+  double: THREE.DoubleSide,
 };
 
 export class MaterialRegistry {

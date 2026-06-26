@@ -32,8 +32,14 @@
 
 ## Scene
 
-**SceneEntity** — interface with lifecycle hooks: `onAttach(scene)`, `onBeforeUpdate(dt)`, `onUpdate(dt)`, `onDetach()`. Each entity owns its update logic. (ADR-002)
+**SceneEntity** — interface with lifecycle hooks: `onAttach(scene)`, `onBeforeUpdate?(dt)` (optional, only ship uses it), `onUpdate(dt)`, `onDetach()`. Each entity owns its update logic. (ADR-002)
 
 **EntityManager** (singleton) — owns the entity list, runs the RAF loop, controls lifecycle. Testable via `manager.update(dt)`. (ADR-002)
 
 **Event bus** (singleton, `src/event-bus.ts`) — decouples entities. Events: `entity:attached`, `entity:detached`, `entity:position-changed`.
+
+## Waves
+
+**`sampleOcean(x, z, t)`** (`src/environment/waves.ts`) — returns `{ height, dispX, dispZ }` (plain object). Gerstner wave simulation.
+
+**`sampleNormal(x, z, t)`** — returns `{ x, y, z }` (plain object, consistent with `sampleOcean`). Wave surface normal.

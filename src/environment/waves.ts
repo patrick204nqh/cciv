@@ -1,5 +1,3 @@
-import * as THREE from 'three';
-
 const G = 9.8;
 
 interface Wave {
@@ -56,7 +54,7 @@ export function sampleOcean(x: number, z: number, t: number): { height: number; 
   return { height: h, dispX: dx, dispZ: dz };
 }
 
-export function sampleNormal(x: number, z: number, t: number): THREE.Vector3 {
+export function sampleNormal(x: number, z: number, t: number): { x: number; y: number; z: number } {
   let dhdx = 0, dhdz = 0;
   for (const w of WAVES) {
     const a = arg(w, x, z, t);
@@ -64,5 +62,6 @@ export function sampleNormal(x: number, z: number, t: number): THREE.Vector3 {
     dhdx += c * w.dir[0];
     dhdz += c * w.dir[1];
   }
-  return new THREE.Vector3(-dhdx, 1, -dhdz).normalize();
+  const len = Math.sqrt(dhdx * dhdx + 1 + dhdz * dhdz);
+  return { x: -dhdx / len, y: 1 / len, z: -dhdz / len };
 }

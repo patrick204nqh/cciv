@@ -80,8 +80,6 @@ export function createOceanEntity(): SceneEntity {
       scene.add(ocean);
     },
 
-    onBeforeUpdate(_dt: number) {},
-
     onUpdate(_dt: number) {
       const t = worldClock.elapsed * WAVE_SPEED;
       const pos = ocean.geometry.attributes.position.array as Float32Array;

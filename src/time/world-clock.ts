@@ -1,16 +1,24 @@
 export class WorldClock {
-  elapsed = 0;
-  timeScale = 1;
-  paused = false;
+  private _elapsed = 0;
+  private _timeScale = 1;
+  private _paused = false;
+
+  get elapsed(): number { return this._elapsed; }
+  get timeScale(): number { return this._timeScale; }
+  get paused(): boolean { return this._paused; }
+
+  setTimeScale(n: number): void { this._timeScale = n; }
+  pause(): void { this._paused = true; }
+  resume(): void { this._paused = false; }
 
   update(dt: number): void {
-    if (!this.paused) {
-      this.elapsed += dt * this.timeScale;
+    if (!this._paused) {
+      this._elapsed += dt * this._timeScale;
     }
   }
 
   reset(): void {
-    this.elapsed = 0;
+    this._elapsed = 0;
   }
 }
 
