@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import { bus } from '../event-bus';
+import { Disposer } from '../util/disposer';
 
 const MAX_PARTICLES = 300;
 const BOW_OFFSET = new THREE.Vector3(0, 4, 56);
@@ -18,6 +19,7 @@ export function createSprayEntity(): SceneEntity {
   const sizeArr = new Float32Array(MAX_PARTICLES);
   const alphaArr = new Float32Array(MAX_PARTICLES);
   let nextIdx = 0;
+  const disp = new Disposer();
 
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
@@ -50,7 +52,6 @@ export function createSprayEntity(): SceneEntity {
   let points: THREE.Points;
   let shipPos = new THREE.Vector3();
   let shipQuat = new THREE.Quaternion();
-  let unsubscribe: (() => void) | null = null;
 
   function emit() {
     const bow = new THREE.Vector3().copy(BOW_OFFSET).applyQuaternion(shipQuat).add(shipPos);
@@ -82,13 +83,18 @@ export function createSprayEntity(): SceneEntity {
       points = new THREE.Points(geo, mat);
       points.frustumCulled = false;
       scene.add(points);
+      disp.addGeo(geo);
+      disp.addMat(mat);
+      disp.addObj(points);
+      disp.addCleanup(() => sprite.dispose());
 
-      unsubscribe = bus.on('entity:position-changed', (ev) => {
+      const unsub = bus.on('entity:position-changed', (ev) => {
         if (ev.entityId === 'ship') {
           shipPos.copy(ev.position);
           shipQuat.copy(ev.quaternion);
         }
       });
+      disp.addUnsub(unsub);
     },
 
     onUpdate(dt: number) {
@@ -123,11 +129,7 @@ export function createSprayEntity(): SceneEntity {
     },
 
     onDetach() {
-      if (unsubscribe) unsubscribe();
-      geo.dispose();
-      mat.dispose();
-      sprite.dispose();
-      points.removeFromParent();
+      disp.dispose();
     },
   };
 }

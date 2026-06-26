@@ -3,6 +3,7 @@ import type { SceneEntity } from './types';
 import { sampleOcean } from '../environment/waves';
 import { createWaterNormalMap, createWaterDiffuseMap } from '../textures';
 import { worldClock } from '../time';
+import { Disposer } from '../util/disposer';
 
 const WAVE_SPEED = 0.42;
 
@@ -49,6 +50,7 @@ export function createOceanEntity(): SceneEntity {
 
   let ocean: THREE.Mesh;
   let basePos: Float32Array;
+  const disp = new Disposer();
 
   return {
     id: 'ocean',
@@ -78,6 +80,10 @@ export function createOceanEntity(): SceneEntity {
       ocean.position.y = -0.35;
       ocean.receiveShadow = true;
       scene.add(ocean);
+
+      disp.addGeo(geo);
+      disp.addMat(mat);
+      disp.addObj(ocean);
     },
 
     onUpdate(_dt: number) {
@@ -96,10 +102,7 @@ export function createOceanEntity(): SceneEntity {
     },
 
     onDetach() {
-      ocean.geometry.dispose();
-      if (Array.isArray(ocean.material)) ocean.material.forEach(m => m.dispose());
-      else ocean.material.dispose();
-      ocean.removeFromParent();
+      disp.dispose();
     },
   };
 }

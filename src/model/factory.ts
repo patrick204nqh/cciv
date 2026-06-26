@@ -6,6 +6,7 @@ import {
 } from './types';
 import { modelRegistry } from './registry';
 import { materialRegistry, type MaterialSpec } from '../material';
+import { Disposer } from '../util/disposer';
 
 function buildGeometry(spec: MeshGroupSpec): THREE.BufferGeometry {
   if (spec.type === 'extracted') {
@@ -51,8 +52,7 @@ function applyTransform(root: THREE.Group, tf: ModelConfig['transform']): void {
 export function createModel(config: ModelConfig): ModelEntity {
   const root = new THREE.Group();
   root.name = config.id;
-
-  const meshes: THREE.Mesh[] = [];
+  const disp = new Disposer();
 
   for (const spec of config.meshGroups) {
     const geo = buildGeometry(spec);
@@ -62,10 +62,14 @@ export function createModel(config: ModelConfig): ModelEntity {
     mesh.receiveShadow = true;
     mesh.name = spec.name;
     root.add(mesh);
-    meshes.push(mesh);
+    disp.addGeo(geo);
+    disp.addMat(mat);
+    disp.addObj(mesh);
   }
 
   applyTransform(root, config.transform);
+  disp.addObj(root);
+  disp.addCleanup(() => modelRegistry.unregister(config.id));
 
   const entity: ModelEntity = {
     id: config.id,
@@ -78,13 +82,7 @@ export function createModel(config: ModelConfig): ModelEntity {
       polyCount: config.metadata?.polyCount,
     },
     dispose() {
-      for (const mesh of meshes) {
-        mesh.geometry.dispose();
-        if (Array.isArray(mesh.material)) mesh.material.forEach(m => m.dispose());
-        else mesh.material.dispose();
-      }
-      root.removeFromParent();
-      modelRegistry.unregister(config.id);
+      disp.dispose();
     },
   };
 

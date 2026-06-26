@@ -1,14 +1,14 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import { bus } from '../event-bus';
+import { Disposer } from '../util/disposer';
 
 const SEGMENTS = 16;
 const TRAIL_LENGTH = 60;
 const HALF_ANGLE = 0.35;
 
 export function createWakeEntity(): SceneEntity {
-  let mesh: THREE.Mesh;
-  let unsubscribe: (() => void) | null = null;
+  const disp = new Disposer();
 
   return {
     id: 'wake',
@@ -52,10 +52,13 @@ export function createWakeEntity(): SceneEntity {
         blending: THREE.AdditiveBlending,
       });
 
-      mesh = new THREE.Mesh(geo, mat);
+      const mesh = new THREE.Mesh(geo, mat);
       scene.add(mesh);
+      disp.addGeo(geo);
+      disp.addMat(mat);
+      disp.addObj(mesh);
 
-      unsubscribe = bus.on('entity:position-changed', (ev) => {
+      const unsub = bus.on('entity:position-changed', (ev) => {
         if (ev.entityId === 'ship') {
           const stern = new THREE.Vector3(0, 0, -56).applyQuaternion(ev.quaternion).add(ev.position);
           mesh.position.copy(stern);
@@ -63,15 +66,13 @@ export function createWakeEntity(): SceneEntity {
           mesh.quaternion.copy(ev.quaternion);
         }
       });
+      disp.addUnsub(unsub);
     },
 
     onUpdate(_dt: number) {},
 
     onDetach() {
-      if (unsubscribe) unsubscribe();
-      mesh.geometry.dispose();
-      mesh.material.dispose();
-      mesh.removeFromParent();
+      disp.dispose();
     },
   };
 }

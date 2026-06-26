@@ -1,5 +1,9 @@
 # Dream World — Domain Glossary
 
+## Utilities
+
+**Disposer** (`src/util/disposer.ts`) — collects `THREE.BufferGeometry`, `Material`, `Object3D` instances, unsubscribe functions, and arbitrary cleanup callbacks. Calling `dispose()` runs them all in order. Used by every entity and the model factory to eliminate duplicated cleanup patterns. One implementation pays back across 6 entities + factory.
+
 ## Models
 
 **Model** — a 3D object in the world. Has geometry, materials, textures, and a transform. Produced via one of three source types.
