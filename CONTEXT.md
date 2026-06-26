@@ -1,5 +1,15 @@
 # Dream World — Domain Glossary
 
+## Scripts Architecture
+
+**compile-model** (`src/scripts/compile-model.ts`) — compiled model to GLB. Runs via `tsx`. Imports `TEXTURES` from `src/textures/sources.ts` directly (no regex parsing). Keeps build scripts (`scripts/pull-reference.mjs`, `scripts/build-model.mjs`) as standalone Node.js scripts — they have no shared types with the runtime.
+
+**paths** (`src/scripts/lib/paths.ts`) — shared path construction for the compile script. Provides `ROOT`, `modelDataDir()`, `modelTexDir()`, `glbOutPath()`.
+
+**tsx** — TypeScript runner for Node.js (devDependency). Used for `npm run model:compile` and any future TypeScript scripts in `src/scripts/`.
+
+**Remaining build scripts** (`scripts/`) — `pull-reference.mjs` downloads Poly Haven assets; `build-model.mjs` copies + renames into `src/models/<id>/` and generates config. These are pure build tooling with no runtime type sharing.
+
 ## Utilities
 
 **Disposer** (`src/util/disposer.ts`) — collects `THREE.BufferGeometry`, `Material`, `Object3D` instances, unsubscribe functions, and arbitrary cleanup callbacks. Calling `dispose()` runs them all in order. Used by every entity and the model factory to eliminate duplicated cleanup patterns. One implementation pays back across 6 entities + factory.
