@@ -1,10 +1,13 @@
 import * as THREE from 'three';
 import { TEXTURES, type TextureSet } from './sources';
 
-const loader = new THREE.TextureLoader();
+let loader: THREE.TextureLoader | null = null;
+function getLoader(): THREE.TextureLoader {
+  return loader ?? (loader = new THREE.TextureLoader());
+}
 
 function loadTexture(path: string): THREE.Texture {
-  const tex = loader.load(path);
+  const tex = getLoader().load(path);
   tex.anisotropy = 4;
   return tex;
 }
@@ -19,7 +22,7 @@ export interface LoadedTextureSet {
 }
 
 export function loadTextureSet(key: string): LoadedTextureSet {
-  const cfg: TextureSet = (TEXTURES as any)[key];
+  const cfg = TEXTURES[key];
   if (!cfg) return {};
   const r: LoadedTextureSet = {};
   if (cfg.diff) r.map = loadTexture(cfg.diff);

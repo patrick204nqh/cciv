@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import type { MaterialSpec } from '../material';
 
 export type ModelSource = 'extracted' | 'procedural' | 'external';
 
@@ -22,7 +22,7 @@ export interface ExtractedMeshGroup {
 export interface ProceduralMeshGroup {
   name: string;
   type: 'procedural';
-  build: () => THREE.BufferGeometry;
+  build: () => import('three').BufferGeometry;
   textureKey?: string;
 }
 
@@ -33,7 +33,7 @@ export interface ModelConfig {
   source: ModelSource;
   meshGroups: MeshGroupSpec[];
   transform?: TransformSpec;
-  materialOverrides?: Record<string, Partial<THREE.MeshStandardMaterialParameters>>;
+  materialOverrides?: Record<string, Partial<MaterialSpec>>;
   metadata?: {
     license?: string;
     sourceUrl?: string;
@@ -43,7 +43,7 @@ export interface ModelConfig {
 
 export interface ModelEntity {
   readonly id: string;
-  readonly root: THREE.Group;
+  readonly root: import('three').Group;
   readonly metadata: {
     id: string;
     source: ModelSource;

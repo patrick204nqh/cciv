@@ -20,9 +20,8 @@ class ModelRegistry {
   }
 
   disposeAll(): void {
-    for (const entity of this.models.values()) {
-      entity.dispose();
-    }
+    const all = Array.from(this.models.values());
+    for (const entity of all) entity.dispose();
     this.models.clear();
   }
 }

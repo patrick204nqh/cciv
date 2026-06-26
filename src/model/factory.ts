@@ -22,23 +22,6 @@ function buildGeometry(spec: MeshGroupSpec): THREE.BufferGeometry {
   throw new Error(`Unknown mesh group type: ${(spec as any).type}`);
 }
 
-function toMaterialSpec(
-  textureKey: string | undefined,
-  overrides: Partial<THREE.MeshStandardMaterialParameters> | undefined,
-): MaterialSpec {
-  const spec: MaterialSpec = { textureKey };
-  if (!overrides) return spec;
-  if (overrides.color != null) spec.color = Number(overrides.color);
-  if (overrides.roughness != null) spec.roughness = overrides.roughness;
-  if (overrides.metalness != null) spec.metalness = overrides.metalness;
-  if (overrides.transparent != null) spec.transparent = overrides.transparent;
-  if (overrides.alphaTest != null) spec.alphaTest = overrides.alphaTest;
-  if (overrides.side === THREE.DoubleSide) spec.side = 'double';
-  else if (overrides.side === THREE.BackSide) spec.side = 'back';
-  else if (overrides.side != null) spec.side = 'front';
-  return spec;
-}
-
 function applyTransform(root: THREE.Group, tf: ModelConfig['transform']): void {
   if (!tf) return;
   if (tf.scale != null) {
@@ -56,7 +39,9 @@ export function createModel(config: ModelConfig): ModelEntity {
 
   for (const spec of config.meshGroups) {
     const geo = buildGeometry(spec);
-    const mat = materialRegistry.getOrCreate(toMaterialSpec(spec.textureKey, config.materialOverrides?.[spec.name]));
+    const override: Partial<MaterialSpec> = config.materialOverrides?.[spec.name] ?? {};
+    const matSpec: MaterialSpec = { textureKey: spec.textureKey, ...override };
+    const mat = materialRegistry.getOrCreate(matSpec);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -86,6 +71,5 @@ export function createModel(config: ModelConfig): ModelEntity {
     },
   };
 
-  modelRegistry.register(entity);
   return entity;
 }

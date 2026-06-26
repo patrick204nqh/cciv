@@ -6,8 +6,9 @@ export interface TextureSet {
   nor_gl?: string;
   rough?: string;
   metal?: string;
-  arm?: string;
   alpha?: string;
+  wrapS?: number;
+  wrapT?: number;
 }
 
 export const TEXTURES: Record<string, TextureSet> = {
