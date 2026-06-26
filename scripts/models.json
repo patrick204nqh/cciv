@@ -1,0 +1,16 @@
+{
+  "ship": {
+    "displayName": "CCIV Ship",
+    "source": "ship_pinnace",
+    "transform": { "scale": 2.7 },
+    "groups": {
+      "hull": { "mesh": "hull", "texture": "ccivHull", "material": { "color": "0x1c160e", "roughness": 0.92 } },
+      "deck": { "mesh": "deck", "texture": "ccivDeck", "material": { "color": "0x887050", "roughness": 0.88, "metalness": 0 } },
+      "sails": { "mesh": "sails", "texture": "ccivSail", "material": { "color": "0xf5edd9", "roughness": 1, "metalness": 0, "transparent": true, "alphaTest": 0.5, "side": "DoubleSide" } },
+      "aft": { "mesh": "aft", "texture": "ccivAft", "material": { "color": "0x1c160e", "roughness": 0.85 } },
+      "rigging": { "mesh": "rigging", "texture": "ccivRigging", "material": { "color": "0x3a2818", "roughness": 0.9 } },
+      "details": { "mesh": "details", "texture": "ccivDetails", "material": { "color": "0x2e1c0c", "roughness": 0.9 } },
+      "interior": { "mesh": "interior", "texture": "ccivInterior", "material": { "color": "0x1a1008", "roughness": 0.95, "metalness": 0 } }
+    }
+  }
+}

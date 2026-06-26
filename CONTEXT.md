@@ -4,19 +4,31 @@
 
 **Model** — a 3D object in the world. Has geometry, materials, textures, and a transform. Produced via one of three source types.
 
-**ModelConfig** — configuration data that describes a model. Discriminated by source type. Lives at `src/models/<id>/config.ts` or in a central config registry.
+**ModelConfig** — configuration data that describes a model. Discriminated by source type. Lives at `src/models/<id>/config.ts`.
 
 **ModelEntity** — the runtime object wrapping a `THREE.Group`. Carries `metadata` (id, source, license, poly count) and lifecycle methods (`dispose()`).
 
-**ModelRegistry** (singleton) — central registry of all active models. Created models auto-register; `dispose()` unregisters.
+**ModelRegistry** (singleton, `src/model/registry.ts`) — central registry of all active models. Created models auto-register; `dispose()` unregisters.
 
 ## Source Types
 
-**Extracted model** — geometry imported from glTF/GLB once and extracted into code as typed array data files (`_pos.js`, `_nml.js`, etc.). Owned and customizable.
+**Extracted model** — geometry imported from glTF/GLB once and extracted into code as typed array data files (`data/{group}/pos.js`, etc.). Owned and customizable.
 
-**External model** — GLB/glTF loaded at runtime from a URL or local file. Not extracted — geometry data lives outside the codebase.
+**External model** — GLB/glTF loaded at runtime from a URL or local file. Not extracted.
 
-**Procedural model** — geometry built entirely in code using helpers (`cyl`, `box`, custom `BufferGeometry`).
+**Procedural model** — geometry built entirely in code using helpers.
+
+## Materials
+
+**MaterialRegistry** (singleton, `src/material/registry.ts`) — manages material creation, reuse, and disposal. Provides `getOrCreate(MaterialSpec)` that caches by spec, and global quality overrides (`setQualityLevel('low'|'medium'|'high')`). Replaces ad-hoc `buildMaterial()` in the factory. Normal maps disabled at 'low' quality.
+
+**MaterialSpec** (`src/material/types.ts`) — canonical description of a material. Fields: `textureKey`, `color`, `roughness`, `metalness`, `transparent`, `alphaTest`, `side`. Consumed by `MaterialRegistry` to produce `THREE.MeshStandardMaterial`.
+
+## Time
+
+**WorldClock** (singleton, `src/time/world-clock.ts`) — monotonically increasing elapsed time accumulated from `dt`. Entities read `worldClock.elapsed` instead of managing local `t` counters. Fixes framerate-dependent wave speed. Provides `timeScale` and `paused`.
+
+**EntityManager** (singleton, `src/entity/manager.ts`) — calls `worldClock.update(dt)` before entity updates. All entities share the same time source.
 
 ## Scene
 
@@ -24,8 +36,4 @@
 
 **EntityManager** (singleton) — owns the entity list, runs the RAF loop, controls lifecycle. Testable via `manager.update(dt)`. (ADR-002)
 
-**Event bus** (singleton) — decouples entities. Events: `entity:attached`, `entity:detached`, `entity:position-changed`. (ADR-002)
-
-## Materials
-
-**MaterialRegistry** — manages material creation, reuse, and disposal. Provides global quality overrides. (ADR-004)
+**Event bus** (singleton, `src/event-bus.ts`) — decouples entities. Events: `entity:attached`, `entity:detached`, `entity:position-changed`.

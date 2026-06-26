@@ -17,8 +17,7 @@ src/
 │   ├── registry.ts      # ModelRegistry singleton
 │   └── factory.ts       # createModel(config) → ModelEntity
 ├── models/              # Model library — each model in its own directory
-│   └── ship/            # CCIV ship: extracted geometry + config.ts
-├── ship/                # Convenience aliases (createShip())
+│   └── ship/            # CCIV ship: extracted geometry + config.ts + data/
 ├── entity/              # SceneEntity interface + EntityManager + implementations
 │   ├── types.ts         # SceneEntity lifecycle interface
 │   ├── manager.ts       # EntityManager singleton
@@ -31,9 +30,9 @@ src/
 ├── event-bus.ts         # Typed singleton with 3 events
 ├── environment/         # Wave simulation (pure functions)
 │   └── waves.ts         # sampleOcean, sampleNormal
-├── textures/            # Photoscanned PBR texture loading
-│   ├── index.ts         # loadTextureSet(key), procedural fallbacks
-│   └── sources.ts       # Texture config (file paths, wrapping)
+├── textures/            # Generated texture manifest + procedural fallbacks
+│   ├── index.ts         # loadTextureSet(key), procedural water textures
+│   └── sources.ts       # Auto-generated texture paths (from build-model)
 └── controls/            # OrbitControls wrapper
     └── orbitControls.ts
 ```
@@ -46,17 +45,20 @@ src/
 
 ## Adding a new model
 
-1. Create `src/models/<id>/config.ts` with a `ModelConfig`
-2. Call `createModel(config)` to get a `ModelEntity`
-3. Attach it via `entityManager.attach(entity, scene)`
-
-If the model comes from an external glTF/GLB, run the extraction script first (see Pipeline).
+1. Add the external source to `scripts/references.json`
+2. Run `npm run model:pull` to download → extract → `.cache/references/`
+3. Add the model definition to `scripts/models.json` (mesh naming, transforms, materials)
+4. Run `npm run model:build` to copy → rename → generate owned code at `src/models/<id>/`
+5. Run `npm run model:compile` to produce a standalone `.glb` at `public/models/<id>.glb`
+6. Call `createModel(config)` in code to get a `ModelEntity`
 
 ## Pipeline
 
-- `scripts/fetch-textures.mjs` — downloads Poly Haven textures, generates `src/textures/sources.ts`
-- `scripts/extract-cciv.mjs` — extracts glTF geometry into Float32Array source files (outputs to `src/models/ship/`)
-- `scripts/textures.config.json` — texture asset configuration
+| Step | Script | Input → Output |
+|------|--------|----------------|
+| Pull | `npm run model:pull` | Poly Haven → `.cache/references/` (throwaway) |
+| Build | `npm run model:build` | `.cache/` → `src/models/<id>/` + `public/textures/<id>/` (owned) |
+| Compile | `npm run model:compile` | `src/models/<id>/data/` + textures → `public/models/<id>.glb` (portable) |
 
 ## Commands
 
@@ -65,3 +67,6 @@ If the model comes from an external glTF/GLB, run the extraction script first (s
 | `npm run dev` | Start dev server with HMR |
 | `npm run build` | Production build to `dist/` |
 | `npm run preview` | Preview production build |
+| `npm run model:pull` | Pull external model references → `.cache/references/` |
+| `npm run model:build` | Build owned models from references |
+| `npm run model:compile` | Compile owned models to portable `.glb` artifacts |

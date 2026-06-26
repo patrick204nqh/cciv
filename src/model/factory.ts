@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { loadTextureSet } from '../textures';
 import {
   type ModelConfig,
   type ModelEntity,
   type MeshGroupSpec,
 } from './types';
 import { modelRegistry } from './registry';
+import { materialRegistry, type MaterialSpec } from '../material';
 
 function buildGeometry(spec: MeshGroupSpec): THREE.BufferGeometry {
   if (spec.type === 'extracted') {
@@ -21,19 +21,21 @@ function buildGeometry(spec: MeshGroupSpec): THREE.BufferGeometry {
   throw new Error(`External mesh groups not yet supported: ${spec.name}`);
 }
 
-function buildMaterial(textureKey: string | undefined, overrides: Partial<THREE.MeshStandardMaterialParameters> = {}): THREE.MeshStandardMaterial {
-  const tex = textureKey ? loadTextureSet(textureKey) : {};
-  return new THREE.MeshStandardMaterial({
-    map: tex.map,
-    normalMap: tex.normalMap,
-    roughnessMap: tex.roughnessMap,
-    metalnessMap: tex.metalnessMap,
-    alphaMap: tex.alphaMap,
-    aoMap: tex.aoMap,
-    roughness: 0.88,
-    metalness: 0.02,
-    ...overrides,
-  });
+function toMaterialSpec(
+  textureKey: string | undefined,
+  overrides: Partial<THREE.MeshStandardMaterialParameters> | undefined,
+): MaterialSpec {
+  const spec: MaterialSpec = { textureKey };
+  if (!overrides) return spec;
+  if (overrides.color != null) spec.color = Number(overrides.color);
+  if (overrides.roughness != null) spec.roughness = overrides.roughness;
+  if (overrides.metalness != null) spec.metalness = overrides.metalness;
+  if (overrides.transparent != null) spec.transparent = overrides.transparent;
+  if (overrides.alphaTest != null) spec.alphaTest = overrides.alphaTest;
+  if (overrides.side === THREE.DoubleSide) spec.side = 'DoubleSide';
+  else if (overrides.side === THREE.BackSide) spec.side = 'BackSide';
+  else if (overrides.side != null) spec.side = 'FrontSide';
+  return spec;
 }
 
 function applyTransform(root: THREE.Group, tf: ModelConfig['transform']): void {
@@ -54,7 +56,7 @@ export function createModel(config: ModelConfig): ModelEntity {
 
   for (const spec of config.meshGroups) {
     const geo = buildGeometry(spec);
-    const mat = buildMaterial(spec.textureKey, config.materialOverrides?.[spec.name]);
+    const mat = materialRegistry.getOrCreate(toMaterialSpec(spec.textureKey, config.materialOverrides?.[spec.name]));
     const mesh = new THREE.Mesh(geo, mat);
     mesh.castShadow = true;
     mesh.receiveShadow = true;

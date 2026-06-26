@@ -3,11 +3,13 @@ import type { SceneEntity } from './types';
 import { bus } from '../event-bus';
 import { type ModelEntity } from '../model/types';
 import { sampleOcean, sampleNormal } from '../environment/waves';
+import { worldClock } from '../time';
+
+const WAVE_SPEED = 0.42;
 
 export function createShipEntity(model: ModelEntity): SceneEntity {
   let prevPos = new THREE.Vector3();
   let prevQuat = new THREE.Quaternion();
-  let t = 0;
 
   return {
     id: 'ship',
@@ -21,8 +23,8 @@ export function createShipEntity(model: ModelEntity): SceneEntity {
       model.root.getWorldQuaternion(prevQuat);
     },
 
-    onUpdate(dt: number) {
-      t += 0.007;
+    onUpdate(_dt: number) {
+      const t = worldClock.elapsed * WAVE_SPEED;
       const pos = new THREE.Vector3();
       model.root.getWorldPosition(pos);
 
