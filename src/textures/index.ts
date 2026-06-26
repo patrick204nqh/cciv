@@ -9,7 +9,7 @@ function loadTexture(path: string): THREE.Texture {
   return tex;
 }
 
-interface LoadedTextureSet {
+export interface LoadedTextureSet {
   map?: THREE.Texture;
   normalMap?: THREE.Texture;
   roughnessMap?: THREE.Texture;
@@ -18,7 +18,7 @@ interface LoadedTextureSet {
   alphaMap?: THREE.Texture;
 }
 
-function loadSet(key: string): LoadedTextureSet {
+export function loadTextureSet(key: string): LoadedTextureSet {
   const cfg: TextureSet = (TEXTURES as any)[key];
   if (!cfg) return {};
   const r: LoadedTextureSet = {};
@@ -34,7 +34,7 @@ function loadSet(key: string): LoadedTextureSet {
   return r;
 }
 
-export function createCCIVHullTexture() { return loadSet('ccivHull'); }
+export function createCCIVHullTexture() { return loadTextureSet('ccivHull'); }
 export function createCCIVDeckTexture() { return loadSet('ccivDeck'); }
 export function createCCIVSailTexture() { return loadSet('ccivSail'); }
 export function createCCIVAftTexture() { return loadSet('ccivAft'); }

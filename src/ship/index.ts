@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import { createCCIVShip } from './cciv/ship';
+import { createModel } from '../model/factory';
+import { ccivConfig } from '../models/ship/config';
 
-export function createShip(): THREE.Group {
-  return createCCIVShip();
+export function createShip() {
+  return createModel(ccivConfig);
 }

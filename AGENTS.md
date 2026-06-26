@@ -3,13 +3,15 @@
 ## Structure
 
 - **`src/`** — Vite + TypeScript Three.js project. Entry point: `src/main.ts`.
-  - `src/ship/` — ship model library. `createShip()` returns a `THREE.Group`. Core geometry in `src/ship/cciv/` as extracted Float32Array data.
-    - `src/ship/cciv/` — CCIV model extracted into-code: hardcoded geometry for all 7 mesh groups (hull, deck, sails, aft, rigging, details, interior).
-  - `src/environment/` — ocean, sky, lighting.
+  - `src/models/` — model library. Each model has its own subdirectory with config + geometry data.
+    - `src/models/ship/` — CCIV ship model: 7 mesh groups with extracted geometry + `config.ts`.
+  - `src/ship/` — convenience aliases (`createShip()`). New models import from `src/models/<id>/`.
+  - `src/entity/` — SceneEntity implementations (ocean, sky, lighting, spray, wake, ship).
+  - `src/model/` — core Model abstraction (types, registry, factory).
+  - `src/event-bus.ts` — typed event bus singleton.
+  - `src/environment/` — wave simulation utilities (`waves.ts`).
   - `src/textures/` — photoscanned PBR textures for the CCIV model (7 groups via Poly Haven pipeline).
-  - `src/materials/` — shared `M` object (currently only `M.water` for environment).
   - `src/controls/` — OrbitControls from three/addons.
-  - `src/geometry.ts` — shared helpers (`cyl`, `box`, `addMesh`, `line`).
 - **`index.html`** — minimal HTML shell with inline CSS; loads `src/main.ts`.
 - **`docs/superpowers/specs-archive/` and `docs/superpowers/plans-archive/`** — archived design docs and implementation plans (stale after rebase).
 - **`bin/dev`** — Ruby script that clones+updates skill source repos into `.cache/skills/`, then symlinks discovered skills into `.claude/skills/`, `.agents/skills/`, and `.opencode/skills/`. Run after adding a new skill source.
@@ -55,7 +57,8 @@ Add new sources by appending to `SOURCES` in `bin/dev:19-27`.
 
 - Skills are symlinked (not copied). Edit in the cache dir at `.cache/skills/<name>/` if you need to modify an upstream skill.
 - Coordinate convention: Y-up, Z-bow(+), X-starboard(-).
-- Ship model extracted into-code: `src/ship/cciv/` contains hardcoded Float32Array/Uint16Array geometry for all 7 mesh groups (hull, deck, sails, aft, rigging, details, interior).
-- `createCCIVShip()` in `src/ship/cciv/ship.ts` builds the model with photoscanned PBR textures from Poly Haven. No more procedural ship modules.
+- Ship model extracted into-code: `src/models/ship/` contains hardcoded Float32Array/Uint16Array geometry for all 7 mesh groups (hull, deck, sails, aft, rigging, details, interior).
+- `createShip()` in `src/ship/index.ts` builds the model using the Model abstraction (`createModel(ccivConfig)`) with photoscanned PBR textures from Poly Haven.
 - Texture pipeline: Poly Haven API → `scripts/fetch-textures.mjs` downloads to `public/textures/` and generates `src/textures/sources.ts`. Edit `scripts/textures.config.json` to add/change textures.
-- Ship modules import `M` from `../materials` directly (singleton). CCIV ship bypasses `M` and uses its own per-group materials.
+- New models: create `src/models/<id>/config.ts` with a `ModelConfig`, then `createModel(config)` returns a `ModelEntity`. See `src/model/types.ts` for the config shape.
+- Entity lifecycle: implement `SceneEntity` (in `src/entity/types.ts`) and attach via `entityManager.attach()`. Entities communicate via the event bus (`src/event-bus.ts`).

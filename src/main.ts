@@ -1,11 +1,8 @@
 import * as THREE from 'three';
-import { createShip } from './ship';
-import { buildEnvironment, updateOcean } from './environment';
-import { setupLighting } from './environment/lighting';
-import { sampleOcean, sampleNormal } from './environment/waves';
-import { initSpray, updateSpray } from './environment/spray';
-import { buildWake } from './environment/wake';
 import { createOrbitControls } from './controls/orbitControls';
+import { createShip } from './ship';
+import { entityManager } from './entity';
+import { createOceanEntity, createSkyEntity, createLightingEntity, createSprayEntity, createWakeEntity, createShipEntity } from './entity';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -25,15 +22,13 @@ camera.position.set(140, 65, -90);
 
 const controls = createOrbitControls(camera, renderer.domElement);
 
-const ship = createShip();
-scene.add(ship);
-
-const { ocean, basePos } = buildEnvironment(scene);
-const spray = initSpray(scene);
-const wake = buildWake();
-scene.add(wake);
-
-setupLighting(scene);
+const model = createShip();
+entityManager.attach(createShipEntity(model), scene);
+entityManager.attach(createOceanEntity(), scene);
+entityManager.attach(createSkyEntity(), scene);
+entityManager.attach(createLightingEntity(), scene);
+entityManager.attach(createSprayEntity(), scene);
+entityManager.attach(createWakeEntity(), scene);
 
 window.addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
@@ -41,9 +36,6 @@ window.addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
 });
 
-const shipPos = new THREE.Vector3();
-const shipQuat = new THREE.Quaternion();
-let t = 0;
 let prevTime = performance.now();
 
 (function loop() {
@@ -51,27 +43,8 @@ let prevTime = performance.now();
   const now = performance.now();
   const dt = Math.min((now - prevTime) / 1000, 0.05);
   prevTime = now;
-  t += 0.007;
 
-  updateOcean(ocean, basePos, t);
-
-  ship.getWorldPosition(shipPos);
-  const { height: waveY } = sampleOcean(shipPos.x, shipPos.z, t);
-  const n = sampleNormal(shipPos.x, shipPos.z, t);
-
-  ship.position.y = -1.5 + waveY;
-  ship.rotation.x = Math.atan2(n.z, n.y) * 0.5;
-  ship.rotation.z = -Math.atan2(n.x, n.y) * 0.5;
-
-  ship.getWorldQuaternion(shipQuat);
-
-  const stern = new THREE.Vector3(0, 0, -56).applyQuaternion(shipQuat).add(shipPos);
-  wake.position.copy(stern);
-  wake.position.y = -0.35;
-  wake.quaternion.copy(shipQuat);
-
-  updateSpray(spray, shipPos, shipQuat, dt);
-
+  entityManager.update(dt);
   controls.update();
   renderer.render(scene, camera);
 })();

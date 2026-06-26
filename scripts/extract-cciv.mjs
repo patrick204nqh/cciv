@@ -8,7 +8,7 @@ const ROOT = join(__dirname, '..');
 
 const GLTF_PATH = '/tmp/cciv_ref/cciv_1k.gltf'
 const BIN_PATH = join(ROOT, 'public', 'models', 'cciv', 'cciv.bin');
-const OUT_DIR = join(ROOT, 'src', 'ship', 'cciv');
+const OUT_DIR = join(ROOT, 'src', 'models', 'ship');
 
 function fmtFloat32(arr) {
   const parts = [];
