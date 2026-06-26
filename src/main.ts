@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createOrbitControls } from './controls/orbitControls';
-import { createShip } from './ship';
+import { createModel } from './model/factory';
+import { shipConfig } from './models/ship/config';
 import { entityManager } from './entity';
 import { createOceanEntity, createSkyEntity, createLightingEntity, createSprayEntity, createWakeEntity, createShipEntity } from './entity';
 
@@ -22,7 +23,7 @@ camera.position.set(140, 65, -90);
 
 const controls = createOrbitControls(camera, renderer.domElement);
 
-const model = createShip();
+const model = createModel(shipConfig);
 entityManager.attach(createShipEntity(model), scene);
 entityManager.attach(createOceanEntity(), scene);
 entityManager.attach(createSkyEntity(), scene);

@@ -34,13 +34,6 @@ export function loadTextureSet(key: string): LoadedTextureSet {
   return r;
 }
 
-export function createCCIVHullTexture() { return loadTextureSet('ccivHull'); }
-export function createCCIVDeckTexture() { return loadSet('ccivDeck'); }
-export function createCCIVSailTexture() { return loadSet('ccivSail'); }
-export function createCCIVAftTexture() { return loadSet('ccivAft'); }
-export function createCCIVRiggingTexture() { return loadSet('ccivRigging'); }
-export function createCCIVDetailsTexture() { return loadSet('ccivDetails'); }
-export function createCCIVInteriorTexture() { return loadSet('ccivInterior'); }
 
 function canvas(w: number, h: number, fn: (ctx: CanvasRenderingContext2D) => void): HTMLCanvasElement {
   const c = document.createElement('canvas'); c.width = w; c.height = h;

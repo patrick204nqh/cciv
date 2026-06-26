@@ -1,0 +1,58 @@
+{
+  "resolution": "4k",
+  "format": "jpg",
+  "textures": {
+    "ccivHull": {
+      "asset": "ship_pinnace",
+      "maps": { "diff": "hull_diff", "nor_gl": "hull_nor_gl", "rough": "hull_rough", "metal": "hull_metal" },
+      "wrap": { "repeatS": 2, "repeatT": 3 }
+    },
+    "ccivDeck": {
+      "asset": "ship_pinnace",
+      "maps": { "diff": "deck_diff", "nor_gl": "deck_nor_gl", "rough": "deck_rough" },
+      "wrap": { "repeatS": 3.5, "repeatT": 9 }
+    },
+    "ccivSail": {
+      "asset": "ship_pinnace",
+      "maps": { "diff": "sails_diff", "nor_gl": "sails_nor_gl", "rough": "sails_rough", "metal": "sails_metal", "alpha": "sails_alpha" },
+      "wrap": { "repeatS": 1, "repeatT": 1 }
+    },
+    "ccivRigging": {
+      "asset": "ship_pinnace",
+      "maps": { "diff": "rigging_diff", "nor_gl": "rigging_nor_gl", "rough": "rigging_rough", "metal": "rigging_metal" },
+      "wrap": { "repeatS": 1, "repeatT": 2 }
+    },
+    "ccivAft": {
+      "asset": "ship_pinnace",
+      "maps": { "diff": "aft_diff", "nor_gl": "aft_nor_gl", "rough": "aft_rough", "metal": "aft_metal" },
+      "wrap": { "repeatS": 1, "repeatT": 1 }
+    },
+    "ccivDetails": {
+      "asset": "ship_pinnace",
+      "maps": { "diff": "details_diff", "nor_gl": "details_nor_gl", "rough": "details_rough", "metal": "details_metal" },
+      "wrap": { "repeatS": 1, "repeatT": 1 }
+    },
+    "ccivInterior": {
+      "asset": "ship_pinnace",
+      "maps": { "diff": "interior_diff", "nor_gl": "interior_nor_gl", "rough": "interior_rough" },
+      "wrap": { "repeatS": 1, "repeatT": 1 }
+    }
+  },
+  "models": {
+    "ship": {
+      "source": "polyhaven",
+      "id": "ship_pinnace",
+      "resolution": "4k",
+      "transform": { "scale": 2.7 },
+      "groups": {
+        "hull": { "texture": "ccivHull", "material": { "color": "0x1c160e", "roughness": 0.92 } },
+        "deck": { "texture": "ccivDeck", "material": { "color": "0x887050", "roughness": 0.88, "metalness": 0 } },
+        "sails": { "texture": "ccivSail", "material": { "color": "0xf5edd9", "roughness": 1, "metalness": 0, "transparent": true, "alphaTest": 0.5, "side": "DoubleSide" } },
+        "aft": { "texture": "ccivAft", "material": { "color": "0x1c160e", "roughness": 0.85 } },
+        "rigging": { "texture": "ccivRigging", "material": { "color": "0x3a2818", "roughness": 0.9 } },
+        "details": { "texture": "ccivDetails", "material": { "color": "0x2e1c0c", "roughness": 0.9 } },
+        "interior": { "texture": "ccivInterior", "material": { "color": "0x1a1008", "roughness": 0.95, "metalness": 0 } }
+      }
+    }
+  }
+}
