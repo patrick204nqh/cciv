@@ -60,12 +60,12 @@ export function createSprayEntity(): SceneEntity {
     p.pos.x += (Math.random() - 0.5) * 1.5;
     p.pos.z += (Math.random() - 0.5) * 1.5;
     p.vel.set(
-      (Math.random() - 0.5) * 1.5,
-      3 + Math.random() * 4,
-      -1 - Math.random() * 2,
+      (Math.random() - 0.5) * 1.8,
+      4 + Math.random() * 5,
+      -1.5 - Math.random() * 2,
     );
     p.vel.applyQuaternion(shipQuat);
-    p.maxLife = 0.6 + Math.random() * 0.8;
+    p.maxLife = 0.8 + Math.random() * 1.0;
     p.life = 0;
     nextIdx = (nextIdx + 1) % MAX_PARTICLES;
   }
@@ -100,14 +100,13 @@ export function createSprayEntity(): SceneEntity {
     onUpdate(dt: number) {
       emit();
       emit();
-      emit();
 
       for (let i = 0; i < MAX_PARTICLES; i++) {
         const p = particles[i];
         if (p.life < p.maxLife) {
           p.life += dt;
           const t = p.life / p.maxLife;
-          p.vel.y -= 4.5 * dt;
+          p.vel.y -= 3.5 * dt;
           p.pos.x += p.vel.x * dt;
           p.pos.y += p.vel.y * dt;
           p.pos.z += p.vel.z * dt;
@@ -115,7 +114,7 @@ export function createSprayEntity(): SceneEntity {
           posArr[i * 3] = p.pos.x;
           posArr[i * 3 + 1] = p.pos.y;
           posArr[i * 3 + 2] = p.pos.z;
-          sizeArr[i] = 1.2 * (1 - t * 0.5);
+          sizeArr[i] = 1.5 * (1 - t * 0.6);
           alphaArr[i] = (1 - t) * 0.7;
         } else {
           sizeArr[i] = 0;

@@ -46,7 +46,7 @@ export function createWakeEntity(): SceneEntity {
       const mat = new THREE.MeshBasicMaterial({
         color: 0x8ab8d8,
         transparent: true,
-        opacity: 0.15,
+        opacity: 0.1,
         side: THREE.DoubleSide,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
@@ -58,10 +58,22 @@ export function createWakeEntity(): SceneEntity {
       disp.addMat(mat);
       disp.addObj(mesh);
 
+      let prevPos = new THREE.Vector3();
+      let intensity = 0;
+
       const unsub = bus.on('entity:position-changed', (ev) => {
         if (ev.entityId === 'ship') {
           const evQuat = new THREE.Quaternion(ev.qx, ev.qy, ev.qz, ev.qw);
           const evPos = new THREE.Vector3(ev.x, ev.y, ev.z);
+
+          const dx = evPos.x - prevPos.x;
+          const dz = evPos.z - prevPos.z;
+          const motion = Math.sqrt(dx * dx + dz * dz);
+          intensity += (motion * 8 - intensity) * 0.15;
+          prevPos.copy(evPos);
+
+          mat.opacity = Math.min(0.1 + intensity * 0.3, 0.2);
+
           const stern = new THREE.Vector3(0, 0, -56).applyQuaternion(evQuat).add(evPos);
           mesh.position.copy(stern);
           mesh.position.y = -0.35;

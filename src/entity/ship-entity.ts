@@ -37,15 +37,22 @@ export function createShipEntity(model: ModelEntity, store?: StateStore): SceneE
       model.root.getWorldQuaternion(prevQuat);
     },
 
-    onUpdate(_dt: number) {
+    onUpdate(dt: number) {
       const pos = new THREE.Vector3();
       model.root.getWorldPosition(pos);
 
       const { height: waveY, normal: n } = waveSurface.sample(pos.x, pos.z);
 
-      model.root.position.y = -1.5 + waveY;
-      model.root.rotation.x = Math.atan2(n.z, n.y) * 0.5;
-      model.root.rotation.z = -Math.atan2(n.x, n.y) * 0.5;
+      const targetY = -1.5 + waveY;
+      const targetRx = Math.atan2(n.z, n.y) * 0.5;
+      const targetRz = -Math.atan2(n.x, n.y) * 0.5;
+
+      const sy = Math.min(dt * 2.5, 1);
+      const sr = Math.min(dt * 2, 1);
+
+      model.root.position.y += (targetY - model.root.position.y) * sy;
+      model.root.rotation.x += (targetRx - model.root.rotation.x) * sr;
+      model.root.rotation.z += (targetRz - model.root.rotation.z) * sr;
 
       const newPos = new THREE.Vector3();
       const newQuat = new THREE.Quaternion();
