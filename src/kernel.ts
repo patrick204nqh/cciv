@@ -14,7 +14,7 @@ export class Kernel implements KernelInterface {
   readonly store: StateStore
   readonly registry: PluginRegistry
   readonly container: HTMLElement
-  private _mode: 'edit' | 'play' = 'play'
+  private _mode: 'edit' | 'play' = 'edit'
   private initialized = false
 
   get mode() { return this._mode }
