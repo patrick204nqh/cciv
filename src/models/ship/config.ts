@@ -4,6 +4,15 @@ const shipConfig: ExtractedModelDef = {
   type: 'extracted',
   provider: 'polyhaven',
   asset: 'ship_pinnace',
+  textureKeys: {
+    hull: 'ccivHull',
+    deck: 'ccivDeck',
+    sails: 'ccivSail',
+    aft: 'ccivAft',
+    rigging: 'ccivRigging',
+    details: 'ccivDetails',
+    interior: 'ccivInterior',
+  },
   transform: { scale: 2.7 },
   materialOverrides: {
     hull: { color: 0x1c160e, roughness: 0.92 },

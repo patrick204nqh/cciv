@@ -2,6 +2,7 @@ export interface ExtractedModelDef {
   type: 'extracted';
   provider: string;
   asset: string;
+  textureKeys?: Record<string, string>;
   transform?: {
     scale?: number | [number, number, number];
     rotation?: [number, number, number];

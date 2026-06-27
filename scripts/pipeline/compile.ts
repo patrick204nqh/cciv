@@ -3,21 +3,25 @@ import { readFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join, relative } from 'path';
 import { Document, NodeIO } from '@gltf-transform/core';
 import manifest from '../../src/textures/manifest.json';
+import type { PipelineModelConfig, ExtractedModelDef, ProceduralModelDef } from './types';
 
 const ROOT = join(__dirname, '..', '..');
-const PROCESSED_DIR = join(ROOT, '.cache', 'processed');
+const MODELS_DIR = join(ROOT, 'src', 'models');
+const REFS_DIR = join(ROOT, '.cache', 'references');
 const OUT_DIR = join(ROOT, 'public', 'models');
 const HEX_COLOR_RX = /^0x([0-9a-fA-F]{6})$/;
 const TEXTURES = manifest as Record<string, Record<string, string>>;
 
-interface GroupConfig {
-  material?: Record<string, unknown>;
-}
+async function compileExtracted(modelId: string, config: ExtractedModelDef): Promise<void> {
+  const refDir = join(REFS_DIR, config.asset);
+  if (!existsSync(refDir)) {
+    console.warn(`  Reference not found: ${refDir}. Pull it first.`);
+    return;
+  }
 
-async function compileModel(modelName: string, groups: Record<string, GroupConfig>) {
-  const groupDataDir = join(PROCESSED_DIR, modelName);
-  if (!existsSync(groupDataDir)) {
-    console.warn(`  No processed data for ${modelName}, skipping`);
+  const dataDir = join(refDir, 'data');
+  if (!existsSync(dataDir)) {
+    console.warn(`  No data directory in reference: ${dataDir}`);
     return;
   }
 
@@ -27,24 +31,26 @@ async function compileModel(modelName: string, groups: Record<string, GroupConfi
   const scene = doc.createScene();
   doc.getRoot().setDefaultScene(scene);
 
-  const entries = readdirSync(groupDataDir, { withFileTypes: true });
-  const meshGroups = entries.filter(e =>
-    e.isDirectory() && existsSync(join(groupDataDir, e.name, 'pos.js'))
-  );
+  const meshGroupDirs = readdirSync(dataDir, { withFileTypes: true })
+    .filter(e => e.isDirectory());
 
-  for (const group of meshGroups) {
-    const groupDir = join(groupDataDir, group.name);
+  for (const group of meshGroupDirs) {
+    const groupDir = join(dataDir, group.name);
     const ourName = group.name;
 
-    const posMod = await import(join(groupDir, 'pos.js'));
+    const posPath = join(groupDir, 'pos.js');
+    if (!existsSync(posPath)) continue;
+
+    const posMod = await import(posPath);
     const nmlMod = await import(join(groupDir, 'nml.js'));
     const uvMod = await import(join(groupDir, 'uv.js'));
     const idxMod = await import(join(groupDir, 'idx.js'));
 
-    const pos = posMod[`${ourName}_pos`] as Float32Array;
-    const nml = nmlMod[`${ourName}_nml`] as Float32Array;
-    const uv = uvMod[`${ourName}_uv`] as Float32Array;
-    const indices = idxMod[`${ourName}_idx`] as Uint16Array | Uint32Array;
+    const prefix = `${config.asset}_${ourName}`;
+    const pos = posMod[`${prefix}_pos`] as Float32Array;
+    const nml = nmlMod[`${prefix}_nml`] as Float32Array;
+    const uv = uvMod[`${prefix}_uv`] as Float32Array;
+    const indices = idxMod[`${prefix}_idx`] as Uint16Array | Uint32Array;
     const hasUV2 = existsSync(join(groupDir, 'uv2.js'));
 
     const accPos = doc.createAccessor().setArray(pos).setType('VEC3');
@@ -60,14 +66,13 @@ async function compileModel(modelName: string, groups: Record<string, GroupConfi
 
     if (hasUV2) {
       const uv2Mod = await import(join(groupDir, 'uv2.js'));
-      const uv2 = uv2Mod[`${ourName}_uv2`] as Float32Array;
+      const uv2 = uv2Mod[`${prefix}_uv2`] as Float32Array;
       const accUv2 = doc.createAccessor().setArray(uv2).setType('VEC2');
       prim.setAttribute('TEXCOORD_1', accUv2);
     }
 
     const mat = doc.createMaterial(ourName).setDoubleSided(false);
-    const groupCfg = groups[ourName];
-    const texKey = (groupCfg as any)?.texture as string | undefined;
+    const texKey = config.textureKeys?.[ourName];
     const texPaths = texKey ? TEXTURES[texKey] : null;
 
     if (texPaths) {
@@ -94,20 +99,20 @@ async function compileModel(modelName: string, groups: Record<string, GroupConfi
       }
     }
 
-    if (groupCfg?.material) {
-      const matCfg = groupCfg.material;
-      if (matCfg.color && typeof matCfg.color === 'string' && HEX_COLOR_RX.test(matCfg.color)) {
-        const hex = parseInt(matCfg.color.slice(2), 16);
+    const override = config.materialOverrides?.[ourName];
+    if (override) {
+      const color = override.color?.toString(16).padStart(6, '0');
+      if (color) {
+        const hex = parseInt(color, 16);
         const r = ((hex >> 16) & 0xff) / 255;
         const g = ((hex >> 8) & 0xff) / 255;
         const b = (hex & 0xff) / 255;
         mat.setBaseColorFactor([r, g, b, 1]);
       }
-      if (matCfg.roughness != null) mat.setRoughnessFactor(Number(matCfg.roughness));
-      if (matCfg.metalness != null) mat.setMetallicFactor(Number(matCfg.metalness));
-      if (matCfg.transparent) mat.setAlphaMode('BLEND');
-      if (matCfg.alphaTest != null) mat.setAlphaMode('MASK').setAlphaCutoff(Number(matCfg.alphaTest));
-      if (matCfg.side === 'DoubleSide') mat.setDoubleSided(true);
+      if (override.roughness != null) mat.setRoughnessFactor(override.roughness);
+      if (override.metalness != null) mat.setMetallicFactor(override.metalness);
+      if (override.transparent) mat.setAlphaMode('BLEND');
+      if (override.alphaTest != null) mat.setAlphaMode('MASK').setAlphaCutoff(override.alphaTest);
     }
 
     prim.setMaterial(mat);
@@ -118,22 +123,118 @@ async function compileModel(modelName: string, groups: Record<string, GroupConfi
     scene.addChild(node);
   }
 
-  const outPath = join(OUT_DIR, `${modelName}.glb`);
+  // Apply model-level transform
+  if (config.transform?.scale != null) {
+    const s = config.transform.scale;
+    scene.getChildren().forEach(child => {
+      child.setScale(Array.isArray(s) ? s : [s, s, s]);
+    });
+  }
+
+  const outPath = join(OUT_DIR, `${modelId}.glb`);
   const io = new NodeIO();
   await io.write(outPath, doc);
-  console.log(`  Compiled \u2192 ${relative(ROOT, outPath)}`);
+  console.log(`  [extracted] ${modelId} \u2192 ${relative(ROOT, outPath)}`);
 }
 
-async function main() {
-  const modelsCfgPath = join(ROOT, 'scripts', 'models.json');
-  const models = JSON.parse(readFileSync(modelsCfgPath, 'utf-8'));
-
-  console.log('Compiling models \u2192 public/models/\n');
-  for (const [name, cfg] of Object.entries(models)) {
-    console.log(`[${name}]`);
-    const groups = (cfg as any).groups as Record<string, GroupConfig>;
-    await compileModel(name, groups);
+async function compileProcedural(modelId: string, config: ProceduralModelDef): Promise<void> {
+  const genPath = join(ROOT, 'src', 'generators', `${config.generator.replace('../../generators/', '')}.ts`);
+  if (!existsSync(genPath)) {
+    console.warn(`  Generator not found: ${genPath}`);
+    return;
   }
+
+  const genMod = await import(genPath);
+  const genFnName = Object.keys(genMod).find(k => k.startsWith('generate'));
+  if (!genFnName) {
+    console.warn(`  No generator function found in ${genPath}`);
+    return;
+  }
+
+  const geo = genMod[genFnName](config.params);
+  if (!geo || !geo.attributes?.position) {
+    console.warn(`  Generator ${genFnName} returned invalid geometry`);
+    return;
+  }
+
+  geo.computeVertexNormals();
+
+  mkdirSync(OUT_DIR, { recursive: true });
+  const doc = new Document();
+  doc.createBuffer();
+  const scene = doc.createScene();
+  doc.getRoot().setDefaultScene(scene);
+
+  const pos = geo.attributes.position.array as Float32Array;
+  const nml = geo.attributes.normal?.array as Float32Array ?? new Float32Array(pos.length);
+  const uv = geo.attributes.uv?.array as Float32Array ?? new Float32Array(pos.length / 3 * 2);
+  const indices = geo.index?.array as (Uint16Array | Uint32Array) ?? new Uint16Array(pos.length / 3);
+
+  const accPos = doc.createAccessor().setArray(pos).setType('VEC3');
+  const accNml = doc.createAccessor().setArray(nml).setType('VEC3');
+  const accUv = doc.createAccessor().setArray(uv).setType('VEC2');
+  const accIdx = doc.createAccessor().setArray(indices).setType('SCALAR');
+
+  const prim = doc.createPrimitive();
+  prim.setAttribute('POSITION', accPos);
+  prim.setAttribute('NORMAL', accNml);
+  prim.setAttribute('TEXCOORD_0', accUv);
+  prim.setIndices(accIdx);
+
+  const mat = doc.createMaterial(modelId);
+  if (config.material) {
+    const m = config.material;
+    if (m.color) {
+      const hex = m.color;
+      const r = ((hex >> 16) & 0xff) / 255;
+      const g = ((hex >> 8) & 0xff) / 255;
+      const b = (hex & 0xff) / 255;
+      mat.setBaseColorFactor([r, g, b, 1]);
+    }
+    if (m.roughness != null) mat.setRoughnessFactor(m.roughness);
+    if (m.metalness != null) mat.setMetallicFactor(m.metalness);
+  }
+
+  prim.setMaterial(mat);
+  const mesh = doc.createMesh(modelId);
+  mesh.addPrimitive(prim);
+  const node = doc.createNode(modelId);
+  node.setMesh(mesh);
+  mesh.addPrimitive(prim);
+  scene.addChild(node);
+
+  const outPath = join(OUT_DIR, `${modelId}.glb`);
+  const io = new NodeIO();
+  await io.write(outPath, doc);
+  console.log(`  [procedural] ${modelId} \u2192 ${relative(ROOT, outPath)}`);
+}
+
+async function main(): Promise<void> {
+  const modelDirs = readdirSync(MODELS_DIR).filter(d =>
+    existsSync(join(MODELS_DIR, d, 'config.ts'))
+  );
+
+  mkdirSync(OUT_DIR, { recursive: true });
+  console.log('Compiling models → public/models/\n');
+
+  for (const modelId of modelDirs) {
+    const configPath = join(MODELS_DIR, modelId, 'config.ts');
+    const config: PipelineModelConfig = (await import(configPath)).default;
+    console.log(`[${modelId}] (type=${config.type})`);
+
+    switch (config.type) {
+      case 'extracted':
+        await compileExtracted(modelId, config);
+        break;
+      case 'procedural':
+        await compileProcedural(modelId, config);
+        break;
+      case 'composite':
+        console.warn(`  Composite compilation not yet implemented`);
+        break;
+    }
+  }
+
   console.log('\nDone.');
 }
 

@@ -9,11 +9,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "pipeline:pull": "tsx scripts/pipeline/pull.ts",
-    "pipeline:build": "tsx scripts/pipeline/build.ts",
     "pipeline:compile": "tsx scripts/pipeline/compile.ts",
     "pipeline:publish": "tsx scripts/pipeline/publish.ts",
-    "build:models": "tsx scripts/pipeline/index.ts"
+    "build:models": "tsx scripts/pipeline/index.ts",
+    "reference:pull": "tsx scripts/reference/pull.ts"
   },
   "dependencies": {
     "@gltf-transform/core": "^4.4.0",

@@ -10,8 +10,6 @@ async function main() {
   const stage = stageArg ? stageArg.split('=')[1] : 'all';
 
   const stages: Record<string, string> = {
-    pull: 'tsx scripts/pipeline/pull.ts',
-    build: 'tsx scripts/pipeline/build.ts',
     compile: 'tsx scripts/pipeline/compile.ts',
     publish: 'tsx scripts/pipeline/publish.ts',
   };
