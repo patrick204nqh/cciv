@@ -11,6 +11,7 @@ import { locationSwitcherPlugin } from './plugins/location-switcher';
 import { simulationPlugin } from './plugins/simulation';
 import { modeTogglePlugin } from './plugins/mode-toggle';
 import { sceneGraphPlugin } from './plugins/scene-graph';
+import { performanceHudPlugin } from './plugins/performance-hud';
 
 async function main() {
   const kernel = new Kernel();
@@ -21,6 +22,7 @@ async function main() {
   kernel.registerPlugin(simulationPlugin);
   kernel.registerPlugin(modeTogglePlugin);
   kernel.registerPlugin(sceneGraphPlugin);
+  kernel.registerPlugin(performanceHudPlugin);
   const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};
