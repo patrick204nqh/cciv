@@ -5,6 +5,14 @@ export const inspectorPlugin: ScenePlugin = (() => {
   let kernel: Kernel;
   let gui: GUI;
   let folders: GUI[] = [];
+  let unsub: (() => void) | null = null;
+
+  function rebuild() {
+    for (const f of folders) f.destroy();
+    folders = [];
+    buildEnvironment();
+    buildInstances();
+  }
 
   return {
     id: 'inspector',
@@ -15,11 +23,12 @@ export const inspectorPlugin: ScenePlugin = (() => {
     init(k: Kernel) {
       kernel = k;
       gui = new GUI({ title: 'CCIV Inspector' });
-      buildEnvironment();
-      buildInstances();
+      rebuild();
+      unsub = kernel.store.subscribe('activeLocation', () => rebuild());
     },
 
     destroy() {
+      unsub?.();
       gui.destroy();
       folders = [];
     },
