@@ -28,7 +28,7 @@ async function main() {
 
   let manifest: Record<string, any> = {};
   try {
-    const resp = await fetch('/models/manifest.json');
+    const resp = await fetch(new URL('models/manifest.json', import.meta.env.BASE_URL).href);
     manifest = await resp.json();
   } catch {
     console.warn('manifest.json not loaded');
