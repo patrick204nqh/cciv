@@ -18,6 +18,17 @@ export interface WorldConfig {
   environment: EnvironmentConfig;
 }
 
+export interface WorldDef {
+  id: string
+  label: string
+  locations: string[]
+}
+
+export interface WorldCollection {
+  current: string
+  worlds: Record<string, WorldDef>
+}
+
 import type { ModelEntity } from '../model/types';
 
 export interface WorldLoadResult {
