@@ -1,12 +1,9 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
+import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
 import type { ModelLoader } from '../loaders/types';
 import type { InstanceDef } from '../state/types';
-
-function isClaimed(id: string): boolean {
-  return id === 'ship';
-}
 
 export function createInstanceManager(
   modelLoader: ModelLoader,
@@ -17,7 +14,9 @@ export function createInstanceManager(
   let unsub: (() => void) | null = null;
 
   function sync(next: Record<string, InstanceDef>) {
-    const nextIds = new Set(Object.keys(next).filter(id => !isClaimed(id)));
+    const nextIds = new Set(
+      Object.keys(next).filter(id => (next[id].behavior ?? 'static') !== 'vessel')
+    );
 
     for (const [id, entry] of instances) {
       if (!nextIds.has(id)) {
@@ -27,7 +26,7 @@ export function createInstanceManager(
     }
 
     for (const [id, def] of Object.entries(next)) {
-      if (isClaimed(id)) continue;
+      if ((def.behavior ?? 'static') === 'vessel') continue;
       const existing = instances.get(id);
       if (existing) {
         const tf = def.transform;
@@ -53,12 +52,13 @@ export function createInstanceManager(
   return {
     id: 'instance-manager',
 
-    onAttach() {
+    onAttach(_scene: THREE.Scene, disposer?: Disposer) {
       const initial = store.get('instances') as Record<string, InstanceDef>;
       sync(initial);
       unsub = store.subscribe('instances', (v) => {
         sync(v as Record<string, InstanceDef>);
       });
+      disposer?.addUnsub(unsub);
     },
 
     onDetach() {

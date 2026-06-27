@@ -1,46 +1,11 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import { waveSurface } from '../environment/wave-surface';
-import { createWaterNormalMap, createWaterDiffuseMap } from '../textures';
-import { Disposer } from '../util/disposer';
+import { buildOceanGrid } from '../environment/ocean-grid';
+import { displaceOceanGrid } from '../environment/ocean-displacement';
+import { createWaterNormalMap, createWaterDiffuseMap } from '../environment/water-textures';
+import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
-
-function buildOceanGrid(size: number, seg: number): { geo: THREE.BufferGeometry; baseHeights: Float32Array } {
-  const half = size / 2;
-  const step = size / seg;
-  const verts: number[] = [];
-  const uvs: number[] = [];
-  const idx: number[] = [];
-
-  for (let iz = 0; iz <= seg; iz++) {
-    for (let ix = 0; ix <= seg; ix++) {
-      verts.push(-half + ix * step, 0, -half + iz * step);
-      uvs.push(ix / seg, iz / seg);
-    }
-  }
-
-  for (let iz = 0; iz < seg; iz++) {
-    for (let ix = 0; ix < seg; ix++) {
-      const a = iz * (seg + 1) + ix;
-      const b = iz * (seg + 1) + ix + 1;
-      const c = (iz + 1) * (seg + 1) + ix;
-      const d = (iz + 1) * (seg + 1) + ix + 1;
-      idx.push(a, b, c, b, d, c);
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setIndex(idx);
-  geo.computeVertexNormals();
-  const pos = geo.attributes.position.array as Float32Array;
-  const baseHeights = new Float32Array(pos.length / 3);
-  for (let i = 0; i < pos.length / 3; i++) {
-    baseHeights[i] = pos[i * 3 + 1];
-  }
-  return { geo, baseHeights };
-}
 
 export function createOceanEntity(store?: StateStore): SceneEntity {
   const seg = 80;
@@ -49,13 +14,12 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
   let ocean: THREE.Mesh;
   let basePos: Float32Array;
   let mat: THREE.MeshStandardMaterial;
-  const disp = new Disposer();
-  const unsubs: (() => void)[] = [];
+  let unsubs: (() => void)[] = [];
 
   return {
     id: 'ocean',
 
-    onAttach(scene: THREE.Scene) {
+    onAttach(scene: THREE.Scene, disposer?: Disposer) {
       const { geo } = buildOceanGrid(size, seg);
       const pos = geo.attributes.position.array as Float32Array;
       basePos = new Float32Array(pos.length);
@@ -81,36 +45,27 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
       ocean.receiveShadow = true;
       scene.add(ocean);
 
-      disp.addGeo(geo);
-      disp.addMat(mat);
-      disp.addObj(ocean);
+      disposer?.addGeo(geo);
+      disposer?.addMat(mat);
+      disposer?.addObj(ocean);
 
       if (store) {
-        unsubs.push(store.subscribe('environment.ocean', (v) => {
+        const unsub = store.subscribe('environment.ocean', (v) => {
           const cfg = v as any;
           mat.color.set(cfg.color);
           mat.opacity = cfg.opacity;
-        }));
+        });
+        unsubs = [unsub];
+        disposer?.addUnsub(unsub);
       }
     },
 
     onUpdate(_dt: number) {
-      const pos = ocean.geometry.attributes.position.array as Float32Array;
-      for (let i = 0; i < pos.length / 3; i++) {
-        const bx = basePos[i * 3];
-        const bz = basePos[i * 3 + 2];
-        const { height, dispX, dispZ } = waveSurface.sample(bx, bz);
-        pos[i * 3] = bx + dispX;
-        pos[i * 3 + 1] = height;
-        pos[i * 3 + 2] = bz + dispZ;
-      }
-      ocean.geometry.attributes.position.needsUpdate = true;
-      ocean.geometry.computeVertexNormals();
+      displaceOceanGrid(ocean.geometry as THREE.BufferGeometry, basePos, waveSurface);
     },
 
     onDetach() {
       unsubs.forEach(fn => fn());
-      disp.dispose();
     },
   };
 }

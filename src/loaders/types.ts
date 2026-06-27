@@ -1,5 +1,4 @@
-import type { ModelEntity } from '../model/types';
-import type { MaterialSpec } from '../material/types';
+import type { ModelEntity, MaterialSpec } from '../model/types';
 
 export interface ModelCatalogEntry {
   glb: string;

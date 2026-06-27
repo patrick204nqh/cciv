@@ -1,1 +1,1 @@
-export { northSea } from './north-sea';
+export type { WorldLoadResult } from './types';

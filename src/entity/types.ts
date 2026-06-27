@@ -1,8 +1,9 @@
 import * as THREE from 'three';
+import type { Disposer } from '../util/disposer';
 
 export interface SceneEntity {
   readonly id: string;
-  onAttach(scene: THREE.Scene): void;
+  onAttach(scene: THREE.Scene, disposer?: Disposer): void;
   onBeforeUpdate?(dt: number): void;
   onUpdate?(dt: number): void;
   onDetach(): void;

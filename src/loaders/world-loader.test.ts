@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { WorldLoader } from './world-loader';
-import type { WorldConfig } from '../worlds/types';
+import type { WorldConfig } from '../state/types';
 import type { ModelEntity } from '../model/types';
 
 describe('WorldLoader', () => {
@@ -30,41 +30,63 @@ describe('WorldLoader', () => {
     worldLoader = new WorldLoader();
   });
 
-  it('loads a world and returns model entries', async () => {
+  it('loads a world and creates entities for vessel instances', async () => {
     const world: WorldConfig = {
-      id: 'test-world',
-      models: [{ ref: 'ship', position: [10, 0, 20], scale: 1.5 }],
       environment: { ocean: true, sky: true, lighting: 'day' },
+      instances: {
+        'my-ship': {
+          ref: 'ship',
+          transform: { position: [10, 0, 20], rotation: [0, 0, 0], scale: 1.5 },
+          visible: true,
+          behavior: 'vessel',
+        },
+      },
     };
     const result = await worldLoader.load(world, mockModelLoader);
-    expect(result.config.id).toBe('test-world');
-    expect(result.entries).toHaveLength(1);
-    expect(result.entries[0].model).toBe(mockModelEntity);
+    expect(result.entities.length).toBeGreaterThanOrEqual(4);
+    const vesselEntity = result.entities.find(e => e.id === 'my-ship');
+    expect(vesselEntity).toBeDefined();
     expect(mockModelLoader.load).toHaveBeenCalledWith('ship');
   });
 
-  it('returns instance transform data', async () => {
+  it('loads a world with only static instances', async () => {
     const world: WorldConfig = {
-      id: 'test-world',
-      models: [{ ref: 'ship', position: [10, 0, 20], scale: 2 }],
-      environment: {},
+      environment: { ocean: false, sky: false },
+      instances: {
+        'buoy-1': {
+          ref: 'buoy',
+          transform: { position: [50, 0, 30], rotation: [0, 0, 0], scale: 1 },
+          visible: true,
+        },
+      },
     };
     const result = await worldLoader.load(world, mockModelLoader);
-    expect(result.entries[0].instance.position).toEqual([10, 0, 20]);
-    expect(result.entries[0].instance.scale).toBe(2);
+    expect(result.entities).toHaveLength(0);
   });
 
-  it('loads multiple models', async () => {
-    const world: WorldConfig = {
-      id: 'test-world',
-      models: [{ ref: 'ship', position: [0, 0, 0] }, { ref: 'buoy', position: [50, 0, 30] }],
-      environment: {},
-    };
+  it('loads multiple vessels', async () => {
     mockModelLoader.load
       .mockResolvedValueOnce(mockModelEntity)
       .mockResolvedValueOnce({ ...mockModelEntity, id: 'buoy' });
+    const world: WorldConfig = {
+      environment: { ocean: true, sky: true },
+      instances: {
+        ship: {
+          ref: 'ship',
+          transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: 2.7 },
+          visible: true,
+          behavior: 'vessel',
+        },
+        'buoy-1': {
+          ref: 'buoy',
+          transform: { position: [60, 0, 35], rotation: [0, 0, 0], scale: 1 },
+          visible: true,
+          behavior: 'vessel',
+        },
+      },
+    };
     const result = await worldLoader.load(world, mockModelLoader);
-    expect(result.entries).toHaveLength(2);
-    expect(result.entries[1].model.id).toBe('buoy');
+    const vessels = result.entities.filter(e => e.id === 'ship' || e.id === 'buoy-1');
+    expect(vessels).toHaveLength(2);
   });
 });

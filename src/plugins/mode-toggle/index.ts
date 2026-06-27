@@ -34,14 +34,14 @@ export const modeTogglePlugin: ScenePlugin = (() => {
         userSelect: 'none',
         background: '#448',
       });
-      badge.onclick = () => { kernel.mode = kernel.mode === 'edit' ? 'play' : 'edit'; updateBadge(); };
+      badge.onclick = () => { kernel.setMode(kernel.mode === 'edit' ? 'play' : 'edit'); updateBadge(); };
       document.body.appendChild(badge);
       updateBadge();
 
       onKey = (e: KeyboardEvent) => {
         if (e.key === 'Tab') {
           e.preventDefault();
-          kernel.mode = kernel.mode === 'edit' ? 'play' : 'edit';
+          kernel.setMode(kernel.mode === 'edit' ? 'play' : 'edit');
           updateBadge();
         }
       };

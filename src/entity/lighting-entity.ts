@@ -1,23 +1,16 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
-import { Disposer } from '../util/disposer';
+import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
 
 export function createLightingEntity(store?: StateStore): SceneEntity {
-  const disp = new Disposer();
-  const unsubs: (() => void)[] = [];
+  let unsubs: (() => void)[] = [];
 
   return {
     id: 'lighting',
 
-    onAttach(scene: THREE.Scene) {
-      let sun: THREE.DirectionalLight;
-      let hemi: THREE.HemisphereLight;
-      let fill: THREE.DirectionalLight;
-      let stern: THREE.PointLight;
-      let deckGlow: THREE.PointLight;
-
-      sun = new THREE.DirectionalLight(0xfff0d0, 2.8);
+    onAttach(scene: THREE.Scene, disposer?: Disposer) {
+      const sun = new THREE.DirectionalLight(0xfff0d0, 2.8);
       sun.position.set(90, 130, -55);
       sun.castShadow = true;
       sun.shadow.mapSize.set(3072, 3072);
@@ -29,30 +22,30 @@ export function createLightingEntity(store?: StateStore): SceneEntity {
       sun.shadow.bias = -0.0004;
       sun.shadow.normalBias = 0.02;
       scene.add(sun);
-      disp.addObj(sun);
-      disp.addCleanup(() => { if (sun.shadow?.map) sun.shadow.map.dispose(); });
+      disposer?.addObj(sun);
+      disposer?.addCleanup(() => { if (sun.shadow?.map) sun.shadow.map.dispose(); });
 
-      hemi = new THREE.HemisphereLight(0x90c0e0, 0x306080, 1.0);
+      const hemi = new THREE.HemisphereLight(0x90c0e0, 0x306080, 1.0);
       scene.add(hemi);
-      disp.addObj(hemi);
+      disposer?.addObj(hemi);
 
-      fill = new THREE.DirectionalLight(0x6090d0, 0.55);
+      const fill = new THREE.DirectionalLight(0x6090d0, 0.55);
       fill.position.set(-70, -18, 85);
       scene.add(fill);
-      disp.addObj(fill);
+      disposer?.addObj(fill);
 
-      stern = new THREE.PointLight(0xffcc66, 0.6, 80);
+      const stern = new THREE.PointLight(0xffcc66, 0.6, 80);
       stern.position.set(0, 18, -35);
       scene.add(stern);
-      disp.addObj(stern);
+      disposer?.addObj(stern);
 
-      deckGlow = new THREE.PointLight(0xc89a50, 0.25, 50);
+      const deckGlow = new THREE.PointLight(0xc89a50, 0.25, 50);
       deckGlow.position.set(0, 10, 0);
       scene.add(deckGlow);
-      disp.addObj(deckGlow);
+      disposer?.addObj(deckGlow);
 
       if (store) {
-        unsubs.push(store.subscribe('environment.lighting', (v) => {
+        const unsub = store.subscribe('environment.lighting', (v) => {
           const cfg = v as any;
           sun.visible = cfg.sun.enabled;
           sun.intensity = cfg.sun.intensity;
@@ -79,13 +72,14 @@ export function createLightingEntity(store?: StateStore): SceneEntity {
             deckGlow.intensity = cfg.pointLights[1].intensity;
             deckGlow.color.set(cfg.pointLights[1].color);
           }
-        }));
+        });
+        unsubs = [unsub];
+        disposer?.addUnsub(unsub);
       }
     },
 
     onDetach() {
       unsubs.forEach(fn => fn());
-      disp.dispose();
     },
   };
 }

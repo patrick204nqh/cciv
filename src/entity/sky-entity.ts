@@ -1,16 +1,15 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
-import { Disposer } from '../util/disposer';
+import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
 
 export function createSkyEntity(store?: StateStore): SceneEntity {
-  const disp = new Disposer();
-  const unsubs: (() => void)[] = [];
+  let unsubs: (() => void)[] = [];
 
   return {
     id: 'sky',
 
-    onAttach(scene: THREE.Scene) {
+    onAttach(scene: THREE.Scene, disposer?: Disposer) {
       const skyGeo = new THREE.SphereGeometry(900, 32, 24);
       const colors = new Float32Array(skyGeo.attributes.position.count * 3);
       const pos = skyGeo.attributes.position;
@@ -25,18 +24,18 @@ export function createSkyEntity(store?: StateStore): SceneEntity {
       const skyMat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide });
       const sky = new THREE.Mesh(skyGeo, skyMat);
       scene.add(sky);
-      disp.addGeo(skyGeo);
-      disp.addMat(skyMat);
-      disp.addObj(sky);
+      disposer?.addGeo(skyGeo);
+      disposer?.addMat(skyMat);
+      disposer?.addObj(sky);
 
       const ringGeo = new THREE.CylinderGeometry(860, 860, 140, 32, 1, true);
       const ringMat = new THREE.MeshBasicMaterial({ color: 0x6090b0, side: THREE.BackSide, transparent: true, opacity: 0.25 });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.position.y = -65;
       scene.add(ring);
-      disp.addGeo(ringGeo);
-      disp.addMat(ringMat);
-      disp.addObj(ring);
+      disposer?.addGeo(ringGeo);
+      disposer?.addMat(ringMat);
+      disposer?.addObj(ring);
 
       if (store) {
         unsubs.push(store.subscribe('environment.sky', (v) => {
@@ -60,7 +59,6 @@ export function createSkyEntity(store?: StateStore): SceneEntity {
 
     onDetach() {
       unsubs.forEach(fn => fn());
-      disp.dispose();
     },
   };
 }

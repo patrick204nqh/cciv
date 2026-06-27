@@ -4,7 +4,14 @@ import { createOrbitControls } from './controls/orbitControls';
 import { StateStore } from './state/store';
 import { PluginRegistry } from './plugins/registry';
 import { createDefaultState } from './state/defaults';
+import { entityManager } from './entity/manager';
 import type { Kernel as KernelInterface, ScenePlugin } from './plugins/types';
+
+export interface KernelOptions {
+  container?: HTMLElement;
+  renderer?: THREE.WebGLRenderer;
+  camera?: THREE.PerspectiveCamera;
+}
 
 export class Kernel implements KernelInterface {
   readonly scene: THREE.Scene
@@ -19,31 +26,36 @@ export class Kernel implements KernelInterface {
   private initialized = false
 
   get mode() { return this._mode }
-  set mode(m: 'edit' | 'play') {
+
+  setMode(m: 'edit' | 'play'): void {
     const prev = this._mode
     if (prev === m) return
     this._mode = m
+    entityManager.setPaused(m === 'edit')
     for (const p of this.registry.getAll()) {
       p.onModeSwitch?.(prev, m)
     }
   }
 
-  constructor(container?: HTMLElement) {
-    this.container = container ?? document.body
+  constructor(opts?: KernelOptions) {
+    this.container = opts?.container ?? document.body
     this.scene = new THREE.Scene()
     this.scene.fog = new THREE.FogExp2(0x406888, 0.0018)
     this.scene.background = new THREE.Color(0x5080a0)
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true })
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-    this.renderer.setSize(innerWidth, innerHeight)
-    this.renderer.shadowMap.enabled = true
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping
-    this.renderer.toneMappingExposure = 1.15
-    this.container.appendChild(this.renderer.domElement)
+    this.renderer = opts?.renderer ?? (() => {
+      const r = new THREE.WebGLRenderer({ antialias: true })
+      r.setPixelRatio(Math.min(devicePixelRatio, 2))
+      r.setSize(innerWidth, innerHeight)
+      r.shadowMap.enabled = true
+      r.shadowMap.type = THREE.PCFSoftShadowMap
+      r.toneMapping = THREE.ACESFilmicToneMapping
+      r.toneMappingExposure = 1.15
+      this.container.appendChild(r.domElement)
+      return r
+    })()
 
-    this.camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000)
+    this.camera = opts?.camera ?? new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000)
     this.camera.position.set(140, 65, -90)
 
     this.controls = createOrbitControls(this.camera, this.renderer.domElement)

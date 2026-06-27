@@ -1,18 +1,4 @@
 import * as THREE from 'three';
-import manifest from './manifest.json';
-
-const TEXTURES = manifest as Record<string, Record<string, string>>;
-
-let loader: THREE.TextureLoader | null = null;
-function getLoader(): THREE.TextureLoader {
-  return loader ?? (loader = new THREE.TextureLoader());
-}
-
-function loadTexture(path: string): THREE.Texture {
-  const tex = getLoader().load(path);
-  tex.anisotropy = 4;
-  return tex;
-}
 
 function canvas(w: number, h: number, fn: (ctx: CanvasRenderingContext2D) => void): HTMLCanvasElement {
   const c = document.createElement('canvas'); c.width = w; c.height = h;

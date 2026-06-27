@@ -3,33 +3,19 @@ import type { SceneEntity } from './types';
 import { bus } from '../event-bus';
 import type { ModelEntity } from '../model/types';
 import { waveSurface } from '../environment/wave-surface';
-import type { StateStore } from '../state/store';
+import type { Disposer } from '../util/disposer';
 
-export function createShipEntity(model: ModelEntity, store?: StateStore): SceneEntity {
+export function createVesselEntity(model: ModelEntity, vesselId?: string): SceneEntity {
+  const id = vesselId ?? 'vessel';
   let prevPos = new THREE.Vector3();
   let prevQuat = new THREE.Quaternion();
-  const unsubs: (() => void)[] = [];
 
   return {
-    id: 'ship',
+    id,
 
-    onAttach(scene: THREE.Scene) {
+    onAttach(scene: THREE.Scene, disposer?: Disposer) {
       scene.add(model.root);
-
-      if (store) {
-        unsubs.push(store.subscribe('instances.ship.materials', (v) => {
-          const mat = v as Record<string, { color: string; roughness: number; metalness: number; visible: boolean }>;
-          for (const [group, overrides] of Object.entries(mat)) {
-            const mesh = model.root.getObjectByName(group) as THREE.Mesh | undefined;
-            if (!mesh || !(mesh.material instanceof THREE.MeshStandardMaterial)) continue;
-            mesh.material.color.set(overrides.color);
-            mesh.material.roughness = overrides.roughness;
-            mesh.material.metalness = overrides.metalness;
-            mesh.visible = overrides.visible;
-            mesh.material.needsUpdate = true;
-          }
-        }));
-      }
+      disposer?.addObj(model.root);
     },
 
     onBeforeUpdate(_dt: number) {
@@ -61,7 +47,7 @@ export function createShipEntity(model: ModelEntity, store?: StateStore): SceneE
 
       if (!newPos.equals(prevPos) || !newQuat.equals(prevQuat)) {
         bus.emit('entity:position-changed', {
-          entityId: 'ship',
+          entityId: id,
           x: newPos.x, y: newPos.y, z: newPos.z,
           qx: newQuat.x, qy: newQuat.y, qz: newQuat.z, qw: newQuat.w,
         });
@@ -69,8 +55,9 @@ export function createShipEntity(model: ModelEntity, store?: StateStore): SceneE
     },
 
     onDetach() {
-      unsubs.forEach(fn => fn());
       model.dispose();
     },
   };
 }
+
+export { createVesselEntity as createShipEntity };

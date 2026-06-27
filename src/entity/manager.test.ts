@@ -19,12 +19,13 @@ describe('EntityManager', () => {
     };
   });
 
-  it('attaches an entity', () => {
+  it('attaches an entity and provides a Disposer', () => {
     manager.attach(entity, mockScene);
-    expect(entity.onAttach).toHaveBeenCalledWith(mockScene);
+    expect(entity.onAttach).toHaveBeenCalled();
+    expect(entity.onAttach).toHaveBeenCalledWith(mockScene, expect.anything());
   });
 
-  it('detaches an entity', () => {
+  it('detaches an entity and disposes resources', () => {
     manager.attach(entity, mockScene);
     manager.detach(entity);
     expect(entity.onDetach).toHaveBeenCalled();
@@ -41,6 +42,22 @@ describe('EntityManager', () => {
     manager.attach(withBefore, mockScene);
     manager.update(0.016);
     expect(withBefore.onBeforeUpdate).toHaveBeenCalledWith(0.016);
+  });
+
+  it('does not call onUpdate when paused', () => {
+    manager.attach(entity, mockScene);
+    manager.setPaused(true);
+    manager.update(0.016);
+    expect(entity.onUpdate).not.toHaveBeenCalled();
+  });
+
+  it('resumes updates after unpausing', () => {
+    manager.attach(entity, mockScene);
+    manager.setPaused(true);
+    manager.update(0.016);
+    manager.setPaused(false);
+    manager.update(0.016);
+    expect(entity.onUpdate).toHaveBeenCalledTimes(1);
   });
 
   it('detaches all entities', () => {

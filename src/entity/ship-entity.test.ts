@@ -24,9 +24,9 @@ describe('createShipEntity', () => {
     };
   });
 
-  it('creates an entity with id "ship"', () => {
-    const entity = createShipEntity(model);
-    expect(entity.id).toBe('ship');
+  it('creates an entity with the given vessel id', () => {
+    const entity = createShipEntity(model, 'my-vessel');
+    expect(entity.id).toBe('my-vessel');
   });
 
   it('adds model root to scene on attach', () => {

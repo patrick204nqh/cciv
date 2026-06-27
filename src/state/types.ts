@@ -36,6 +36,7 @@ export interface InstanceDef {
   ref: string
   transform: { position: [number, number, number]; rotation: [number, number, number]; scale: number }
   visible: boolean
+  behavior?: 'vessel' | 'static'
   materials?: Record<string, MaterialOverride>
 }
 
@@ -45,6 +46,9 @@ export interface LocationPreset {
   environment: EnvironmentState
   instances: InstanceState
 }
+
+/** Unified world config — replaces the deprecated WorldConfig from worlds/types.ts */
+export type WorldConfig = LocationPreset;
 
 /** Branded string for entity identifiers */
 export type EntityId = string & { readonly __brand: 'EntityId' }

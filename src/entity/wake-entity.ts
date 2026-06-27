@@ -1,19 +1,17 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import { bus } from '../event-bus';
-import { Disposer } from '../util/disposer';
+import type { Disposer } from '../util/disposer';
 
 const SEGMENTS = 16;
 const TRAIL_LENGTH = 60;
 const HALF_ANGLE = 0.35;
 
-export function createWakeEntity(): SceneEntity {
-  const disp = new Disposer();
-
+export function createWakeEntity(vesselId?: string): SceneEntity {
   return {
-    id: 'wake',
+    id: `wake${vesselId ? '-' + vesselId : ''}`,
 
-    onAttach(scene: THREE.Scene) {
+    onAttach(scene: THREE.Scene, disposer?: Disposer) {
       const verts: number[] = [];
       const idx: number[] = [];
 
@@ -54,15 +52,16 @@ export function createWakeEntity(): SceneEntity {
 
       const mesh = new THREE.Mesh(geo, mat);
       scene.add(mesh);
-      disp.addGeo(geo);
-      disp.addMat(mat);
-      disp.addObj(mesh);
+      disposer?.addGeo(geo);
+      disposer?.addMat(mat);
+      disposer?.addObj(mesh);
 
       let prevPos = new THREE.Vector3();
       let intensity = 0;
 
+      const targetId = vesselId ?? 'ship';
       const unsub = bus.on('entity:position-changed', (ev) => {
-        if (ev.entityId === 'ship') {
+        if (ev.entityId === targetId) {
           const evQuat = new THREE.Quaternion(ev.qx, ev.qy, ev.qz, ev.qw);
           const evPos = new THREE.Vector3(ev.x, ev.y, ev.z);
 
@@ -80,11 +79,9 @@ export function createWakeEntity(): SceneEntity {
           mesh.quaternion.copy(evQuat);
         }
       });
-      disp.addUnsub(unsub);
+      disposer?.addUnsub(unsub);
     },
 
-    onDetach() {
-      disp.dispose();
-    },
+    onDetach() {},
   };
 }

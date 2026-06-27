@@ -1,24 +1,49 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
+import { Disposer } from '../util/disposer';
 import { bus } from '../event-bus';
 
 export class EntityManager {
   private entities = new Set<SceneEntity>();
+  private disposers = new Map<string, Disposer>();
+  private _paused = false;
+
+  get paused(): boolean {
+    return this._paused;
+  }
+
+  setPaused(paused: boolean): void {
+    this._paused = paused;
+  }
 
   attach(entity: SceneEntity, scene: THREE.Scene): void {
     this.entities.add(entity);
-    entity.onAttach(scene);
+    const disp = new Disposer();
+    this.disposers.set(entity.id, disp);
+    entity.onAttach(scene, disp);
     bus.emit('entity:attached', entity.id);
   }
 
   detach(entity: SceneEntity): void {
     entity.onDetach();
+    const disp = this.disposers.get(entity.id);
+    if (disp) {
+      disp.dispose();
+      this.disposers.delete(entity.id);
+    }
     this.entities.delete(entity);
     bus.emit('entity:detached', entity.id);
   }
 
   detachAll(): void {
-    for (const entity of this.entities) entity.onDetach();
+    for (const entity of this.entities) {
+      entity.onDetach();
+      const disp = this.disposers.get(entity.id);
+      if (disp) {
+        disp.dispose();
+        this.disposers.delete(entity.id);
+      }
+    }
     this.entities.clear();
   }
 
@@ -27,6 +52,7 @@ export class EntityManager {
   }
 
   update(dt: number): void {
+    if (this._paused) return;
     for (const entity of this.entities) entity.onBeforeUpdate?.(dt);
     for (const entity of this.entities) entity.onUpdate?.(dt);
   }

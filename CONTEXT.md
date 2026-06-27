@@ -2,7 +2,7 @@
 
 ## Utilities
 
-**Disposer** (`src/util/disposer.ts`) — collects `THREE.BufferGeometry`, `Material`, `Object3D` instances, unsubscribe functions, and arbitrary cleanup callbacks. Calling `dispose()` runs them all in order. Used by every entity and model loader.
+**Disposer** (`src/util/disposer.ts`) — collects `THREE.BufferGeometry`, `Material`, `Object3D` instances, unsubscribe functions, and arbitrary cleanup callbacks. Calling `dispose()` runs them all in order. Owned by EntityManager per attached entity — entities receive a Disposer from EntityManager via `onAttach(scene, disp)` rather than creating their own.
 
 ## Models
 
@@ -24,23 +24,35 @@
 
 ## Materials
 
-**MaterialRegistry** (singleton, `src/material/registry.ts`) — manages material creation, reuse, and disposal. Provides `getOrCreate(MaterialSpec)` that caches by spec, and global quality overrides (`setQualityLevel('low'|'medium'|'high')`). Normal maps disabled at 'low' quality.
-
-**MaterialSpec** (`src/material/types.ts`) — canonical description of a material. Fields: `textureKey`, `color`, `roughness`, `metalness`, `transparent`, `alphaTest`, `side`. Consumed by `MaterialRegistry` to produce `THREE.MeshStandardMaterial`.
+**MaterialSpec** (`src/material/types.ts`) — canonical description of a material. Currently unused by runtime — materials are baked into GLB. Candidate for deletion.
 
 ## Time
 
 **WorldClock** (singleton, `src/time/world-clock.ts`) — monotonically increasing elapsed time accumulated from `dt`. Entities read `worldClock.elapsed` instead of managing local `t` counters. Provides `timeScale` and `paused`.
 
-**EntityManager** (singleton, `src/entity/manager.ts`) — calls `worldClock.update(dt)` before entity updates.
+**EntityManager** (singleton, `src/entity/manager.ts`) — owns the entity list, provides `attach/detach/update`. Does NOT own the RAF loop (contradicts ADR-002). Update is driven by `simulationPlugin` which calls `entityManager.update(dt)` inside the Kernel's render loop, only in 'play' mode.
 
 ## Scene
 
-**SceneEntity** — interface with lifecycle hooks: `onAttach(scene)`, `onBeforeUpdate?(dt)`, `onUpdate(dt)`, `onDetach()`. Each entity owns its update logic. (ADR-002)
+**SceneEntity** — interface with lifecycle hooks: `onAttach(scene, disposer?)`, `onBeforeUpdate?(dt)`, `onUpdate(dt)`, `onDetach()`. Each entity owns its update logic. EntityManager provides a Disposer on attach; entities should use it rather than creating their own. (ADR-002)
 
-**EntityManager** (singleton) — owns the entity list, runs the RAF loop, controls lifecycle. (ADR-002)
+**EntityManager** (singleton) — owns the entity list, lifecycle control. RAF loop is in Kernel. (ADR-002 — note: RAF loop was delegated to Kernel for edit/play mode switching; ADR-002's "owns the RAF loop" is stale.)
 
 **Event bus** (singleton, `src/event-bus.ts`) — decouples entities. Events: `entity:attached`, `entity:detached`, `entity:position-changed`.
+
+## World
+
+**WorldConfig** (singular, unified from `LocationPreset` + deprecated `WorldConfig`) — declarative scene composition. One shape used by WorldLoader and Store. Contains:
+  - `environment` — sky, waves, ocean, lighting, fog state
+  - `instances` — model placement with per-instance `behavior` field
+
+**Behavior** — optional field on a WorldConfig instance. `'vessel'` enables wave-response physics, event emission, spray, and wake. Default (undefined) is static placement.
+
+**WorldLoader** — loads a WorldConfig, resolves all model refs, creates all SceneEntities (models + environment entities + vessel effects) from config. Returns `SceneEntity[]` ready for EntityManager.attach(). Replaces hardcoded entity factories in main.ts.
+
+**Kernel** — bootstrap orchestrator. Accepts renderer/camera as optional constructor deps (tests inject mocks). `setMode(m)` replaces the `mode` setter to avoid side effects in property access. `setMode` propagates to EntityManager (`setPaused`) and plugins (`onModeSwitch`).
+
+**EntityManager** — owns the entity list and per-entity Disposers. `setPaused(bool)` controls whether `update(dt)` advances entity state. Paused in 'edit' mode, unpaused in 'play' mode.
 
 ## Waves
 
@@ -88,17 +100,7 @@ Three ways to create a model, defined in `src/models/<id>/config.ts`:
 - **GlbLoader** — wraps Three.js GLTFLoader, returns `THREE.Group`
 - **ModelLoader** — resolves model refs via catalog, loads GLBs, applies overrides, caches `ModelEntity` instances
 - **Catalog** — reads `public/models/manifest.json`, provides `getEntry(ref)`
-- **WorldLoader** — loads a `WorldConfig`, resolves all model refs, places them in the scene
-
-### Worlds
-
-**WorldConfig** (`src/worlds/types.ts`) — declarative scene composition. Lists model instances with positions and environment config.
-
-```
-src/worlds/north-sea.ts → ship at origin, buoys at offsets, island far, ocean/sky/lighting
-```
-
-Wiring: `main.ts` calls `worldLoader.load(config, scene)` → attaches entities.
+- **WorldLoader** — see World section below
 
 ## Commands
 
