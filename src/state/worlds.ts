@@ -115,9 +115,9 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
         transform: { position: [-70, 0, -30], rotation: [0, 0, 0], scale: 1 },
         visible: true,
       },
-      island: {
-        ref: 'island',
-        transform: { position: [-150, 0, -180], rotation: [0, 0, 0], scale: 1.2 },
+      'palm-island-1': {
+        ref: 'palm-island',
+        transform: { position: [-150, 0, -180], rotation: [0, 0.5, 0], scale: 1 },
         visible: true,
       },
     },
@@ -173,9 +173,14 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
         transform: { position: [-30, 0, -50], rotation: [0, 0, 0], scale: 1 },
         visible: true,
       },
-      island: {
-        ref: 'island',
-        transform: { position: [-180, 0, -100], rotation: [0, 0, 0], scale: 1 },
+      'ice-floe-1': {
+        ref: 'ice-floe',
+        transform: { position: [-180, 0, -100], rotation: [0, 0.3, 0], scale: 1 },
+        visible: true,
+      },
+      'ice-floe-2': {
+        ref: 'ice-floe',
+        transform: { position: [-120, 0, -60], rotation: [0, 1.2, 0], scale: 0.6 },
         visible: true,
       },
     },
