@@ -1,18 +1,35 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import { bus } from '../event-bus';
-import { type ModelEntity } from '../model/types';
+import type { ModelEntity } from '../model/types';
 import { waveSurface } from '../environment/wave-surface';
+import type { StateStore } from '../state/store';
 
-export function createShipEntity(model: ModelEntity): SceneEntity {
+export function createShipEntity(model: ModelEntity, store?: StateStore): SceneEntity {
   let prevPos = new THREE.Vector3();
   let prevQuat = new THREE.Quaternion();
+  const unsubs: (() => void)[] = [];
 
   return {
     id: 'ship',
 
     onAttach(scene: THREE.Scene) {
       scene.add(model.root);
+
+      if (store) {
+        unsubs.push(store.subscribe('instances.ship.material', (v) => {
+          const mat = v as Record<string, { color: string; roughness: number; metalness: number; visible: boolean }>;
+          for (const [group, overrides] of Object.entries(mat)) {
+            const mesh = model.root.getObjectByName(group) as THREE.Mesh | undefined;
+            if (!mesh || !(mesh.material instanceof THREE.MeshStandardMaterial)) continue;
+            mesh.material.color.set(overrides.color);
+            mesh.material.roughness = overrides.roughness;
+            mesh.material.metalness = overrides.metalness;
+            mesh.visible = overrides.visible;
+            mesh.material.needsUpdate = true;
+          }
+        }));
+      }
     },
 
     onBeforeUpdate(_dt: number) {
@@ -45,6 +62,7 @@ export function createShipEntity(model: ModelEntity): SceneEntity {
     },
 
     onDetach() {
+      unsubs.forEach(fn => fn());
       model.dispose();
     },
   };

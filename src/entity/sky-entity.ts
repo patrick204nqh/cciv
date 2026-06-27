@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import { Disposer } from '../util/disposer';
+import type { StateStore } from '../state/store';
 
-export function createSkyEntity(): SceneEntity {
+export function createSkyEntity(store?: StateStore): SceneEntity {
   const disp = new Disposer();
+  const unsubs: (() => void)[] = [];
 
   return {
     id: 'sky',
@@ -35,11 +37,31 @@ export function createSkyEntity(): SceneEntity {
       disp.addGeo(ringGeo);
       disp.addMat(ringMat);
       disp.addObj(ring);
+
+      if (store) {
+        unsubs.push(store.subscribe('environment.sky', (v) => {
+          const cfg = v as any;
+          const cArr = skyGeo.attributes.color.array as Float32Array;
+          const p = skyGeo.attributes.position;
+          for (let i = 0; i < p.count; i++) {
+            const y = p.getY(i);
+            const t = (y + 900) / 1800;
+            const top = new THREE.Color(cfg.gradientTop);
+            const bottom = new THREE.Color(cfg.gradientBottom);
+            const c = bottom.clone().lerp(top, t);
+            cArr[i * 3] = c.r;
+            cArr[i * 3 + 1] = c.g;
+            cArr[i * 3 + 2] = c.b;
+          }
+          skyGeo.attributes.color.needsUpdate = true;
+        }));
+      }
     },
 
     onUpdate(_dt: number) {},
 
     onDetach() {
+      unsubs.forEach(fn => fn());
       disp.dispose();
     },
   };

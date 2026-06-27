@@ -6,7 +6,7 @@ import { northSea } from './worlds';
 
 async function main() {
   const kernel = new Kernel();
-  const { scene } = kernel;
+  const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};
   try {
@@ -24,7 +24,7 @@ async function main() {
 
   for (const { model } of worldResult.entries) {
     if (model.id === 'ship') {
-      entityManager.attach(createShipEntity(model), scene);
+      entityManager.attach(createShipEntity(model, store), scene);
     } else {
       entityManager.attach({
         id: model.id,
@@ -35,9 +35,9 @@ async function main() {
     }
   }
 
-  entityManager.attach(createOceanEntity(), scene);
-  entityManager.attach(createSkyEntity(), scene);
-  entityManager.attach(createLightingEntity(), scene);
+  entityManager.attach(createOceanEntity(store), scene);
+  entityManager.attach(createSkyEntity(store), scene);
+  entityManager.attach(createLightingEntity(store), scene);
   entityManager.attach(createSprayEntity(), scene);
   entityManager.attach(createWakeEntity(), scene);
 

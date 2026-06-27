@@ -3,6 +3,7 @@ import type { SceneEntity } from './types';
 import { waveSurface } from '../environment/wave-surface';
 import { createWaterNormalMap, createWaterDiffuseMap } from '../textures';
 import { Disposer } from '../util/disposer';
+import type { StateStore } from '../state/store';
 
 function buildOceanGrid(size: number, seg: number): { geo: THREE.BufferGeometry; baseHeights: Float32Array } {
   const half = size / 2;
@@ -41,13 +42,15 @@ function buildOceanGrid(size: number, seg: number): { geo: THREE.BufferGeometry;
   return { geo, baseHeights };
 }
 
-export function createOceanEntity(): SceneEntity {
+export function createOceanEntity(store?: StateStore): SceneEntity {
   const seg = 80;
   const size = 1800;
 
   let ocean: THREE.Mesh;
   let basePos: Float32Array;
+  let mat: THREE.MeshStandardMaterial;
   const disp = new Disposer();
+  const unsubs: (() => void)[] = [];
 
   return {
     id: 'ocean',
@@ -61,7 +64,7 @@ export function createOceanEntity(): SceneEntity {
       const normTex = createWaterNormalMap();
       const diffTex = createWaterDiffuseMap();
 
-      const mat = new THREE.MeshStandardMaterial({
+      mat = new THREE.MeshStandardMaterial({
         map: diffTex,
         normalMap: normTex,
         normalScale: new THREE.Vector2(0.6, 0.6),
@@ -81,6 +84,14 @@ export function createOceanEntity(): SceneEntity {
       disp.addGeo(geo);
       disp.addMat(mat);
       disp.addObj(ocean);
+
+      if (store) {
+        unsubs.push(store.subscribe('environment.ocean', (v) => {
+          const cfg = v as any;
+          mat.color.set(cfg.color);
+          mat.opacity = cfg.opacity;
+        }));
+      }
     },
 
     onUpdate(_dt: number) {
@@ -98,6 +109,7 @@ export function createOceanEntity(): SceneEntity {
     },
 
     onDetach() {
+      unsubs.forEach(fn => fn());
       disp.dispose();
     },
   };
