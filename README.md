@@ -1,11 +1,20 @@
-# Dream World
+# CCIV — The Vessel
 
-A 3D world engine built with Three.js + Vite + TypeScript.
+A 3D ship viewer and environment editor built with Three.js + Vite + TypeScript. Explore a fully realized vessel in a dynamic ocean scene with stormy atmosphere, ship's log telemetry, and a dual-mode editor/viewer interface.
 
 ```sh
 npm install
 npm run dev
 ```
+
+## Controls
+
+| Input | Action |
+|---|---|
+| Drag | Orbit camera |
+| Scroll | Zoom |
+| Right-drag | Pan |
+| Tab | Toggle edit / play mode |
 
 ## Quick start
 
@@ -19,13 +28,12 @@ npm run dev
 
 ## Project structure
 
-See [`docs/architecture.md`](docs/architecture.md) for full diagrams, data flow, and module dependency graph.
-
 ```
-src/                   Runtime code (260 KB, 60 files)
+src/                   Runtime code
 scripts/               Build pipeline + reference downloader
-public/models/         Compiled GLB artifacts (gitignored)
-.cache/references/     External reference data (gitignored)
+public/models/         Compiled GLB artifacts
+public/textures/       Owned textures
+docs/superpowers/      Specs and design documents
 ```
 
 ## Commands
@@ -34,6 +42,10 @@ public/models/         Compiled GLB artifacts (gitignored)
 |---|---|
 | `npm run dev` | Dev server with HMR |
 | `npm run build` | Production build |
-| `npm run test` | Run all tests |
+| `npm test` | Run all tests |
 | `npm run build:models` | Compile all models → GLB + publish manifest |
 | `npm run reference:pull` | Download external references → `.cache/references/` |
+
+## Architecture
+
+See [`docs/architecture.md`](docs/architecture.md) for full diagrams, data flow, and module dependency graph.
