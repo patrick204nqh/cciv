@@ -1,0 +1,43 @@
+{
+  "ccivHull": {
+    "diff": "/textures/ship/hull/diff_4k.jpg",
+    "nor_gl": "/textures/ship/hull/nor_gl_4k.jpg",
+    "rough": "/textures/ship/hull/rough_4k.jpg",
+    "metal": "/textures/ship/hull/metal_4k.jpg"
+  },
+  "ccivDeck": {
+    "diff": "/textures/ship/deck/diff_4k.jpg",
+    "nor_gl": "/textures/ship/deck/nor_gl_4k.jpg",
+    "rough": "/textures/ship/deck/rough_4k.jpg"
+  },
+  "ccivSail": {
+    "diff": "/textures/ship/sails/diff_4k.jpg",
+    "nor_gl": "/textures/ship/sails/nor_gl_4k.jpg",
+    "rough": "/textures/ship/sails/rough_4k.jpg",
+    "metal": "/textures/ship/sails/metal_4k.jpg",
+    "alpha": "/textures/ship/sails/alpha_4k.jpg"
+  },
+  "ccivAft": {
+    "diff": "/textures/ship/aft/diff_4k.jpg",
+    "nor_gl": "/textures/ship/aft/nor_gl_4k.jpg",
+    "rough": "/textures/ship/aft/rough_4k.jpg",
+    "metal": "/textures/ship/aft/metal_4k.jpg"
+  },
+  "ccivRigging": {
+    "diff": "/textures/ship/rigging/diff_4k.jpg",
+    "nor_gl": "/textures/ship/rigging/nor_gl_4k.jpg",
+    "rough": "/textures/ship/rigging/rough_4k.jpg",
+    "metal": "/textures/ship/rigging/metal_4k.jpg"
+  },
+  "ccivDetails": {
+    "diff": "/textures/ship/details/diff_4k.jpg",
+    "nor_gl": "/textures/ship/details/nor_gl_4k.jpg",
+    "rough": "/textures/ship/details/rough_4k.jpg",
+    "metal": "/textures/ship/details/metal_4k.jpg"
+  },
+  "ccivInterior": {
+    "diff": "/textures/ship/interior/diff_4k.jpg",
+    "nor_gl": "/textures/ship/interior/nor_gl_4k.jpg",
+    "rough": "/textures/ship/interior/rough_4k.jpg"
+  }
+}
