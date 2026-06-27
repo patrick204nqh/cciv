@@ -67,5 +67,43 @@ export const inspectorPlugin: ScenePlugin = (() => {
       folders.push(g);
     }
     folders.push(mat, ship);
+
+    const s = { save: () => savePreset(), load: () => loadPreset() };
+    mat.add(s, 'save').name('Save Preset');
+    mat.add(s, 'load').name('Load Preset');
+
+    function savePreset() {
+      const materials = kernel.store.get('instances.ship.materials');
+      const data = { format: 'cciv-material-preset', version: 1, materials };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ship-materials-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadPreset() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (data.format !== 'cciv-material-preset' || data.version !== 1) {
+            console.warn('Invalid material preset file');
+            return;
+          }
+          kernel.store.set('instances.ship.materials', data.materials);
+        } catch {
+          console.warn('Failed to load material preset');
+        }
+      };
+      input.click();
+    }
   }
 })();
