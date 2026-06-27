@@ -18,6 +18,7 @@ function glbHotReload(): Plugin {
 
 export default defineConfig({
   root: '.',
+  base: '/cciv/',
   publicDir: 'public',
   plugins: [glbHotReload()],
   build: {
