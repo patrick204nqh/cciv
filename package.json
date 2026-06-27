@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "model:pull": "node scripts/pull-reference.mjs",
     "model:build": "node scripts/build-model.mjs",
     "model:compile": "tsx src/scripts/compile-model.ts"
@@ -20,6 +22,7 @@
     "@types/three": "^0.174.0",
     "tsx": "^4.22.4",
     "typescript": "^5.7.0",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^4.1.9"
   }
 }
