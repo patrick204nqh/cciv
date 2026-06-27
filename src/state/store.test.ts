@@ -76,4 +76,20 @@ describe('StateStore', () => {
     store.set('environment', createDefaultState().environment);
     expect(store.get('dirtyLocations')).toEqual(['north-sea']);
   });
+
+  it('notifies child subscribers when parent path is set', () => {
+    const store = new StateStore(createDefaultState());
+    const fn = vi.fn();
+    store.subscribe('environment.sky', fn);
+    store.set('environment', createDefaultState().environment);
+    expect(fn).toHaveBeenCalled();
+  });
+
+  it('notifies grandchild subscribers when parent path is set', () => {
+    const store = new StateStore(createDefaultState());
+    const fn = vi.fn();
+    store.subscribe('environment.sky.gradientTop', fn);
+    store.set('environment', createDefaultState().environment);
+    expect(fn).toHaveBeenCalled();
+  });
 });

@@ -69,8 +69,9 @@ export class StateStore {
 
   private notify(path: string, value: unknown): void {
     for (const [key, fns] of this.listeners) {
-      if (path === key || path.startsWith(key + '.')) {
-        for (const fn of fns) fn(value, path);
+      if (path === key || path.startsWith(key + '.') || key.startsWith(path + '.')) {
+        const v = key === path ? value : this.get(key);
+        for (const fn of fns) fn(v, path);
       }
     }
   }
