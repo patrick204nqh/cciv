@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { ModelLoader, ModelCatalogEntry } from './types';
-import type { ModelEntity, ModelSource } from '../model/types';
+import type { ModelEntity } from '../model/types';
 import { GlbLoader, type GlbLoaderResult } from './glb-loader';
 import { ModelCatalogReader } from './catalog';
 import { modelRegistry } from '../model/registry';
@@ -75,7 +75,7 @@ export class ModelLoaderImpl implements ModelLoader {
       root,
       metadata: {
         id: ref,
-        source: (entry.provider === 'polyhaven' ? 'extracted' : 'procedural') as ModelSource,
+        source: 'extracted',
         license: entry.license,
         polyCount: entry.polyCount,
       },

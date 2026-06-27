@@ -21,46 +21,15 @@ export interface TransformSpec {
   position?: [number, number, number];
 }
 
-export interface ExtractedModelDef {
-  type: 'extracted';
-  provider: string;
-  asset: string;
+// A model config says "how to compile my data into a GLB."
+// The data itself lives in .cache/models/<id>/ — how it got there is not our concern.
+export interface ModelConfig {
   textureKeys?: Record<string, string>;
-  transform?: TransformSpec;
   materialOverrides?: Record<string, Partial<MaterialSpec>>;
+  transform?: TransformSpec;
   metadata?: {
     license?: string;
     sourceUrl?: string;
     polyCount?: number;
   };
 }
-
-export interface ProceduralModelDef {
-  type: 'procedural';
-  generator: string;
-  params: Record<string, number>;
-  material?: Partial<MaterialSpec>;
-  metadata?: {
-    license?: string;
-    polyCount?: number;
-  };
-}
-
-export interface CompositePart {
-  primitive?: string;
-  params?: Record<string, number>;
-  model?: string;
-  transform?: {
-    position?: [number, number, number];
-    rotation?: [number, number, number];
-    scale?: number;
-  };
-}
-
-export interface CompositeModelDef {
-  type: 'composite';
-  parts: CompositePart[];
-  transform?: TransformSpec;
-}
-
-export type ModelConfig = ExtractedModelDef | ProceduralModelDef | CompositeModelDef;

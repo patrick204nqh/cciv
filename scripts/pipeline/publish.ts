@@ -29,26 +29,22 @@ async function publishManifest(): Promise<void> {
     let config: any = {};
     try {
       config = (await import(join(MODELS_DIR, modelId, 'config.ts'))).default ?? {};
-    } catch {
-      // fallback
-    }
+    } catch { /* fallback */ }
 
-    const entry: ModelCatalog[string] = {
+    catalog[modelId] = {
       glb: `/models/${modelId}.glb`,
-      provider: config.type === 'extracted' ? config.provider : config.type,
+      ...(config.metadata?.polyCount && { polyCount: config.metadata.polyCount }),
+      ...(config.metadata?.license && { license: config.metadata.license }),
+      ...(config.materialOverrides && { materialOverrides: config.materialOverrides }),
+      ...(config.transform && { transform: config.transform }),
     };
-    if (config.metadata?.polyCount) entry.polyCount = config.metadata.polyCount;
-    if (config.metadata?.license) entry.license = config.metadata.license;
-    if (config.materialOverrides) entry.materialOverrides = config.materialOverrides;
-    if (config.transform) entry.transform = config.transform;
 
-    catalog[modelId] = entry;
-    console.log(`[publish] ${modelId}: registered in manifest`);
+    console.log(`[publish] ${modelId}: registered`);
   }
 
   const outPath = join(OUT_DIR, 'manifest.json');
   writeFileSync(outPath, JSON.stringify(catalog, null, 2));
-  console.log(`\n[publish] manifest written \u2192 ${outPath} (${Object.keys(catalog).length} models)`);
+  console.log(`\n[publish] ${Object.keys(catalog).length} models → ${outPath}`);
 }
 
 publishManifest().catch(err => { console.error(err); process.exit(1); });

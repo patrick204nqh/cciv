@@ -1,17 +1,11 @@
 import type { ModelEntity } from '../model/types';
+import type { MaterialSpec } from '../material/types';
 
 export interface ModelCatalogEntry {
   glb: string;
-  provider?: string;
   polyCount?: number;
   license?: string;
-  materialOverrides?: Record<string, {
-    color?: number;
-    roughness?: number;
-    metalness?: number;
-    transparent?: boolean;
-    alphaTest?: number;
-  }>;
+  materialOverrides?: Record<string, Partial<MaterialSpec>>;
   transform?: {
     scale?: number | [number, number, number];
     rotation?: [number, number, number];

@@ -25,7 +25,7 @@ describe('ModelLoaderImpl', () => {
 
     const mockCatalog = {
       getEntry: vi.fn().mockImplementation((ref: string) => {
-        if (ref === 'ship') return { glb: '/models/ship.glb', provider: 'polyhaven' } as ModelCatalogEntry;
+        if (ref === 'ship') return { glb: '/models/ship.glb' } as ModelCatalogEntry;
         return undefined;
       }),
       has: vi.fn().mockImplementation((ref: string) => ref === 'ship'),
