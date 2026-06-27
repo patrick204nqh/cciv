@@ -5,11 +5,13 @@ import { GlbLoader, ModelLoaderImpl, ModelCatalogReader, WorldLoader } from './l
 import { northSea } from './worlds';
 import { inspectorPlugin } from './plugins/inspector';
 import { gizmosPlugin } from './plugins/gizmos';
+import { snapshotPlugin } from './plugins/snapshot';
 
 async function main() {
   const kernel = new Kernel();
   kernel.registerPlugin(inspectorPlugin);
   kernel.registerPlugin(gizmosPlugin);
+  kernel.registerPlugin(snapshotPlugin);
   const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};
