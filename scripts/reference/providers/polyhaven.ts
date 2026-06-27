@@ -12,7 +12,7 @@ export class PolyHeavenProvider implements AssetProvider {
     if (!existsSync(refDir)) {
       throw new Error(
         `Reference '${assetId}' not found at ${refDir}. ` +
-        `Run 'node scripts/pull-reference.mjs' first.`
+        `Run 'npm run reference:pull' first.`
       );
     }
 
