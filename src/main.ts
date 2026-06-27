@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { createOrbitControls } from './controls/orbitControls';
-import { modelRegistry } from './model/registry';
+import { worldClock } from './time';
 import { entityManager } from './entity';
 import { createOceanEntity, createSkyEntity, createLightingEntity, createSprayEntity, createWakeEntity, createShipEntity } from './entity';
 import { northSea } from './worlds';
@@ -25,7 +25,7 @@ async function main() {
 
   const controls = createOrbitControls(camera, renderer.domElement);
 
-  // Load world from manifest
+  // Load manifest
   let manifest: Record<string, any> = {};
   try {
     const resp = await fetch('/models/manifest.json');
@@ -39,18 +39,26 @@ async function main() {
   const modelLoader = new ModelLoaderImpl(glbLoader, catalog);
   const worldLoader = new WorldLoader();
 
-  const worldResult = await worldLoader.load(northSea, scene, modelLoader);
-  for (const entity of worldResult.entities) {
-    entityManager.attach(entity, scene);
+  // Load world models (does not add to scene — entities own placement)
+  const worldResult = await worldLoader.load(northSea, modelLoader);
+
+  // Attach model entities — each entity owns its scene placement.
+  // Ship gets a specialized entity for wave interaction; all others get a generic lifecycle entity.
+  for (const { model } of worldResult.entries) {
+    if (model.id === 'ship') {
+      entityManager.attach(createShipEntity(model), scene);
+    } else {
+      const entity: import('./entity/types').SceneEntity = {
+        id: model.id,
+        onAttach(s: THREE.Scene) { s.add(model.root); },
+        onUpdate() {},
+        onDetach() { model.dispose(); },
+      };
+      entityManager.attach(entity, scene);
+    }
   }
 
-  // Get the ship model for the ship entity (wave interaction)
-  const shipModel = modelLoader.getCached('ship');
-  if (shipModel) {
-    entityManager.attach(createShipEntity(shipModel), scene);
-  }
-
-  // Always attach environment entities
+  // Environment entities
   entityManager.attach(createOceanEntity(), scene);
   entityManager.attach(createSkyEntity(), scene);
   entityManager.attach(createLightingEntity(), scene);
@@ -71,6 +79,7 @@ async function main() {
     const dt = Math.min((now - prevTime) / 1000, 0.05);
     prevTime = now;
 
+    worldClock.update(dt);
     entityManager.update(dt);
     controls.update();
     renderer.render(scene, camera);

@@ -2,10 +2,7 @@ import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import { bus } from '../event-bus';
 import { type ModelEntity } from '../model/types';
-import { sampleOcean, sampleNormal } from '../environment/waves';
-import { worldClock } from '../time';
-
-const WAVE_SPEED = 0.42;
+import { waveSurface } from '../environment/wave-surface';
 
 export function createShipEntity(model: ModelEntity): SceneEntity {
   let prevPos = new THREE.Vector3();
@@ -24,12 +21,10 @@ export function createShipEntity(model: ModelEntity): SceneEntity {
     },
 
     onUpdate(_dt: number) {
-      const t = worldClock.elapsed * WAVE_SPEED;
       const pos = new THREE.Vector3();
       model.root.getWorldPosition(pos);
 
-      const { height: waveY } = sampleOcean(pos.x, pos.z, t);
-      const n = sampleNormal(pos.x, pos.z, t);
+      const { height: waveY, normal: n } = waveSurface.sample(pos.x, pos.z);
 
       model.root.position.y = -1.5 + waveY;
       model.root.rotation.x = Math.atan2(n.z, n.y) * 0.5;
@@ -43,8 +38,8 @@ export function createShipEntity(model: ModelEntity): SceneEntity {
       if (!newPos.equals(prevPos) || !newQuat.equals(prevQuat)) {
         bus.emit('entity:position-changed', {
           entityId: 'ship',
-          position: newPos,
-          quaternion: newQuat,
+          x: newPos.x, y: newPos.y, z: newPos.z,
+          qx: newQuat.x, qy: newQuat.y, qz: newQuat.z, qw: newQuat.w,
         });
       }
     },

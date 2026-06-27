@@ -1,9 +1,7 @@
-import * as THREE from 'three';
-
 export interface EntityPositionEvent {
   entityId: string;
-  position: THREE.Vector3;
-  quaternion: THREE.Quaternion;
+  x: number; y: number; z: number;
+  qx: number; qy: number; qz: number; qw: number;
 }
 
 type EventMap = {

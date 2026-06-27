@@ -1,9 +1,8 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import { bus } from '../event-bus';
-import { worldClock } from '../time';
 
-class EntityManager {
+export class EntityManager {
   private entities = new Set<SceneEntity>();
 
   attach(entity: SceneEntity, scene: THREE.Scene): void {
@@ -28,7 +27,6 @@ class EntityManager {
   }
 
   update(dt: number): void {
-    worldClock.update(dt);
     for (const entity of this.entities) entity.onBeforeUpdate?.(dt);
     for (const entity of this.entities) entity.onUpdate(dt);
   }

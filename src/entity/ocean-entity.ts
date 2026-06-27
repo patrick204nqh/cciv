@@ -1,11 +1,8 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
-import { sampleOcean } from '../environment/waves';
+import { waveSurface } from '../environment/wave-surface';
 import { createWaterNormalMap, createWaterDiffuseMap } from '../textures';
-import { worldClock } from '../time';
 import { Disposer } from '../util/disposer';
-
-const WAVE_SPEED = 0.42;
 
 function buildOceanGrid(size: number, seg: number): { geo: THREE.BufferGeometry; baseHeights: Float32Array } {
   const half = size / 2;
@@ -87,12 +84,11 @@ export function createOceanEntity(): SceneEntity {
     },
 
     onUpdate(_dt: number) {
-      const t = worldClock.elapsed * WAVE_SPEED;
       const pos = ocean.geometry.attributes.position.array as Float32Array;
       for (let i = 0; i < pos.length / 3; i++) {
         const bx = basePos[i * 3];
         const bz = basePos[i * 3 + 2];
-        const { height, dispX, dispZ } = sampleOcean(bx, bz, t);
+        const { height, dispX, dispZ } = waveSurface.sample(bx, bz);
         pos[i * 3] = bx + dispX;
         pos[i * 3 + 1] = height;
         pos[i * 3 + 2] = bz + dispZ;

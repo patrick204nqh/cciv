@@ -60,10 +60,12 @@ export function createWakeEntity(): SceneEntity {
 
       const unsub = bus.on('entity:position-changed', (ev) => {
         if (ev.entityId === 'ship') {
-          const stern = new THREE.Vector3(0, 0, -56).applyQuaternion(ev.quaternion).add(ev.position);
+          const evQuat = new THREE.Quaternion(ev.qx, ev.qy, ev.qz, ev.qw);
+          const evPos = new THREE.Vector3(ev.x, ev.y, ev.z);
+          const stern = new THREE.Vector3(0, 0, -56).applyQuaternion(evQuat).add(evPos);
           mesh.position.copy(stern);
           mesh.position.y = -0.35;
-          mesh.quaternion.copy(ev.quaternion);
+          mesh.quaternion.copy(evQuat);
         }
       });
       disp.addUnsub(unsub);

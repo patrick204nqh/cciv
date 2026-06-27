@@ -90,8 +90,8 @@ export function createSprayEntity(): SceneEntity {
 
       const unsub = bus.on('entity:position-changed', (ev) => {
         if (ev.entityId === 'ship') {
-          shipPos.copy(ev.position);
-          shipQuat.copy(ev.quaternion);
+          shipPos.set(ev.x, ev.y, ev.z);
+          shipQuat.set(ev.qx, ev.qy, ev.qz, ev.qw);
         }
       });
       disp.addUnsub(unsub);

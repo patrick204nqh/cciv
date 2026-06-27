@@ -18,7 +18,9 @@ export interface WorldConfig {
   environment: EnvironmentConfig;
 }
 
+import type { ModelEntity } from '../model/types';
+
 export interface WorldLoadResult {
   config: WorldConfig;
-  entities: import('../entity/types').SceneEntity[];
+  entries: Array<{ model: ModelEntity; instance: ModelInstance }>;
 }

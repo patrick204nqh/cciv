@@ -5,12 +5,10 @@ import type { ModelEntity } from '../model/types';
 
 describe('WorldLoader', () => {
   let worldLoader: WorldLoader;
-  let mockScene: any;
   let mockModelLoader: any;
   let mockModelEntity: ModelEntity;
 
   beforeEach(() => {
-    mockScene = { add: vi.fn() };
     mockModelEntity = {
       id: 'ship',
       root: {
@@ -32,27 +30,28 @@ describe('WorldLoader', () => {
     worldLoader = new WorldLoader();
   });
 
-  it('loads a world and returns entities', async () => {
+  it('loads a world and returns model entries', async () => {
     const world: WorldConfig = {
       id: 'test-world',
       models: [{ ref: 'ship', at: [10, 0, 20], scale: 1.5 }],
       environment: { ocean: true, sky: true, lighting: 'day' },
     };
-    const result = await worldLoader.load(world, mockScene, mockModelLoader);
+    const result = await worldLoader.load(world, mockModelLoader);
     expect(result.config.id).toBe('test-world');
-    expect(result.entities.length).toBe(1);
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0].model).toBe(mockModelEntity);
     expect(mockModelLoader.load).toHaveBeenCalledWith('ship');
   });
 
-  it('applies transform from model instance', async () => {
+  it('returns instance transform data', async () => {
     const world: WorldConfig = {
       id: 'test-world',
       models: [{ ref: 'ship', at: [10, 0, 20], scale: 2 }],
       environment: {},
     };
-    await worldLoader.load(world, mockScene, mockModelLoader);
-    expect(mockModelEntity.root.position.set).toHaveBeenCalledWith(10, 0, 20);
-    expect(mockModelEntity.root.scale.setScalar).toHaveBeenCalledWith(2);
+    const result = await worldLoader.load(world, mockModelLoader);
+    expect(result.entries[0].instance.at).toEqual([10, 0, 20]);
+    expect(result.entries[0].instance.scale).toBe(2);
   });
 
   it('loads multiple models', async () => {
@@ -63,8 +62,9 @@ describe('WorldLoader', () => {
     };
     mockModelLoader.load
       .mockResolvedValueOnce(mockModelEntity)
-      .mockResolvedValueOnce(mockModelEntity);
-    const result = await worldLoader.load(world, mockScene, mockModelLoader);
-    expect(result.entities.length).toBe(2);
+      .mockResolvedValueOnce({ ...mockModelEntity, id: 'buoy' });
+    const result = await worldLoader.load(world, mockModelLoader);
+    expect(result.entries).toHaveLength(2);
+    expect(result.entries[1].model.id).toBe('buoy');
   });
 });
