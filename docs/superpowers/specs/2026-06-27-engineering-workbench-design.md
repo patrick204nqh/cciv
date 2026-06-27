@@ -53,17 +53,17 @@ interface StateStore<T> {
 }
 ```
 
-### Hierarchy: World > Location > { Environment, Objects }
+### Hierarchy: World > Location > { Environment, Instances }
 
-A **World** is a collection of **Locations**. Each **Location** bundles an **Environment** preset with an **Objects** arrangement.
-Switching location = one action that replaces both environmental tuning and object placements.
+The project's world is named **CCIV**. A **World** is a collection of **Locations**. Each **Location** bundles an **Environment** preset with an **Instances** arrangement (placed models with transforms/materials).
+Switching location = one action that replaces both environmental tuning and instance placements.
 
 ```
-World
- └── Location A ──┬── Environment (sky, waves, fog, lighting, ocean)
-                  └── Objects     (ship pos/materials, buoy placements, island)
- └── Location B ──┬── Environment (different sky, calmer waves)
-                  └── Objects     (ship at different position, fewer buoys)
+World "CCIV"
+ └── Location "North Sea" ──┬── Environment (sky, waves, fog, lighting, ocean)
+                            └── Instances   (ship pos/materials, buoys, island)
+ └── Location "Caribbean" ──┬── Environment (different sky, calmer waves)
+                            └── Instances   (ship at different position, fewer buoys)
 ```
 
 ### State Shape
@@ -96,7 +96,7 @@ locations: {
       }
       fog: { type: 'exp2' | 'linear', color, density | near, far }
     }
-    objects: {
+    instances: {
       ship: {
         transform: { position: [x,y,z], rotation: [x,y,z], scale: [x,y,z] }
         material: {
@@ -129,11 +129,11 @@ interface WorldPreset {
 
 interface LocationPreset {
   environment: EnvironmentState
-  objects: ObjectsState
+  instances: InstancesState
 }
 ```
 
-Switching location loads that location's environment + objects into the active state, triggering a crossfade transition.
+Switching location loads that location's environment + instances into the active state, triggering a crossfade transition.
 
 ## MVP Plugins (First Pass)
 
@@ -142,7 +142,7 @@ Switching location loads that location's environment + objects into the active s
 | 1 | `inspector` | Auto-generated UI from state schema using @lil-gui. Covers wave params, lighting, fog, ship transform, all 7 ship material groups. |
 | 2 | `gizmos` | TransformControls on selected entity (raycast-detectable). Click ship → translate/rotate/scale. |
 | 3 | `snapshot` | Save current full state to JSON (Ctrl+S). Restore from file dialog. |
-| 4 | `location-switcher` | Dropdown in toolbar. Crossfade environment + reposition objects over 2s. |
+| 4 | `location-switcher` | Dropdown in toolbar. Crossfade environment + reposition instances over 2s. |
 
 ## New Files
 
@@ -184,6 +184,6 @@ Each MVP plugin is already structured as `ScenePlugin`. Extracting to standalone
 
 2. **Plugins over monolith** — Even the first pass uses the plugin interface. This prevents the kernel from growing tentacles into every feature.
 
-3. **World > Location > { Environment, Objects }** — A world is a collection of locations. Each location bundles an environment preset with an objects arrangement. Switching location transitions everything at once, but objects stay in memory (only their state changes).
+3. **World > Location > { Environment, Instances }** — A world (e.g. "CCIV") is a collection of locations. Each location bundles an environment preset with an instances arrangement (placed models). Switching location transitions everything at once, but models stay in memory (only their state changes).
 
 4. **Two modes, shared state** — Edit and play read/write the same store. This ensures edit-mode tweaks survive mode switches and you can "play" with edited params immediately.
