@@ -37,7 +37,9 @@ export class ModelLoaderImpl implements ModelLoader {
   }
 
   private async loadFromEntry(ref: string, entry: ModelCatalogEntry): Promise<ModelEntity> {
-    const result = await this.glbLoader.load(entry.glb);
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    const glb = entry.glb.startsWith('/') ? base + entry.glb : entry.glb;
+    const result = await this.glbLoader.load(glb);
     const root = result.scene;
     root.name = ref;
 
