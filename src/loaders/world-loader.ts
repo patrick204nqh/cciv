@@ -1,5 +1,4 @@
-import * as THREE from 'three';
-import type { WorldLoadResult } from '../worlds/types';
+import type { WorldLoadResult, WorldLoadError } from '../worlds/types';
 import type { WorldConfig } from '../state/types';
 import type { ModelLoader } from './types';
 import { createVesselEntity } from '../entity/ship-entity';
@@ -15,6 +14,7 @@ export class WorldLoader {
     modelLoader: ModelLoader,
   ): Promise<WorldLoadResult> {
     const entities: import('../entity/types').SceneEntity[] = [];
+    const errors: WorldLoadError[] = [];
 
     if (config.environment.ocean) {
       entities.push(createOceanEntity());
@@ -30,18 +30,24 @@ export class WorldLoader {
 
     for (const [id, def] of Object.entries(config.instances)) {
       if (def.behavior === 'vessel') {
-        const model = await modelLoader.load(def.ref);
-        const vessel = createVesselEntity(model, id);
-        entities.push(vessel);
-
-        const spray = createSprayEntity(id);
-        entities.push(spray);
-
-        const wake = createWakeEntity(id);
-        entities.push(wake);
+        try {
+          const model = await modelLoader.load(def.ref);
+          entities.push(createVesselEntity(model, id));
+          entities.push(createSprayEntity(id));
+          entities.push(createWakeEntity(id));
+        } catch (e) {
+          errors.push({ ref: def.ref, error: e instanceof Error ? e : new Error(String(e)) });
+        }
       }
     }
 
-    return { entities };
+    return {
+      entities,
+      errors,
+      metadata: {
+        worldId: 'id' in config ? (config as any).id : undefined,
+        loadedAt: Date.now(),
+      },
+    };
   }
 }

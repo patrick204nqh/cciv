@@ -1,13 +1,13 @@
-import type { ScenePlugin, Kernel } from '../types';
+import type { ScenePlugin, PluginContext } from '../types';
 
 export const modeTogglePlugin: ScenePlugin = (() => {
-  let kernel: Kernel;
+  let ctx: PluginContext;
   let badge: HTMLElement;
   let onKey: (e: KeyboardEvent) => void;
 
   function updateBadge() {
-    badge.textContent = kernel.mode === 'edit' ? 'EDIT' : 'PLAY';
-    badge.style.background = kernel.mode === 'edit' ? '#448' : '#844';
+    badge.textContent = ctx.mode === 'edit' ? 'EDIT' : 'PLAY';
+    badge.style.background = ctx.mode === 'edit' ? '#448' : '#844';
   }
 
   return {
@@ -16,8 +16,8 @@ export const modeTogglePlugin: ScenePlugin = (() => {
     modes: new Set(['edit', 'play']),
     priority: 100,
 
-    init(k: Kernel) {
-      kernel = k;
+    init(k: PluginContext) {
+      ctx = k;
 
       badge = document.createElement('div');
       badge.id = 'mode-badge';
@@ -34,14 +34,14 @@ export const modeTogglePlugin: ScenePlugin = (() => {
         userSelect: 'none',
         background: '#448',
       });
-      badge.onclick = () => { kernel.setMode(kernel.mode === 'edit' ? 'play' : 'edit'); updateBadge(); };
+      badge.onclick = () => { ctx.setMode(ctx.mode === 'edit' ? 'play' : 'edit'); updateBadge(); };
       document.body.appendChild(badge);
       updateBadge();
 
       onKey = (e: KeyboardEvent) => {
         if (e.key === 'Tab') {
           e.preventDefault();
-          kernel.setMode(kernel.mode === 'edit' ? 'play' : 'edit');
+          ctx.setMode(ctx.mode === 'edit' ? 'play' : 'edit');
           updateBadge();
         }
       };

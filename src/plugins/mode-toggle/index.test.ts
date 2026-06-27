@@ -1,27 +1,24 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { modeTogglePlugin } from './index';
-import type { Kernel } from '../types';
+import type { PluginContext } from '../types';
 
-function mockKernel(): Kernel {
+function mockPluginContext(): PluginContext {
   return {
     scene: {} as any,
-    renderer: {} as any,
-    camera: {} as any,
-    controls: {} as any,
     store: {} as any,
-    container: document.body,
     mode: 'edit',
     selectedObject: null,
+    setMode: () => {},
   };
 }
 
 describe('modeTogglePlugin', () => {
-  let kernel: Kernel;
+  let ctx: PluginContext;
 
   beforeEach(() => {
     document.body.innerHTML = '';
-    kernel = mockKernel();
+    ctx = mockPluginContext();
   });
 
   it('has correct identity', () => {
@@ -39,7 +36,7 @@ describe('modeTogglePlugin', () => {
   });
 
   it('creates a mode badge on init', () => {
-    modeTogglePlugin.init(kernel);
+    modeTogglePlugin.init(ctx);
     const badge = document.getElementById('mode-badge');
     expect(badge).toBeTruthy();
     expect(badge!.textContent).toBe('EDIT');
@@ -47,7 +44,7 @@ describe('modeTogglePlugin', () => {
   });
 
   it('destroys removes badge', () => {
-    modeTogglePlugin.init(kernel);
+    modeTogglePlugin.init(ctx);
     modeTogglePlugin.destroy();
     expect(document.getElementById('mode-badge')).toBeNull();
   });

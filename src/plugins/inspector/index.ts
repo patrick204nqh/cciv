@@ -1,8 +1,8 @@
 import GUI from 'lil-gui';
-import type { ScenePlugin, Kernel } from '../types';
+import type { ScenePlugin, PluginContext } from '../types';
 
 export const inspectorPlugin: ScenePlugin = (() => {
-  let kernel: Kernel;
+  let ctx: PluginContext;
   let gui: GUI;
   let folders: GUI[] = [];
   let unsub: (() => void) | null = null;
@@ -20,11 +20,11 @@ export const inspectorPlugin: ScenePlugin = (() => {
     modes: new Set(['edit']),
     priority: 10,
 
-    init(k: Kernel) {
-      kernel = k;
+    init(k: PluginContext) {
+      ctx = k;
       gui = new GUI({ title: 'CCIV Inspector' });
       rebuild();
-      unsub = kernel.store.subscribe('activeLocation', () => rebuild());
+      unsub = ctx.store.subscribe('activeLocation', () => rebuild());
     },
 
     destroy() {
@@ -35,44 +35,44 @@ export const inspectorPlugin: ScenePlugin = (() => {
   };
 
   function buildEnvironment() {
-    const env = kernel.store.get('environment') as any;
+    const env = ctx.store.get('environment') as any;
     const sky = gui.addFolder('Sky');
-    sky.add(env.sky, 'gradientTop').name('Top Color').onChange((v: string) => kernel.store.set('environment.sky.gradientTop', v));
-    sky.add(env.sky, 'gradientBottom').name('Bottom Color').onChange((v: string) => kernel.store.set('environment.sky.gradientBottom', v));
+    sky.add(env.sky, 'gradientTop').name('Top Color').onChange((v: string) => ctx.store.set('environment.sky.gradientTop', v));
+    sky.add(env.sky, 'gradientBottom').name('Bottom Color').onChange((v: string) => ctx.store.set('environment.sky.gradientBottom', v));
     folders.push(sky);
 
     const fog = gui.addFolder('Fog');
-    fog.add(env.fog, 'color').name('Color').onChange((v: string) => kernel.store.set('environment.fog.color', v));
-    fog.add(env.fog, 'density', 0, 0.01).name('Density').onChange((v: number) => kernel.store.set('environment.fog.density', v));
+    fog.add(env.fog, 'color').name('Color').onChange((v: string) => ctx.store.set('environment.fog.color', v));
+    fog.add(env.fog, 'density', 0, 0.01).name('Density').onChange((v: number) => ctx.store.set('environment.fog.density', v));
     folders.push(fog);
 
     const sun = gui.addFolder('Sun');
     const l = env.lighting;
-    sun.add(l.sun, 'enabled').name('Enabled').onChange((v: boolean) => kernel.store.set('environment.lighting.sun.enabled', v));
-    sun.add(l.sun, 'intensity', 0, 10).name('Intensity').onChange((v: number) => kernel.store.set('environment.lighting.sun.intensity', v));
-    sun.add(l.sun, 'color').name('Color').onChange((v: string) => kernel.store.set('environment.lighting.sun.color', v));
-    sun.add(l.sun, 'azimuth', -Math.PI, Math.PI).name('Azimuth').onChange((v: number) => kernel.store.set('environment.lighting.sun.azimuth', v));
-    sun.add(l.sun, 'elevation', 0, Math.PI / 2).name('Elevation').onChange((v: number) => kernel.store.set('environment.lighting.sun.elevation', v));
+    sun.add(l.sun, 'enabled').name('Enabled').onChange((v: boolean) => ctx.store.set('environment.lighting.sun.enabled', v));
+    sun.add(l.sun, 'intensity', 0, 10).name('Intensity').onChange((v: number) => ctx.store.set('environment.lighting.sun.intensity', v));
+    sun.add(l.sun, 'color').name('Color').onChange((v: string) => ctx.store.set('environment.lighting.sun.color', v));
+    sun.add(l.sun, 'azimuth', -Math.PI, Math.PI).name('Azimuth').onChange((v: number) => ctx.store.set('environment.lighting.sun.azimuth', v));
+    sun.add(l.sun, 'elevation', 0, Math.PI / 2).name('Elevation').onChange((v: number) => ctx.store.set('environment.lighting.sun.elevation', v));
     folders.push(sun);
 
     const ocean = gui.addFolder('Ocean');
-    ocean.add(env.ocean, 'color').name('Color').onChange((v: string) => kernel.store.set('environment.ocean.color', v));
-    ocean.add(env.ocean, 'opacity', 0, 1).name('Opacity').onChange((v: number) => kernel.store.set('environment.ocean.opacity', v));
+    ocean.add(env.ocean, 'color').name('Color').onChange((v: string) => ctx.store.set('environment.ocean.color', v));
+    ocean.add(env.ocean, 'opacity', 0, 1).name('Opacity').onChange((v: number) => ctx.store.set('environment.ocean.opacity', v));
     folders.push(ocean);
   }
 
   function buildInstances() {
-    const inst = kernel.store.get('instances') as any;
+    const inst = ctx.store.get('instances') as any;
     const ship = gui.addFolder('Ship');
-    ship.add(inst.ship, 'visible').name('Visible').onChange((v: boolean) => kernel.store.set('instances.ship.visible', v));
+    ship.add(inst.ship, 'visible').name('Visible').onChange((v: boolean) => ctx.store.set('instances.ship.visible', v));
 
     const mat = ship.addFolder('Materials');
     for (const [group, overrides] of Object.entries(inst.ship.materials)) {
       const g = mat.addFolder(group);
-      g.add(overrides, 'color').name('Color').onChange((v: string) => kernel.store.set(`instances.ship.materials.${group}.color`, v));
-      g.add(overrides, 'roughness', 0, 1).name('Roughness').onChange((v: number) => kernel.store.set(`instances.ship.materials.${group}.roughness`, v));
-      g.add(overrides, 'metalness', 0, 1).name('Metalness').onChange((v: number) => kernel.store.set(`instances.ship.materials.${group}.metalness`, v));
-      g.add(overrides, 'visible').name('Visible').onChange((v: boolean) => kernel.store.set(`instances.ship.materials.${group}.visible`, v));
+      g.add(overrides, 'color').name('Color').onChange((v: string) => ctx.store.set(`instances.ship.materials.${group}.color`, v));
+      g.add(overrides, 'roughness', 0, 1).name('Roughness').onChange((v: number) => ctx.store.set(`instances.ship.materials.${group}.roughness`, v));
+      g.add(overrides, 'metalness', 0, 1).name('Metalness').onChange((v: number) => ctx.store.set(`instances.ship.materials.${group}.metalness`, v));
+      g.add(overrides, 'visible').name('Visible').onChange((v: boolean) => ctx.store.set(`instances.ship.materials.${group}.visible`, v));
       folders.push(g);
     }
     folders.push(mat, ship);
@@ -82,7 +82,7 @@ export const inspectorPlugin: ScenePlugin = (() => {
     mat.add(s, 'load').name('Load Preset');
 
     function savePreset() {
-      const materials = kernel.store.get('instances.ship.materials');
+      const materials = ctx.store.get('instances.ship.materials');
       const data = { format: 'cciv-material-preset', version: 1, materials };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -107,7 +107,7 @@ export const inspectorPlugin: ScenePlugin = (() => {
             console.warn('Invalid material preset file');
             return;
           }
-          kernel.store.set('instances.ship.materials', data.materials);
+          ctx.store.set('instances.ship.materials', data.materials);
         } catch {
           console.warn('Failed to load material preset');
         }

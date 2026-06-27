@@ -1,16 +1,14 @@
 import * as THREE from 'three';
 import { StateStore } from '../state/store';
-import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-export interface Kernel {
+export interface PluginContext {
   readonly scene: THREE.Scene
-  readonly renderer: THREE.WebGLRenderer
-  readonly camera: THREE.PerspectiveCamera
-  readonly controls: OrbitControls
   readonly store: StateStore
-  mode: 'edit' | 'play'
-  readonly container: HTMLElement
+  readonly mode: 'edit' | 'play'
+  readonly renderer?: THREE.WebGLRenderer
+  readonly camera?: THREE.PerspectiveCamera
   selectedObject: THREE.Object3D | null
+  setMode(m: 'edit' | 'play'): void
 }
 
 export interface ScenePlugin {
@@ -18,7 +16,7 @@ export interface ScenePlugin {
   readonly label: string
   readonly modes: Set<'edit' | 'play'>
   readonly priority: number
-  init(kernel: Kernel): void
+  init(ctx: PluginContext): void
   destroy(): void
   onModeSwitch?(from: 'edit' | 'play', to: 'edit' | 'play'): void
   render?(dt: number): void

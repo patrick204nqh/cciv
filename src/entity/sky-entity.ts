@@ -24,18 +24,18 @@ export function createSkyEntity(store?: StateStore): SceneEntity {
       const skyMat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide });
       const sky = new THREE.Mesh(skyGeo, skyMat);
       scene.add(sky);
-      disposer?.addGeo(skyGeo);
-      disposer?.addMat(skyMat);
-      disposer?.addObj(sky);
+      disposer?.add(skyGeo);
+      disposer?.add(skyMat);
+      disposer?.add(sky);
 
       const ringGeo = new THREE.CylinderGeometry(860, 860, 140, 32, 1, true);
       const ringMat = new THREE.MeshBasicMaterial({ color: 0x6090b0, side: THREE.BackSide, transparent: true, opacity: 0.25 });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.position.y = -65;
       scene.add(ring);
-      disposer?.addGeo(ringGeo);
-      disposer?.addMat(ringMat);
-      disposer?.addObj(ring);
+      disposer?.add(ringGeo);
+      disposer?.add(ringMat);
+      disposer?.add(ring);
 
       if (store) {
         unsubs.push(store.subscribe('environment.sky', (v) => {

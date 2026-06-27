@@ -58,7 +58,7 @@ export function createInstanceManager(
       unsub = store.subscribe('instances', (v) => {
         sync(v as Record<string, InstanceDef>);
       });
-      disposer?.addUnsub(unsub);
+      disposer?.add(unsub);
     },
 
     onDetach() {

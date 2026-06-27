@@ -42,7 +42,7 @@ export class ModelLoaderImpl implements ModelLoader {
     root.name = ref;
 
     const disp = new Disposer();
-    disp.addObj(root);
+    disp.add(root);
 
     if (entry.materialOverrides) {
       root.traverse((child) => {
@@ -69,7 +69,7 @@ export class ModelLoaderImpl implements ModelLoader {
       if (tf.position) root.position.set(tf.position[0], tf.position[1], tf.position[2]);
     }
 
-    disp.addCleanup(() => modelRegistry.unregister(ref));
+    disp.add(() => modelRegistry.unregister(ref));
 
     const entity: ModelEntity = {
       id: ref,

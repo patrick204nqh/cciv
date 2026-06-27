@@ -85,10 +85,10 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
       points = new THREE.Points(geo, mat);
       points.frustumCulled = false;
       scene.add(points);
-      disposer?.addGeo(geo);
-      disposer?.addMat(mat);
-      disposer?.addObj(points);
-      disposer?.addCleanup(() => sprite.dispose());
+      disposer?.add(geo);
+      disposer?.add(mat);
+      disposer?.add(points);
+      disposer?.add(() => sprite.dispose());
 
       const targetId = vesselId ?? 'ship';
       unsub = bus.on('entity:position-changed', (ev) => {
@@ -97,7 +97,7 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
           vesselQuat.set(ev.qx, ev.qy, ev.qz, ev.qw);
         }
       });
-      disposer?.addUnsub(unsub);
+      disposer?.add(unsub);
     },
 
     onUpdate(dt: number) {

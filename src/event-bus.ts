@@ -21,14 +21,12 @@ class EventBus {
     return () => this.listeners.get(event)?.delete(fn);
   }
 
-  emit<K extends keyof EventMap>(event: K, data: EventMap[K]): void {
-    this.listeners.get(event)?.forEach(fn => fn(data));
-  }
-
-  /** Clear all listeners. Existing unsubscribe handles are no-ops after this. */
-  clear(): void {
-    for (const [, fns] of this.listeners) fns.clear();
-    this.listeners.clear();
+  /** Returns true if at least one listener was called. */
+  emit<K extends keyof EventMap>(event: K, data: EventMap[K]): boolean {
+    const fns = this.listeners.get(event);
+    if (!fns || fns.size === 0) return false;
+    for (const fn of fns) fn(data);
+    return true;
   }
 }
 

@@ -15,7 +15,7 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
 
     onAttach(scene: THREE.Scene, disposer?: Disposer) {
       scene.add(model.root);
-      disposer?.addObj(model.root);
+      disposer?.add(model.root);
     },
 
     onBeforeUpdate(_dt: number) {

@@ -1,7 +1,7 @@
-import type { ScenePlugin, Kernel } from '../types';
+import type { ScenePlugin, PluginContext } from '../types';
 
 export const performanceHudPlugin: ScenePlugin = (() => {
-  let kernel: Kernel;
+  let ctx: PluginContext;
   let el: HTMLElement;
   let frameCount = 0;
   let fpsAccum = 0;
@@ -13,8 +13,8 @@ export const performanceHudPlugin: ScenePlugin = (() => {
     modes: new Set(['edit', 'play']),
     priority: 90,
 
-    init(k: Kernel) {
-      kernel = k;
+    init(k: PluginContext) {
+      ctx = k;
       el = document.createElement('div');
       el.id = 'perf-hud';
       Object.assign(el.style, {
@@ -41,7 +41,7 @@ export const performanceHudPlugin: ScenePlugin = (() => {
         frameCount = 0;
         fpsAccum = 0;
       }
-      const info = kernel.renderer.info;
+      const info = ctx.renderer.info;
       el.textContent = `${fps} FPS · ${info.render.calls} DC · ${info.render.triangles} tri`;
     },
 

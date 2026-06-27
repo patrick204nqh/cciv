@@ -22,27 +22,27 @@ export function createLightingEntity(store?: StateStore): SceneEntity {
       sun.shadow.bias = -0.0004;
       sun.shadow.normalBias = 0.02;
       scene.add(sun);
-      disposer?.addObj(sun);
-      disposer?.addCleanup(() => { if (sun.shadow?.map) sun.shadow.map.dispose(); });
+      disposer?.add(sun);
+      disposer?.add(() => { if (sun.shadow?.map) sun.shadow.map.dispose(); });
 
       const hemi = new THREE.HemisphereLight(0x90c0e0, 0x306080, 1.0);
       scene.add(hemi);
-      disposer?.addObj(hemi);
+      disposer?.add(hemi);
 
       const fill = new THREE.DirectionalLight(0x6090d0, 0.55);
       fill.position.set(-70, -18, 85);
       scene.add(fill);
-      disposer?.addObj(fill);
+      disposer?.add(fill);
 
       const stern = new THREE.PointLight(0xffcc66, 0.6, 80);
       stern.position.set(0, 18, -35);
       scene.add(stern);
-      disposer?.addObj(stern);
+      disposer?.add(stern);
 
       const deckGlow = new THREE.PointLight(0xc89a50, 0.25, 50);
       deckGlow.position.set(0, 10, 0);
       scene.add(deckGlow);
-      disposer?.addObj(deckGlow);
+      disposer?.add(deckGlow);
 
       if (store) {
         const unsub = store.subscribe('environment.lighting', (v) => {
@@ -74,7 +74,7 @@ export function createLightingEntity(store?: StateStore): SceneEntity {
           }
         });
         unsubs = [unsub];
-        disposer?.addUnsub(unsub);
+        disposer?.add(unsub);
       }
     },
 

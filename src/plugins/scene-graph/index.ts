@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import type { ScenePlugin, Kernel } from '../types';
+import type { ScenePlugin, PluginContext } from '../types';
 
 export const sceneGraphPlugin: ScenePlugin = (() => {
-  let kernel: Kernel;
+  let ctx: PluginContext;
   let panel: HTMLElement;
   let treeEl: HTMLElement;
   let propsEl: HTMLElement;
@@ -15,9 +15,9 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
 
   function selectObject(obj: THREE.Object3D) {
     if (selectedRow) selectedRow.style.background = 'transparent';
-    kernel.selectedObject = obj;
+    ctx.selectedObject = obj;
 
-    kernel.scene.traverse(child => {
+    ctx.scene.traverse(child => {
       if ((child as any).isTransformControls) {
         (child as any).attach(obj);
         (child as any).visible = true;
@@ -70,7 +70,7 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
   function buildTree() {
     nodeMap.clear();
     treeEl.innerHTML = '';
-    addNode(kernel.scene, 0, treeEl);
+    addNode(ctx.scene, 0, treeEl);
   }
 
   function updateProps(obj: THREE.Object3D) {
@@ -102,8 +102,8 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
     modes: new Set(['edit']),
     priority: 15,
 
-    init(k: Kernel) {
-      kernel = k;
+    init(k: PluginContext) {
+      ctx = k;
 
       panel = document.createElement('div');
       panel.id = 'scene-graph-panel';
@@ -151,7 +151,7 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
     onModeSwitch(_from: 'edit' | 'play', to: 'edit' | 'play') {
       if (to === 'edit') {
         selectedRow = null;
-        kernel.selectedObject = null;
+        ctx.selectedObject = null;
         buildTree();
         propsEl.innerHTML = '';
       }

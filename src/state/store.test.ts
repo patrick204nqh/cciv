@@ -47,6 +47,26 @@ describe('StateStore', () => {
     expect(store.get('activeLocation')).toBe('north-sea');
   });
 
+  it('select returns typed value from selector', () => {
+    const store = new StateStore(createDefaultState());
+    const mode = store.select(s => s.activeLocation);
+    expect(mode).toBe('north-sea');
+  });
+
+  it('select returns nested typed value', () => {
+    const store = new StateStore(createDefaultState());
+    const color = store.select(s => s.environment.sky.gradientTop);
+    expect(color).toBe('#5588bb');
+  });
+
+  it('watch fires on state changes with typed selector', () => {
+    const store = new StateStore(createDefaultState());
+    const fn = vi.fn();
+    store.watch(s => s.activeLocation, fn);
+    store.set('activeLocation', 'caribbean');
+    expect(fn).toHaveBeenCalledWith('caribbean');
+  });
+
   it('unsubscribes', () => {
     const store = new StateStore(createDefaultState());
     const fn = vi.fn();

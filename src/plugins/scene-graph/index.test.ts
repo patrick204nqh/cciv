@@ -2,9 +2,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as THREE from 'three';
 import { sceneGraphPlugin } from './index';
-import type { Kernel } from '../types';
+import type { PluginContext } from '../types';
 
-function mockKernel(): Kernel {
+function mockPluginContext(): PluginContext {
   const scene = new THREE.Scene();
   const group = new THREE.Group();
   group.name = 'test-group';
@@ -16,22 +16,19 @@ function mockKernel(): Kernel {
 
   return {
     scene,
-    renderer: {} as any,
-    camera: {} as any,
-    controls: {} as any,
     store: {} as any,
-    container: document.body,
     mode: 'edit',
     selectedObject: null,
+    setMode: () => {},
   };
 }
 
 describe('sceneGraphPlugin', () => {
-  let kernel: Kernel;
+  let ctx: PluginContext;
 
   beforeEach(() => {
     document.body.innerHTML = '';
-    kernel = mockKernel();
+    ctx = mockPluginContext();
   });
 
   it('has correct identity', () => {
@@ -49,7 +46,7 @@ describe('sceneGraphPlugin', () => {
   });
 
   it('creates panel with tree on init', () => {
-    sceneGraphPlugin.init(kernel);
+    sceneGraphPlugin.init(ctx);
     const panel = document.getElementById('scene-graph-panel');
     expect(panel).toBeTruthy();
     expect(panel!.textContent).toContain('test-group');
@@ -58,7 +55,7 @@ describe('sceneGraphPlugin', () => {
   });
 
   it('removes panel on destroy', () => {
-    sceneGraphPlugin.init(kernel);
+    sceneGraphPlugin.init(ctx);
     sceneGraphPlugin.destroy();
     expect(document.getElementById('scene-graph-panel')).toBeNull();
   });

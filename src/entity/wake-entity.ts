@@ -52,9 +52,9 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
 
       const mesh = new THREE.Mesh(geo, mat);
       scene.add(mesh);
-      disposer?.addGeo(geo);
-      disposer?.addMat(mat);
-      disposer?.addObj(mesh);
+      disposer?.add(geo);
+      disposer?.add(mat);
+      disposer?.add(mesh);
 
       let prevPos = new THREE.Vector3();
       let intensity = 0;
@@ -79,7 +79,7 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
           mesh.quaternion.copy(evQuat);
         }
       });
-      disposer?.addUnsub(unsub);
+      disposer?.add(unsub);
     },
 
     onDetach() {},

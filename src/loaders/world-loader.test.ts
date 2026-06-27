@@ -47,6 +47,8 @@ describe('WorldLoader', () => {
     const vesselEntity = result.entities.find(e => e.id === 'my-ship');
     expect(vesselEntity).toBeDefined();
     expect(mockModelLoader.load).toHaveBeenCalledWith('ship');
+    expect(result.errors).toHaveLength(0);
+    expect(result.metadata.loadedAt).toBeGreaterThan(0);
   });
 
   it('loads a world with only static instances', async () => {
@@ -62,6 +64,27 @@ describe('WorldLoader', () => {
     };
     const result = await worldLoader.load(world, mockModelLoader);
     expect(result.entities).toHaveLength(0);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('collects errors for failed model loads', async () => {
+    mockModelLoader.load.mockRejectedValue(new Error('Network error'));
+    const world: WorldConfig = {
+      environment: { ocean: false, sky: false },
+      instances: {
+        'my-ship': {
+          ref: 'ship',
+          transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: 1 },
+          visible: true,
+          behavior: 'vessel',
+        },
+      },
+    };
+    const result = await worldLoader.load(world, mockModelLoader);
+    expect(result.entities).toHaveLength(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].ref).toBe('ship');
+    expect(result.errors[0].error.message).toBe('Network error');
   });
 
   it('loads multiple vessels', async () => {
@@ -88,5 +111,6 @@ describe('WorldLoader', () => {
     const result = await worldLoader.load(world, mockModelLoader);
     const vessels = result.entities.filter(e => e.id === 'ship' || e.id === 'buoy-1');
     expect(vessels).toHaveLength(2);
+    expect(result.errors).toHaveLength(0);
   });
 });

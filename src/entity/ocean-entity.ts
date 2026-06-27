@@ -45,9 +45,9 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
       ocean.receiveShadow = true;
       scene.add(ocean);
 
-      disposer?.addGeo(geo);
-      disposer?.addMat(mat);
-      disposer?.addObj(ocean);
+      disposer?.add(geo);
+      disposer?.add(mat);
+      disposer?.add(ocean);
 
       if (store) {
         const unsub = store.subscribe('environment.ocean', (v) => {
@@ -56,7 +56,7 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
           mat.opacity = cfg.opacity;
         });
         unsubs = [unsub];
-        disposer?.addUnsub(unsub);
+        disposer?.add(unsub);
       }
     },
 

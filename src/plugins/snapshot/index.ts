@@ -1,7 +1,7 @@
-import type { ScenePlugin, Kernel } from '../types';
+import type { ScenePlugin, PluginContext } from '../types';
 
 export const snapshotPlugin: ScenePlugin = (() => {
-  let kernel: Kernel;
+  let ctx: PluginContext;
 
   function onKeyDown(e: KeyboardEvent) {
     if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
@@ -15,7 +15,7 @@ export const snapshotPlugin: ScenePlugin = (() => {
   }
 
   function save() {
-    const snap = kernel.store.snapshot();
+    const snap = ctx.store.snapshot();
     const blob = new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -35,7 +35,7 @@ export const snapshotPlugin: ScenePlugin = (() => {
       const text = await file.text();
       try {
         const state = JSON.parse(text);
-        kernel.store.restore(state);
+        ctx.store.restore(state);
       } catch {
         console.warn('Invalid snapshot file');
       }
@@ -49,8 +49,8 @@ export const snapshotPlugin: ScenePlugin = (() => {
     modes: new Set(['edit']),
     priority: 20,
 
-    init(k: Kernel) {
-      kernel = k;
+    init(k: PluginContext) {
+      ctx = k;
       window.addEventListener('keydown', onKeyDown);
     },
 

@@ -5,6 +5,7 @@ type Listener = (value: unknown, path: string) => void;
 export class StateStore {
   private state: AppState;
   private listeners = new Map<string, Set<Listener>>();
+  private watchers: Set<() => void> = new Set();
 
   constructor(initial: AppState) {
     this.state = structuredClone(initial);
@@ -38,12 +39,25 @@ export class StateStore {
       (cur as Record<string, unknown>)[parts[parts.length - 1]] = value;
     }
     this.notify(path, value);
+    this.fireWatchers();
     if (path === 'environment' || path === 'instances' || path.startsWith('environment.') || path.startsWith('instances.')) {
       const active = this.state.activeLocation;
       if (!this.state.dirtyLocations.includes(active)) {
         this.state.dirtyLocations.push(active);
       }
     }
+  }
+
+  /** Typed read accessor. Returns the result of the selector function. */
+  select<T>(selector: (state: AppState) => T): T {
+    return selector(this.state);
+  }
+
+  /** Typed subscription — fires whenever any state changes. */
+  watch<T>(selector: (state: AppState) => T, fn: (value: T) => void): () => void {
+    const wrapper = () => fn(selector(this.state));
+    this.watchers.add(wrapper);
+    return () => { this.watchers.delete(wrapper); };
   }
 
   subscribe(path: string, fn: Listener): () => void {
@@ -65,6 +79,11 @@ export class StateStore {
       const v = (this.state as Record<string, unknown>)[key];
       this.notify(key, v);
     }
+    this.fireWatchers();
+  }
+
+  private fireWatchers(): void {
+    for (const fn of this.watchers) fn();
   }
 
   private notify(path: string, value: unknown): void {

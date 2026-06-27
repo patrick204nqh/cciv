@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { performanceHudPlugin } from './index';
-import type { Kernel } from '../types';
+import type { PluginContext } from '../types';
 
-function mockKernel(): Kernel {
+function mockPluginContext(): PluginContext {
   return {
     scene: {} as any,
     renderer: { info: { render: { calls: 42, triangles: 1200 } } } as any,
@@ -13,15 +13,16 @@ function mockKernel(): Kernel {
     container: document.body,
     mode: 'edit',
     selectedObject: null,
+    setMode: () => {},
   };
 }
 
 describe('performanceHudPlugin', () => {
-  let kernel: Kernel;
+  let ctx: PluginContext;
 
   beforeEach(() => {
     document.body.innerHTML = '';
-    kernel = mockKernel();
+    ctx = mockPluginContext();
   });
 
   it('has correct identity', () => {
@@ -35,19 +36,19 @@ describe('performanceHudPlugin', () => {
   });
 
   it('creates HUD element on init', () => {
-    performanceHudPlugin.init(kernel);
+    performanceHudPlugin.init(ctx);
     expect(document.getElementById('perf-hud')).toBeTruthy();
     performanceHudPlugin.destroy();
   });
 
   it('removes HUD on destroy', () => {
-    performanceHudPlugin.init(kernel);
+    performanceHudPlugin.init(ctx);
     performanceHudPlugin.destroy();
     expect(document.getElementById('perf-hud')).toBeNull();
   });
 
   it('updates display on render', () => {
-    performanceHudPlugin.init(kernel);
+    performanceHudPlugin.init(ctx);
     performanceHudPlugin.render(0.016);
     const el = document.getElementById('perf-hud')!;
     expect(el.textContent).toContain('42');

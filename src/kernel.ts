@@ -5,7 +5,7 @@ import { StateStore } from './state/store';
 import { PluginRegistry } from './plugins/registry';
 import { createDefaultState } from './state/defaults';
 import { entityManager } from './entity/manager';
-import type { Kernel as KernelInterface, ScenePlugin } from './plugins/types';
+import type { PluginContext, ScenePlugin } from './plugins/types';
 
 export interface KernelOptions {
   container?: HTMLElement;
@@ -13,7 +13,7 @@ export interface KernelOptions {
   camera?: THREE.PerspectiveCamera;
 }
 
-export class Kernel implements KernelInterface {
+export class Kernel {
   readonly scene: THREE.Scene
   readonly renderer: THREE.WebGLRenderer
   readonly camera: THREE.PerspectiveCamera
@@ -63,16 +63,31 @@ export class Kernel implements KernelInterface {
     this.registry = new PluginRegistry()
   }
 
+  private createPluginContext(): PluginContext {
+    const self = this;
+    return {
+      scene: this.scene,
+      store: this.store,
+      get mode() { return self.mode; },
+      renderer: this.renderer,
+      camera: this.camera,
+      get selectedObject() { return self.selectedObject; },
+      set selectedObject(o) { self.selectedObject = o; },
+      setMode: (m) => self.setMode(m),
+    };
+  }
+
   registerPlugin(plugin: ScenePlugin): void {
     this.registry.register(plugin)
     if (this.initialized && plugin.modes.has(this.mode)) {
-      plugin.init(this)
+      plugin.init(this.createPluginContext())
     }
   }
 
   async init(): Promise<void> {
+    const ctx = this.createPluginContext()
     for (const p of this.registry.getActive(this.mode)) {
-      p.init(this)
+      p.init(ctx)
     }
     this.initialized = true
     window.addEventListener('resize', this.onResize)
