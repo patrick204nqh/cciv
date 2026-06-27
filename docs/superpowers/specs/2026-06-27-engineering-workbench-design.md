@@ -53,64 +53,87 @@ interface StateStore<T> {
 }
 ```
 
+### Hierarchy: World > Location > { Environment, Objects }
+
+A **World** is a collection of **Locations**. Each **Location** bundles an **Environment** preset with an **Objects** arrangement.
+Switching location = one action that replaces both environmental tuning and object placements.
+
+```
+World
+ └── Location A ──┬── Environment (sky, waves, fog, lighting, ocean)
+                  └── Objects     (ship pos/materials, buoy placements, island)
+ └── Location B ──┬── Environment (different sky, calmer waves)
+                  └── Objects     (ship at different position, fewer buoys)
+```
+
 ### State Shape
 
 ```ts
-world {
-  time: { speed: number, paused: boolean, elapsed: number }
-}
-environment {
-  waves: {
-    type: 'gerstner'
-    count: number
-    params: { amplitude, frequency, direction, speed, steepness }[]
-  }
-  sky: {
-    type: 'gradient' | 'physical'
-    gradient: { topColor, bottomColor, horizonOffset }
-  }
-  ocean: {
-    gridSize: number, extent: number, color: string, opacity: number
-  }
-  lighting: {
-    sun: { enabled, intensity, color, position, shadowMapSize }
-    hemisphere: { enabled, skyColor, groundColor, intensity }
-    fill: { enabled, intensity, color, position }
-    pointLights: { enabled, intensity, color, position, range }[]
-  }
-  fog: { type: 'exp2' | 'linear', color, density | near, far }
-}
-models {
-  ship: {
-    transform: { position: [x,y,z], rotation: [x,y,z], scale: [x,y,z] }
-    material: {
-      hull: { color, roughness, metalness, visible }
-      deck: { color, roughness, metalness, visible }
-      sails: { color, roughness, metalness, visible }
-      aft: { color, roughness, metalness, visible }
-      rigging: { color, roughness, metalness, visible }
-      details: { color, roughness, metalness, visible }
-      interior: { color, roughness, metalness, visible }
+activeLocation: string  // "north-sea" | "caribbean" | ...
+time: { speed: number, paused: boolean, elapsed: number }
+
+// Location A (north-sea)
+locations: {
+  "north-sea": {
+    environment: {
+      waves: {
+        type: 'gerstner'
+        count: number
+        params: { amplitude, frequency, direction, speed, steepness }[]
+      }
+      sky: {
+        type: 'gradient' | 'physical'
+        gradient: { topColor, bottomColor, horizonOffset }
+      }
+      ocean: {
+        gridSize: number, extent: number, color: string, opacity: number
+      }
+      lighting: {
+        sun: { enabled, intensity, color, position, shadowMapSize }
+        hemisphere: { enabled, skyColor, groundColor, intensity }
+        fill: { enabled, intensity, color, position }
+        pointLights: { enabled, intensity, color, position, range }[]
+      }
+      fog: { type: 'exp2' | 'linear', color, density | near, far }
     }
-    visible: boolean
+    objects: {
+      ship: {
+        transform: { position: [x,y,z], rotation: [x,y,z], scale: [x,y,z] }
+        material: {
+          hull: { color, roughness, metalness, visible }
+          deck: { color, roughness, metalness, visible }
+          sails: { color, roughness, metalness, visible }
+          aft: { color, roughness, metalness, visible }
+          rigging: { color, roughness, metalness, visible }
+          details: { color, roughness, metalness, visible }
+          interior: { color, roughness, metalness, visible }
+        }
+        visible: boolean
+      }
+      buoys: { id: string, transform, visible }[]
+      island: { transform, visible }
+    }
   }
-  buoys: { id: string, transform, visible }[]
-  island: { transform, visible }
 }
 ```
 
-Worlds are pure presets matching this shape:
+Worlds are collections of location presets:
 
 ```ts
 // src/state/worlds.ts
 interface WorldPreset {
   id: string
   label: string
+  locations: Record<string, LocationPreset>
+}
+
+interface LocationPreset {
   environment: EnvironmentState
+  objects: ObjectsState
 }
 ```
 
-Switching worlds loads environment state into the store, triggering a crossfade transition.
+Switching location loads that location's environment + objects into the active state, triggering a crossfade transition.
 
 ## MVP Plugins (First Pass)
 
@@ -119,7 +142,7 @@ Switching worlds loads environment state into the store, triggering a crossfade 
 | 1 | `inspector` | Auto-generated UI from state schema using @lil-gui. Covers wave params, lighting, fog, ship transform, all 7 ship material groups. |
 | 2 | `gizmos` | TransformControls on selected entity (raycast-detectable). Click ship → translate/rotate/scale. |
 | 3 | `snapshot` | Save current full state to JSON (Ctrl+S). Restore from file dialog. |
-| 4 | `world-switcher` | Dropdown in toolbar. Crossfade environment: lerp fog, sky, wave params over 2s. |
+| 4 | `location-switcher` | Dropdown in toolbar. Crossfade environment + reposition objects over 2s. |
 
 ## New Files
 
@@ -134,7 +157,7 @@ src/plugins/registry.ts        — PluginRegistry
 src/plugins/inspector/index.ts — lil-gui panel builder
 src/plugins/gizmos/index.ts    — TransformControls wrapper
 src/plugins/snapshot/index.ts  — JSON save/load
-src/plugins/world-switcher/index.ts — Preset loader + crossfade
+src/plugins/location-switcher/index.ts — Preset loader + crossfade
 ```
 
 ## Modified Files
@@ -161,6 +184,6 @@ Each MVP plugin is already structured as `ScenePlugin`. Extracting to standalone
 
 2. **Plugins over monolith** — Even the first pass uses the plugin interface. This prevents the kernel from growing tentacles into every feature.
 
-3. **Worlds as presets, not scenes** — A world is just environment data. Models are registered independently. This lets you swap environments without reloading models, and mix-and-match later.
+3. **World > Location > { Environment, Objects }** — A world is a collection of locations. Each location bundles an environment preset with an objects arrangement. Switching location transitions everything at once, but objects stay in memory (only their state changes).
 
 4. **Two modes, shared state** — Edit and play read/write the same store. This ensures edit-mode tweaks survive mode switches and you can "play" with edited params immediately.
