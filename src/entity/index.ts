@@ -6,3 +6,4 @@ export { createLightingEntity } from './lighting-entity';
 export { createSprayEntity } from './spray-entity';
 export { createWakeEntity } from './wake-entity';
 export { createShipEntity } from './ship-entity';
+export { createInstanceManager } from './instance-manager';
