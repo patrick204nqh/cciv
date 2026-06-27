@@ -3,9 +3,11 @@ import { Kernel } from './kernel';
 import { createOceanEntity, createSkyEntity, createLightingEntity, createSprayEntity, createWakeEntity, createShipEntity, entityManager } from './entity';
 import { GlbLoader, ModelLoaderImpl, ModelCatalogReader, WorldLoader } from './loaders';
 import { northSea } from './worlds';
+import { inspectorPlugin } from './plugins/inspector';
 
 async function main() {
   const kernel = new Kernel();
+  kernel.registerPlugin(inspectorPlugin);
   const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};
