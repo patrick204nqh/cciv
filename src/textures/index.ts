@@ -14,32 +14,6 @@ function loadTexture(path: string): THREE.Texture {
   return tex;
 }
 
-export interface LoadedTextureSet {
-  map?: THREE.Texture;
-  normalMap?: THREE.Texture;
-  roughnessMap?: THREE.Texture;
-  metalnessMap?: THREE.Texture;
-  aoMap?: THREE.Texture;
-  alphaMap?: THREE.Texture;
-}
-
-export function loadTextureSet(key: string): LoadedTextureSet {
-  const cfg = TEXTURES[key];
-  if (!cfg) return {};
-  const r: LoadedTextureSet = {};
-  if (cfg.diff) r.map = loadTexture(cfg.diff);
-  if (cfg.nor_gl) r.normalMap = loadTexture(cfg.nor_gl);
-  if (cfg.rough) r.roughnessMap = loadTexture(cfg.rough);
-  if (cfg.metal) r.metalnessMap = loadTexture(cfg.metal);
-  if (cfg.ao) r.aoMap = loadTexture(cfg.ao);
-  if (cfg.alpha) r.alphaMap = loadTexture(cfg.alpha);
-  Object.values(r).forEach(t => {
-    if (t) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(cfg.wrapS ?? 1, cfg.wrapT ?? 1); }
-  });
-  return r;
-}
-
-
 function canvas(w: number, h: number, fn: (ctx: CanvasRenderingContext2D) => void): HTMLCanvasElement {
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   fn(c.getContext('2d')!);

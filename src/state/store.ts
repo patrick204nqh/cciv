@@ -38,6 +38,12 @@ export class StateStore {
       (cur as Record<string, unknown>)[parts[parts.length - 1]] = value;
     }
     this.notify(path, value);
+    if (path === 'environment' || path === 'instances' || path.startsWith('environment.') || path.startsWith('instances.')) {
+      const active = this.state.activeLocation;
+      if (!this.state.dirtyLocations.includes(active)) {
+        this.state.dirtyLocations.push(active);
+      }
+    }
   }
 
   subscribe(path: string, fn: Listener): () => void {
@@ -63,7 +69,7 @@ export class StateStore {
 
   private notify(path: string, value: unknown): void {
     for (const [key, fns] of this.listeners) {
-      if (path.startsWith(key) || key.startsWith(path)) {
+      if (path === key || path.startsWith(key + '.')) {
         for (const fn of fns) fn(value, path);
       }
     }

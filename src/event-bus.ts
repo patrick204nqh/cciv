@@ -25,7 +25,9 @@ class EventBus {
     this.listeners.get(event)?.forEach(fn => fn(data));
   }
 
+  /** Clear all listeners. Existing unsubscribe handles are no-ops after this. */
   clear(): void {
+    for (const [, fns] of this.listeners) fns.clear();
     this.listeners.clear();
   }
 }

@@ -37,7 +37,6 @@ async function main() {
       entityManager.attach({
         id: model.id,
         onAttach(s: THREE.Scene) { s.add(model.root); },
-        onUpdate() {},
         onDetach() { model.dispose(); },
       }, scene);
     }

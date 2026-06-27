@@ -11,8 +11,8 @@ export interface WaveSample {
 }
 
 export const waveSurface = {
-  sample(x: number, z: number): WaveSample {
-    const t = worldClock.elapsed * WAVE_SPEED;
+  sample(x: number, z: number, time?: number): WaveSample {
+    const t = time ?? worldClock.elapsed * WAVE_SPEED;
     const { height, dispX, dispZ } = sampleOcean(x, z, t);
     const normal = sampleNormal(x, z, t);
     return { height, dispX, dispZ, normal };

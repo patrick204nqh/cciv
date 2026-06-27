@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { ModelLoader, ModelCatalogEntry } from './types';
+import { ModelLoadError } from './types';
 import type { ModelEntity } from '../model/types';
 import { GlbLoader, type GlbLoaderResult } from './glb-loader';
 import { ModelCatalogReader } from './catalog';
@@ -28,7 +29,7 @@ export class ModelLoaderImpl implements ModelLoader {
     if (cached) return cached;
 
     const entry = this.catalog.getEntry(ref);
-    if (!entry) throw new Error(`Model not found in catalog: ${ref}`);
+    if (!entry) throw new ModelLoadError(`Model not found in catalog: ${ref}`, ref);
 
     const entity = await this.loadFromEntry(ref, entry);
     this.cache.set(ref, entity);

@@ -71,8 +71,6 @@ export function createWakeEntity(): SceneEntity {
       disp.addUnsub(unsub);
     },
 
-    onUpdate(_dt: number) {},
-
     onDetach() {
       disp.dispose();
     },

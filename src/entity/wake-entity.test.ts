@@ -16,7 +16,6 @@ describe('createWakeEntity', () => {
 
   it('defines lifecycle methods', () => {
     const entity = createWakeEntity();
-    expect(typeof entity.onUpdate).toBe('function');
     expect(typeof entity.onDetach).toBe('function');
   });
 });

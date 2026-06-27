@@ -17,7 +17,15 @@ export interface ModelCatalog {
   [id: string]: ModelCatalogEntry;
 }
 
+export class ModelLoadError extends Error {
+  constructor(message: string, public readonly ref: string) {
+    super(message);
+    this.name = 'ModelLoadError';
+  }
+}
+
 export interface ModelLoader {
+  /** Load a model by reference. Rejects with ModelLoadError on failure. */
   load(ref: string): Promise<ModelEntity>;
   preload(refs: string[]): Promise<void>;
   getCached(ref: string): ModelEntity | undefined;

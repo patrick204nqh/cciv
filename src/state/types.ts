@@ -49,8 +49,15 @@ export interface LocationPreset {
   instances: InstanceState
 }
 
+/** Branded string for entity identifiers */
+export type EntityId = string & { readonly __brand: 'EntityId' }
+
+/** Branded string for location identifiers */
+export type LocationId = string & { readonly __brand: 'LocationId' }
+
 export interface AppState {
   activeLocation: string
+  dirtyLocations: string[]
   time: { speed: number; paused: boolean; elapsed: number }
   environment: EnvironmentState
   instances: InstanceState

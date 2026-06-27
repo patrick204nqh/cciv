@@ -1,32 +1,23 @@
 export interface ModelInstance {
   ref: string;
-  at: [number, number, number];
+  position: [number, number, number];
   rotation?: [number, number, number];
   quaternion?: [number, number, number, number];
   scale?: number;
 }
 
+/** @deprecated Use LocationPreset from state/types instead */
 export interface EnvironmentConfig {
   ocean?: boolean;
   sky?: boolean;
   lighting?: 'day' | 'night' | 'sunset';
 }
 
+/** @deprecated Use LocationPreset from state/types instead */
 export interface WorldConfig {
   id: string;
   models: ModelInstance[];
   environment: EnvironmentConfig;
-}
-
-export interface WorldDef {
-  id: string
-  label: string
-  locations: string[]
-}
-
-export interface WorldCollection {
-  current: string
-  worlds: Record<string, WorldDef>
 }
 
 import type { ModelEntity } from '../model/types';

@@ -16,7 +16,6 @@ describe('createLightingEntity', () => {
 
   it('defines lifecycle methods', () => {
     const entity = createLightingEntity();
-    expect(typeof entity.onUpdate).toBe('function');
     expect(typeof entity.onDetach).toBe('function');
   });
 });

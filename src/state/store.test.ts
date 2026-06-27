@@ -55,4 +55,25 @@ describe('StateStore', () => {
     store.set('activeLocation', 'caribbean');
     expect(fn).not.toHaveBeenCalled();
   });
+
+  it('does not match similar but different paths', () => {
+    const store = new StateStore(createDefaultState());
+    const fn = vi.fn();
+    store.subscribe('environment.fog', fn);
+    store.set('environment.foggy', 'anything');
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('tracks dirty locations when active state changes', () => {
+    const store = new StateStore(createDefaultState());
+    expect(store.get('dirtyLocations')).toEqual([]);
+    store.set('environment.fog.color', '#ff0000');
+    expect(store.get('dirtyLocations')).toEqual(['north-sea']);
+  });
+
+  it('tracks dirty when entire environment is replaced', () => {
+    const store = new StateStore(createDefaultState());
+    store.set('environment', createDefaultState().environment);
+    expect(store.get('dirtyLocations')).toEqual(['north-sea']);
+  });
 });

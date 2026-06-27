@@ -27,8 +27,8 @@ export class Kernel implements KernelInterface {
     }
   }
 
-  constructor() {
-    this.container = document.body
+  constructor(container?: HTMLElement) {
+    this.container = container ?? document.body
     this.scene = new THREE.Scene()
     this.scene.fog = new THREE.FogExp2(0x406888, 0.0018)
     this.scene.background = new THREE.Color(0x5080a0)

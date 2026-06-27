@@ -33,7 +33,7 @@ describe('WorldLoader', () => {
   it('loads a world and returns model entries', async () => {
     const world: WorldConfig = {
       id: 'test-world',
-      models: [{ ref: 'ship', at: [10, 0, 20], scale: 1.5 }],
+      models: [{ ref: 'ship', position: [10, 0, 20], scale: 1.5 }],
       environment: { ocean: true, sky: true, lighting: 'day' },
     };
     const result = await worldLoader.load(world, mockModelLoader);
@@ -46,18 +46,18 @@ describe('WorldLoader', () => {
   it('returns instance transform data', async () => {
     const world: WorldConfig = {
       id: 'test-world',
-      models: [{ ref: 'ship', at: [10, 0, 20], scale: 2 }],
+      models: [{ ref: 'ship', position: [10, 0, 20], scale: 2 }],
       environment: {},
     };
     const result = await worldLoader.load(world, mockModelLoader);
-    expect(result.entries[0].instance.at).toEqual([10, 0, 20]);
+    expect(result.entries[0].instance.position).toEqual([10, 0, 20]);
     expect(result.entries[0].instance.scale).toBe(2);
   });
 
   it('loads multiple models', async () => {
     const world: WorldConfig = {
       id: 'test-world',
-      models: [{ ref: 'ship', at: [0, 0, 0] }, { ref: 'buoy', at: [50, 0, 30] }],
+      models: [{ ref: 'ship', position: [0, 0, 0] }, { ref: 'buoy', position: [50, 0, 30] }],
       environment: {},
     };
     mockModelLoader.load

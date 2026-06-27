@@ -28,7 +28,7 @@ export class EntityManager {
 
   update(dt: number): void {
     for (const entity of this.entities) entity.onBeforeUpdate?.(dt);
-    for (const entity of this.entities) entity.onUpdate(dt);
+    for (const entity of this.entities) entity.onUpdate?.(dt);
   }
 }
 

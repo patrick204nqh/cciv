@@ -58,8 +58,6 @@ export function createSkyEntity(store?: StateStore): SceneEntity {
       }
     },
 
-    onUpdate(_dt: number) {},
-
     onDetach() {
       unsubs.forEach(fn => fn());
       disp.dispose();
