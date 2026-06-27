@@ -103,9 +103,10 @@ Wiring: `main.ts` calls `worldLoader.load(config, scene)` → attaches entities.
 ## Commands
 
 ```sh
-npm run build:models     # compile all models to GLB + publish manifest
-npm run reference:pull   # download external assets to .cache/references/
 npm run dev              # Vite dev server with HMR
 npm run build            # production build
 npm run test             # run all tests
+npm run build:models     # compile all models to GLB + publish manifest
+npm run setup            # setup after clone (build:models)
+npm run reference:pull   # clone external references (optional, for customization)
 ```

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..');
-const MODELS_DIR = join(ROOT, '.cache', 'models');
+const MODELS_DIR = join(ROOT, 'src', 'models');
 
 async function main() {
   const args = process.argv.slice(2);
@@ -38,7 +38,7 @@ async function main() {
 
   geo.computeVertexNormals();
 
-  const destDir = join(MODELS_DIR, modelId);
+  const destDir = join(MODELS_DIR, modelId, 'data');
   mkdirSync(destDir, { recursive: true });
 
   const pos = Array.from(geo.attributes.position.array as Float32Array);
