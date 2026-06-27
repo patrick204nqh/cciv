@@ -58,12 +58,12 @@ export const inspectorPlugin: ScenePlugin = (() => {
     ship.add(inst.ship, 'visible').name('Visible').onChange((v: boolean) => kernel.store.set('instances.ship.visible', v));
 
     const mat = ship.addFolder('Materials');
-    for (const [group, overrides] of Object.entries(inst.ship.material)) {
+    for (const [group, overrides] of Object.entries(inst.ship.materials)) {
       const g = mat.addFolder(group);
-      g.add(overrides, 'color').name('Color').onChange((v: string) => kernel.store.set(`instances.ship.material.${group}.color`, v));
-      g.add(overrides, 'roughness', 0, 1).name('Roughness').onChange((v: number) => kernel.store.set(`instances.ship.material.${group}.roughness`, v));
-      g.add(overrides, 'metalness', 0, 1).name('Metalness').onChange((v: number) => kernel.store.set(`instances.ship.material.${group}.metalness`, v));
-      g.add(overrides, 'visible').name('Visible').onChange((v: boolean) => kernel.store.set(`instances.ship.material.${group}.visible`, v));
+      g.add(overrides, 'color').name('Color').onChange((v: string) => kernel.store.set(`instances.ship.materials.${group}.color`, v));
+      g.add(overrides, 'roughness', 0, 1).name('Roughness').onChange((v: number) => kernel.store.set(`instances.ship.materials.${group}.roughness`, v));
+      g.add(overrides, 'metalness', 0, 1).name('Metalness').onChange((v: number) => kernel.store.set(`instances.ship.materials.${group}.metalness`, v));
+      g.add(overrides, 'visible').name('Visible').onChange((v: boolean) => kernel.store.set(`instances.ship.materials.${group}.visible`, v));
       folders.push(g);
     }
     folders.push(mat, ship);

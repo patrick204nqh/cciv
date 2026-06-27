@@ -17,7 +17,7 @@ export function createShipEntity(model: ModelEntity, store?: StateStore): SceneE
       scene.add(model.root);
 
       if (store) {
-        unsubs.push(store.subscribe('instances.ship.material', (v) => {
+        unsubs.push(store.subscribe('instances.ship.materials', (v) => {
           const mat = v as Record<string, { color: string; roughness: number; metalness: number; visible: boolean }>;
           for (const [group, overrides] of Object.entries(mat)) {
             const mesh = model.root.getObjectByName(group) as THREE.Mesh | undefined;

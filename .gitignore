@@ -4,7 +4,6 @@ dist/
 .claude/skills/
 .agents/skills/
 .opencode/skills/
-docs/superpowers/
 *.local.json
 public/models/
 public/textures/

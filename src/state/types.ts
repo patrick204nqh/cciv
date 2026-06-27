@@ -32,17 +32,14 @@ export interface MaterialOverride {
   visible: boolean
 }
 
-export interface ShipInstanceState {
+export interface InstanceDef {
+  ref: string
   transform: { position: [number, number, number]; rotation: [number, number, number]; scale: number }
-  material: Record<string, MaterialOverride>
   visible: boolean
+  materials?: Record<string, MaterialOverride>
 }
 
-export interface InstanceState {
-  ship: ShipInstanceState
-  buoys: { id: string; transform: { position: [number, number, number]; rotation: [number, number, number]; scale: number }; visible: boolean }[]
-  island: { transform: { position: [number, number, number]; rotation: [number, number, number]; scale: number }; visible: boolean }
-}
+export type InstanceState = Record<string, InstanceDef>
 
 export interface LocationPreset {
   environment: EnvironmentState
