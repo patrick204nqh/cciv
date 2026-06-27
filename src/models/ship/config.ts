@@ -1,4 +1,4 @@
-import type { ExtractedModelDef } from '../../../scripts/pipeline/types';
+import type { ExtractedModelDef } from '../../model/types';
 
 const shipConfig: ExtractedModelDef = {
   type: 'extracted',

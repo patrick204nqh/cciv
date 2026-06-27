@@ -1,4 +1,4 @@
-import type { ProceduralModelDef } from '../../../scripts/pipeline/types';
+import type { ProceduralModelDef } from '../../model/types';
 
 const islandConfig: ProceduralModelDef = {
   type: 'procedural',

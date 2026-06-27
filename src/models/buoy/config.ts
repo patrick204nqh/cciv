@@ -1,4 +1,4 @@
-import type { ProceduralModelDef } from '../../../scripts/pipeline/types';
+import type { ProceduralModelDef } from '../../model/types';
 
 const buoyConfig: ProceduralModelDef = {
   type: 'procedural',

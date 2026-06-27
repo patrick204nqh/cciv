@@ -4,7 +4,7 @@ import { join, relative, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { Document, NodeIO } from '@gltf-transform/core';
 import manifest from '../../src/textures/manifest.json';
-import type { PipelineModelConfig, ExtractedModelDef, ProceduralModelDef } from './types';
+import type { ModelConfig, ExtractedModelDef, ProceduralModelDef } from '../../src/model/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -225,7 +225,7 @@ async function main(): Promise<void> {
 
   for (const modelId of modelDirs) {
     const configPath = join(MODELS_DIR, modelId, 'config.ts');
-    const config: PipelineModelConfig = (await import(configPath)).default;
+    const config: ModelConfig = (await import(configPath)).default;
     console.log(`[${modelId}] (type=${config.type})`);
 
     switch (config.type) {
