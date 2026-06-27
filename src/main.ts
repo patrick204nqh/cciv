@@ -6,12 +6,14 @@ import { northSea } from './worlds';
 import { inspectorPlugin } from './plugins/inspector';
 import { gizmosPlugin } from './plugins/gizmos';
 import { snapshotPlugin } from './plugins/snapshot';
+import { locationSwitcherPlugin } from './plugins/location-switcher';
 
 async function main() {
   const kernel = new Kernel();
   kernel.registerPlugin(inspectorPlugin);
   kernel.registerPlugin(gizmosPlugin);
   kernel.registerPlugin(snapshotPlugin);
+  kernel.registerPlugin(locationSwitcherPlugin);
   const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};
