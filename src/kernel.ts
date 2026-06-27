@@ -15,6 +15,7 @@ export class Kernel implements KernelInterface {
   readonly registry: PluginRegistry
   readonly container: HTMLElement
   private _mode: 'edit' | 'play' = 'edit'
+  selectedObject: THREE.Object3D | null = null
   private initialized = false
 
   get mode() { return this._mode }

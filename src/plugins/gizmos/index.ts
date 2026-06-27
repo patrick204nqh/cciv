@@ -22,9 +22,11 @@ export const gizmosPlugin: ScenePlugin = (() => {
 
     const hits = raycaster.intersectObjects(meshes, false);
     if (hits.length > 0) {
+      kernel.selectedObject = hits[0].object;
       controls.attach(hits[0].object);
       controls.visible = true;
     } else {
+      kernel.selectedObject = null;
       controls.detach();
       controls.visible = false;
     }

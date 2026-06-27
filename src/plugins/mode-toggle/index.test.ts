@@ -12,6 +12,7 @@ function mockKernel(): Kernel {
     store: {} as any,
     container: document.body,
     mode: 'edit',
+    selectedObject: null,
   };
 }
 

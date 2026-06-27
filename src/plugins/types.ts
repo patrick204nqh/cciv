@@ -10,6 +10,7 @@ export interface Kernel {
   readonly store: StateStore
   mode: 'edit' | 'play'
   readonly container: HTMLElement
+  selectedObject: THREE.Object3D | null
 }
 
 export interface ScenePlugin {
