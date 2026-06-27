@@ -32,7 +32,7 @@ async function publishManifest(): Promise<void> {
     } catch { /* fallback */ }
 
     catalog[modelId] = {
-      glb: `/models/${modelId}.glb`,
+      glb: `models/${modelId}.glb`,
       ...(config.metadata?.polyCount && { polyCount: config.metadata.polyCount }),
       ...(config.metadata?.license && { license: config.metadata.license }),
       ...(config.materialOverrides && { materialOverrides: config.materialOverrides }),
