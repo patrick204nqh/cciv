@@ -1,7 +1,10 @@
 #!/usr/bin/env tsx
 import { execSync } from 'child_process';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..', '..');
 
 async function main() {

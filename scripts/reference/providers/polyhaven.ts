@@ -2,6 +2,8 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, copyFi
 import { join } from 'path';
 import type { AssetProvider, AssetBundle } from './types';
 
+export type { AssetProvider, AssetBundle };
+
 export class PolyHeavenProvider implements AssetProvider {
   readonly id = 'polyhaven';
 

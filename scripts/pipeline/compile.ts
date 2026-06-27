@@ -1,10 +1,13 @@
 #!/usr/bin/env tsx
 import { readFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
-import { join, relative } from 'path';
+import { join, relative, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { Document, NodeIO } from '@gltf-transform/core';
 import manifest from '../../src/textures/manifest.json';
 import type { PipelineModelConfig, ExtractedModelDef, ProceduralModelDef } from './types';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..', '..');
 const MODELS_DIR = join(ROOT, 'src', 'models');
 const REFS_DIR = join(ROOT, '.cache', 'references');
@@ -31,27 +34,30 @@ async function compileExtracted(modelId: string, config: ExtractedModelDef): Pro
   const scene = doc.createScene();
   doc.getRoot().setDefaultScene(scene);
 
-  const meshGroupDirs = readdirSync(dataDir, { withFileTypes: true })
-    .filter(e => e.isDirectory());
+  // Discover mesh groups from flat data files: <asset>_<group>_<attr>.js
+  const allFiles = readdirSync(dataDir);
+  const posFiles = allFiles.filter(f => f.endsWith('_pos.js'));
+  const groupNames = [...new Set(posFiles.map(f => {
+    const match = f.match(new RegExp(`${config.asset}_(.+)_pos\\.js`));
+    return match ? match[1] : null;
+  }).filter(Boolean))] as string[];
 
-  for (const group of meshGroupDirs) {
-    const groupDir = join(dataDir, group.name);
-    const ourName = group.name;
+  for (const ourName of groupNames) {
+    const prefix = `${config.asset}_${ourName}`;
 
-    const posPath = join(groupDir, 'pos.js');
+    const posPath = join(dataDir, `${prefix}_pos.js`);
     if (!existsSync(posPath)) continue;
 
     const posMod = await import(posPath);
-    const nmlMod = await import(join(groupDir, 'nml.js'));
-    const uvMod = await import(join(groupDir, 'uv.js'));
-    const idxMod = await import(join(groupDir, 'idx.js'));
+    const nmlMod = await import(join(dataDir, `${prefix}_nml.js`));
+    const uvMod = await import(join(dataDir, `${prefix}_uv.js`));
+    const idxMod = await import(join(dataDir, `${prefix}_idx.js`));
 
-    const prefix = `${config.asset}_${ourName}`;
     const pos = posMod[`${prefix}_pos`] as Float32Array;
     const nml = nmlMod[`${prefix}_nml`] as Float32Array;
     const uv = uvMod[`${prefix}_uv`] as Float32Array;
     const indices = idxMod[`${prefix}_idx`] as Uint16Array | Uint32Array;
-    const hasUV2 = existsSync(join(groupDir, 'uv2.js'));
+    const hasUV2 = existsSync(join(dataDir, `${prefix}_uv2.js`));
 
     const accPos = doc.createAccessor().setArray(pos).setType('VEC3');
     const accNml = doc.createAccessor().setArray(nml).setType('VEC3');
@@ -65,7 +71,7 @@ async function compileExtracted(modelId: string, config: ExtractedModelDef): Pro
     prim.setIndices(accIdx);
 
     if (hasUV2) {
-      const uv2Mod = await import(join(groupDir, 'uv2.js'));
+      const uv2Mod = await import(join(dataDir, `${prefix}_uv2.js`));
       const uv2 = uv2Mod[`${prefix}_uv2`] as Float32Array;
       const accUv2 = doc.createAccessor().setArray(uv2).setType('VEC2');
       prim.setAttribute('TEXCOORD_1', accUv2);
@@ -126,9 +132,10 @@ async function compileExtracted(modelId: string, config: ExtractedModelDef): Pro
   // Apply model-level transform
   if (config.transform?.scale != null) {
     const s = config.transform.scale;
-    scene.getChildren().forEach(child => {
+    const children = scene.listChildren();
+    for (const child of children) {
       child.setScale(Array.isArray(s) ? s : [s, s, s]);
-    });
+    }
   }
 
   const outPath = join(OUT_DIR, `${modelId}.glb`);
@@ -200,7 +207,6 @@ async function compileProcedural(modelId: string, config: ProceduralModelDef): P
   mesh.addPrimitive(prim);
   const node = doc.createNode(modelId);
   node.setMesh(mesh);
-  mesh.addPrimitive(prim);
   scene.addChild(node);
 
   const outPath = join(OUT_DIR, `${modelId}.glb`);

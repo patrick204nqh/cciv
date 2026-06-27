@@ -5,9 +5,12 @@
 //   or:  tsx scripts/reference/pull.ts (pulls all references from references.json)
 
 import { existsSync, readFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
-import { PolyHeavenProvider } from '../../src/providers/polyhaven';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { PolyHeavenProvider } from './providers/polyhaven';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..', '..');
 const REFS_DIR = join(ROOT, '.cache', 'references');
 

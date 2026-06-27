@@ -1,8 +1,11 @@
 #!/usr/bin/env tsx
 import { existsSync, readdirSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import type { ModelCatalog } from '../../src/loaders/types';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..', '..');
 const MODELS_DIR = join(ROOT, 'src', 'models');
 const OUT_DIR = join(ROOT, 'public', 'models');
