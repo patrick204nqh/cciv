@@ -1,6 +1,6 @@
 import type { MaterialSpec } from '../material/types';
 
-export type ModelSource = 'extracted' | 'procedural' | 'external';
+export type ModelSource = 'extracted' | 'procedural' | 'composite';
 
 export interface ModelEntity {
   readonly id: string;

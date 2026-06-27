@@ -20,7 +20,7 @@ describe('WorldLoader', () => {
         rotation: { set: vi.fn() },
         quaternion: { set: vi.fn() },
       } as any,
-      metadata: { id: 'ship', source: 'external' as any },
+      metadata: { id: 'ship', source: 'procedural' },
       dispose: vi.fn(),
     };
     mockModelLoader = {
