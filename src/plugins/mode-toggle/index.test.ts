@@ -17,7 +17,7 @@ describe('modeTogglePlugin', () => {
   let ctx: PluginContext;
 
   beforeEach(() => {
-    document.body.innerHTML = '';
+    document.body.innerHTML = '<div id="mb">EDIT</div><div id="ch">hint</div>';
     ctx = mockPluginContext();
   });
 
@@ -35,17 +35,11 @@ describe('modeTogglePlugin', () => {
     expect(modeTogglePlugin.priority).toBe(100);
   });
 
-  it('creates a mode badge on init', () => {
+  it('sets badge text on init', () => {
     modeTogglePlugin.init(ctx);
-    const badge = document.getElementById('mode-badge');
+    const badge = document.getElementById('mb');
     expect(badge).toBeTruthy();
     expect(badge!.textContent).toBe('EDIT');
-    badge!.remove();
-  });
-
-  it('destroys removes badge', () => {
-    modeTogglePlugin.init(ctx);
     modeTogglePlugin.destroy();
-    expect(document.getElementById('mode-badge')).toBeNull();
   });
 });

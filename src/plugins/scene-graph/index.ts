@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import type { ScenePlugin, PluginContext } from '../types';
+import { registerTool, destroyTool } from '../sidebar';
 
 export const sceneGraphPlugin: ScenePlugin = (() => {
   let ctx: PluginContext;
-  let panel: HTMLElement;
-  let treeEl: HTMLElement;
-  let propsEl: HTMLElement;
+  let treeEl: HTMLElement | null = null;
+  let propsEl: HTMLElement | null = null;
   let nodeMap = new Map<string, THREE.Object3D>();
   let selectedRow: HTMLElement | null = null;
 
@@ -14,7 +14,7 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
   }
 
   function selectObject(obj: THREE.Object3D) {
-    if (selectedRow) selectedRow.style.background = 'transparent';
+    if (selectedRow) selectedRow.classList.remove('s');
     ctx.selectedObject = obj;
 
     ctx.scene.traverse(child => {
@@ -30,7 +30,7 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
   function onRowClick(obj: THREE.Object3D, row: HTMLElement) {
     return () => {
       selectObject(obj);
-      row.style.background = '#335';
+      row.classList.add('s');
       selectedRow = row;
     };
   }
@@ -41,10 +41,11 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
       nodeMap.set(child.id.toString(), child);
 
       const row = document.createElement('div');
-      const indent = depth * 16;
-      row.style.cssText = `padding-left:${indent}px;cursor:pointer;padding:2px 4px;font:12px monospace;display:flex;align-items:center;gap:4px;border-radius:2px;`;
+      row.className = 'sg-r';
+      row.style.paddingLeft = `${depth * 16 + 8}px`;
 
       const icon = document.createElement('span');
+      icon.className = 'sg-i';
       if (child instanceof THREE.Mesh) icon.textContent = '◇';
       else if (child instanceof THREE.Light) icon.textContent = '☀';
       else if (child instanceof THREE.Points) icon.textContent = '•';
@@ -53,12 +54,13 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
       row.appendChild(icon);
 
       const label = document.createElement('span');
+      label.className = 'sg-l';
       label.textContent = getLabel(child);
       row.appendChild(label);
 
       const badge = document.createElement('span');
+      badge.className = 'sg-b';
       badge.textContent = child.type;
-      badge.style.cssText = 'margin-left:auto;font-size:10px;color:#888;';
       row.appendChild(badge);
 
       row.addEventListener('click', onRowClick(child, row));
@@ -67,13 +69,14 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
     }
   }
 
-  function buildTree() {
+  function buildTree(container: HTMLElement) {
     nodeMap.clear();
-    treeEl.innerHTML = '';
-    addNode(ctx.scene, 0, treeEl);
+    container.innerHTML = '';
+    addNode(ctx.scene, 0, container);
   }
 
   function updateProps(obj: THREE.Object3D) {
+    if (!propsEl) return;
     propsEl.innerHTML = '';
     const fields: [string, string][] = [
       ['Name', obj.name || '(unnamed)'],
@@ -84,16 +87,38 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
     ];
     for (const [k, v] of fields) {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;gap:8px;padding:2px 4px;font:11px monospace;';
+      row.className = 'pr';
       const key = document.createElement('span');
+      key.className = 'pk';
       key.textContent = k + ':';
-      key.style.cssText = 'color:#888;min-width:60px;';
       const val = document.createElement('span');
+      val.className = 'pv';
       val.textContent = v;
       row.appendChild(key);
       row.appendChild(val);
       propsEl.appendChild(row);
     }
+  }
+
+  function initPanel(container: HTMLElement) {
+    treeEl = document.createElement('div');
+    container.appendChild(treeEl);
+
+    const divider = document.createElement('div');
+    divider.style.cssText = 'height:1px;background:var(--border);margin:6px 0;';
+    container.appendChild(divider);
+
+    propsEl = document.createElement('div');
+    container.appendChild(propsEl);
+
+    buildTree(treeEl);
+  }
+
+  function destroyPanel() {
+    treeEl = null;
+    propsEl = null;
+    nodeMap.clear();
+    selectedRow = null;
   }
 
   return {
@@ -104,63 +129,27 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
 
     init(k: PluginContext) {
       ctx = k;
-
-      panel = document.createElement('div');
-      panel.id = 'scene-graph-panel';
-      Object.assign(panel.style, {
-        position: 'fixed',
-        top: '12px',
-        left: '12px',
-        width: '280px',
-        maxHeight: '70vh',
-        background: 'rgba(20,20,30,0.92)',
-        border: '1px solid #446',
-        borderRadius: '6px',
-        padding: '8px',
-        overflow: 'auto',
-        zIndex: '999',
-        fontFamily: 'monospace',
-        color: '#ccc',
-        fontSize: '12px',
+      registerTool({
+        id: 'scene-graph',
+        label: 'Scene Graph',
+        icon: '▤',
+        init: initPanel,
+        destroy: destroyPanel,
       });
-
-      const title = document.createElement('div');
-      title.textContent = 'Scene Graph';
-      title.style.cssText = 'font-weight:bold;margin-bottom:6px;color:#aac;';
-      panel.appendChild(title);
-
-      treeEl = document.createElement('div');
-      panel.appendChild(treeEl);
-
-      const divider = document.createElement('div');
-      divider.style.cssText = 'height:1px;background:#446;margin:8px 0;';
-      panel.appendChild(divider);
-
-      const propsTitle = document.createElement('div');
-      propsTitle.textContent = 'Properties';
-      propsTitle.style.cssText = 'font-weight:bold;margin-bottom:4px;color:#aac;';
-      panel.appendChild(propsTitle);
-
-      propsEl = document.createElement('div');
-      panel.appendChild(propsEl);
-
-      document.body.appendChild(panel);
-      buildTree();
     },
 
     onModeSwitch(_from: 'edit' | 'play', to: 'edit' | 'play') {
       if (to === 'edit') {
         selectedRow = null;
         ctx.selectedObject = null;
-        buildTree();
-        propsEl.innerHTML = '';
+        if (treeEl) buildTree(treeEl);
+        if (propsEl) propsEl.innerHTML = '';
       }
     },
 
     destroy() {
-      panel?.remove();
-      nodeMap.clear();
-      selectedRow = null;
+      destroyPanel();
+      destroyTool('scene-graph');
     },
   };
 })();

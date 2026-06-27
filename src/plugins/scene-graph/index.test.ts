@@ -27,7 +27,7 @@ describe('sceneGraphPlugin', () => {
   let ctx: PluginContext;
 
   beforeEach(() => {
-    document.body.innerHTML = '';
+    document.body.innerHTML = '<div id="tb"></div><div id="pn"><div id="pn-b"></div><div id="pn-t"></div><div id="pn-x"></div></div>';
     ctx = mockPluginContext();
   });
 
@@ -45,18 +45,17 @@ describe('sceneGraphPlugin', () => {
     expect(sceneGraphPlugin.priority).toBe(15);
   });
 
-  it('creates panel with tree on init', () => {
+  it('creates toolbar button on init', () => {
     sceneGraphPlugin.init(ctx);
-    const panel = document.getElementById('scene-graph-panel');
-    expect(panel).toBeTruthy();
-    expect(panel!.textContent).toContain('test-group');
-    expect(panel!.textContent).toContain('test-mesh');
+    const btn = document.querySelector('.tb-b');
+    expect(btn).toBeTruthy();
+    expect(btn!.getAttribute('data-tool')).toBe('scene-graph');
     sceneGraphPlugin.destroy();
   });
 
-  it('removes panel on destroy', () => {
+  it('removes toolbar button on destroy', () => {
     sceneGraphPlugin.init(ctx);
     sceneGraphPlugin.destroy();
-    expect(document.getElementById('scene-graph-panel')).toBeNull();
+    expect(document.querySelector('.tb-b')).toBeNull();
   });
 });

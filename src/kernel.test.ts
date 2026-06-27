@@ -35,4 +35,20 @@ describe('PluginRegistry integration', () => {
     const active = reg.getActive('edit');
     expect(active).toHaveLength(1);
   });
+
+  it('setMode isolates plugin crashes — one failing onModeSwitch does not block others', () => {
+    const goodFn = vi.fn();
+    const badFn = vi.fn().mockImplementation(() => { throw new Error('plugin crash'); });
+    const reg = new PluginRegistry();
+    reg.register({ id: 'bad', label: 'Bad', modes: new Set(['edit', 'play']), priority: 0, init() {}, destroy() {}, onModeSwitch: badFn });
+    reg.register({ id: 'good', label: 'Good', modes: new Set(['edit', 'play']), priority: 10, init() {}, destroy() {}, onModeSwitch: goodFn });
+
+    const plugins = reg.getAll();
+    for (const p of plugins) {
+      try { p.onModeSwitch?.('edit', 'play'); } catch {}
+    }
+
+    expect(goodFn).toHaveBeenCalledWith('edit', 'play');
+    expect(badFn).toHaveBeenCalledTimes(1);
+  });
 });

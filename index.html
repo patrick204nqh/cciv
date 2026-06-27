@@ -5,19 +5,134 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CCIV — The Vessel</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#08121c;overflow:hidden;font-family:'Georgia',serif}
-  canvas{display:block}
-  #tp{position:fixed;top:20px;left:20px;color:#e8d5a0;pointer-events:none;user-select:none}
-  #tp h1{font-size:20px;letter-spacing:4px;font-weight:normal;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+*{margin:0;padding:0;box-sizing:border-box}
 
-  #ch{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
-      color:#384858;font-size:10px;letter-spacing:1px;pointer-events:none}
+:root{--bg:oklch(0.08 0.02 260);--surface:oklch(0.15 0.03 260);--surface-hover:oklch(0.20 0.04 260);--accent:oklch(0.70 0.15 85);--accent-dim:oklch(0.55 0.12 85);--ink:oklch(0.85 0.02 260);--ink-muted:oklch(0.55 0.03 260);--hud-bg:oklch(0.05 0.01 260 / 0.85);--border:oklch(0.25 0.04 260);--font-serif:'Georgia','Times New Roman',serif;--font-mono:'SF Mono','Cascadia Code','Consolas',monospace;--font-ui:system-ui,-apple-system,sans-serif;--tb-w:44px;--pn-w:280px;--ts:400ms}
+
+body{background:var(--bg);overflow:hidden;font-family:var(--font-ui);color:var(--ink)}
+canvas{display:block}
+
+/* ====== Title header (top-left, transparent overlay) ====== */
+#tz{position:fixed;top:8px;left:12px;z-index:350;font-family:var(--font-serif);user-select:none;pointer-events:none}
+#tz h1{font-size:17px;letter-spacing:5px;font-weight:400;color:var(--accent);line-height:1;text-shadow:0 0 16px rgba(0,0,0,.6)}
+#tz .sub{font-size:9px;letter-spacing:2px;color:var(--ink-muted);line-height:1;margin-top:4px;text-shadow:0 0 12px rgba(0,0,0,.6)}
+
+/* ====== Controls hint ====== */
+#ch{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:var(--ink-muted);font-size:10px;letter-spacing:1.5px;font-family:var(--font-mono);pointer-events:none;user-select:none;z-index:100;opacity:1;transition:opacity 1s ease;text-shadow:0 2px 12px rgba(0,0,0,.9)}
+#ch.h{opacity:0}
+
+/* ====== Widget base ====== */
+.w{position:fixed;z-index:100;pointer-events:none;user-select:none}
+.wi{background:var(--hud-bg);border:1px solid var(--border);border-radius:4px;padding:8px 12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+
+/* ====== Ship's Log widget (top, centered) ====== */
+#sl{opacity:0;transition:opacity 800ms ease;top:8px;left:50%;transform:translateX(-50%)}
+#sl.on{opacity:1}
+.sl-i{display:flex;gap:20px;align-items:center;font-size:11px;font-family:var(--font-mono);color:var(--ink)}
+.sl-l{color:var(--ink-muted)}
+
+/* ====== Perf widget (top-right, left of toolbar) ====== */
+#ph{top:8px;right:calc(var(--tb-w) + 8px);font:11px var(--font-mono);color:oklch(0.60 0.10 150);padding:6px 10px}
+
+/* ====== Mode badge (bottom-left) ====== */
+#mb{position:fixed;bottom:16px;left:12px;z-index:1000;padding:5px 12px;border-radius:3px;color:var(--ink);font:11px var(--font-mono);letter-spacing:1.5px;cursor:pointer;user-select:none;background:var(--surface);border:1px solid var(--border);transition:background 300ms ease,border-color 300ms ease}
+#mb:hover{border-color:var(--accent-dim)}
+#mb.e{border-color:var(--accent-dim);background:oklch(0.25 0.06 260)}
+#mb.p{border-color:var(--ink-muted);background:var(--surface)}
+
+/* ====== Toolbar rail (right side) ====== */
+#tb{position:fixed;top:0;right:0;width:var(--tb-w);height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:300;display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;transition:transform var(--ts) cubic-bezier(0.16,1,0.3,1)}
+#tb.c{transform:translateX(var(--tb-w))}
+
+.tb-b{width:32px;height:32px;border-radius:4px;border:none;background:transparent;color:var(--ink-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:background 150ms ease,color 150ms ease}
+.tb-b:hover{background:var(--surface-hover);color:var(--ink)}
+.tb-b.a{background:oklch(0.25 0.06 260);color:var(--accent)}
+
+/* Spacer in toolbar */
+.tb-s{flex:1}
+
+/* ====== Tool panel (slides left of toolbar, from right) ====== */
+#pn{position:fixed;top:0;right:var(--tb-w);width:var(--pn-w);height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform var(--ts) cubic-bezier(0.16,1,0.3,1);display:flex;flex-direction:column;overflow:hidden}
+#pn.o{transform:translateX(0)}
+#pn-h{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+#pn-h h3{font-family:var(--font-serif);font-size:12px;letter-spacing:2px;font-weight:400;color:var(--accent)}
+#pn-x{background:none;border:none;color:var(--ink-muted);cursor:pointer;font:14px var(--font-ui);padding:2px 6px;border-radius:2px;transition:color 150ms ease}
+#pn-x:hover{color:var(--ink)}
+#pn-b{flex:1;overflow-y:auto;padding:8px 0}
+#pn-b::-webkit-scrollbar{width:4px}
+#pn-b::-webkit-scrollbar-track{background:transparent}
+#pn-b::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* Select inside panel */
+#pn select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--border);border-radius:3px;padding:5px 8px;font:11px var(--font-ui);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px}
+#pn select:hover{border-color:var(--accent-dim)}
+#pn select:focus{border-color:var(--accent)}
+
+/* Scene graph tree */
+.sg-r{cursor:pointer;padding:2px 8px;font:11px var(--font-mono);display:flex;align-items:center;gap:4px;border-radius:2px;color:var(--ink);transition:background 150ms ease}
+.sg-r:hover{background:var(--surface-hover)}
+.sg-r.s{background:oklch(0.25 0.06 260)}
+.sg-i{color:var(--accent-dim);width:14px;text-align:center;flex-shrink:0}
+.sg-l{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sg-b{font-size:9px;color:var(--ink-muted);flex-shrink:0}
+
+/* Props */
+.pr{display:flex;gap:8px;padding:1px 8px;font:10px var(--font-mono)}
+.pk{color:var(--ink-muted);min-width:60px}
+.pv{color:var(--ink)}
+
+/* lil-gui overrides */
+.lil-gui{--background:transparent!important;--font-family:var(--font-mono)!important;--font-size:11px!important;--input-background:var(--bg)!important;--color:var(--ink)!important;--title-background:transparent!important;--title-text-color:var(--accent-dim)!important;--widget-color:var(--surface)!important;--focus-color:var(--accent)!important;--toggle-on:var(--accent-dim)!important;--toggle-off:var(--border)!important;--slider-knob-color:var(--accent)!important;--slider-input-color:var(--ink)!important;--slider-input-focus-color:var(--accent)!important;width:100%!important;max-width:100%!important}
+.lil-gui .controller{border-left:none!important}
+
+@media(max-width:640px){
+  .w{display:none}
+  #tz h1{font-size:14px;letter-spacing:3px}
+  #tz .sub{font-size:8px}
+  #tb{width:36px}
+  #tb.c{transform:translateX(36px)}
+  #pn{right:36px;width:calc(100vw - 36px)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  #tb,#pn,#sl,#ch{transition:none!important}
+}
 </style>
 </head>
 <body>
-<div id="tp"><h1>CCIV</h1></div>
+
+<div id="tz">
+  <h1>CCIV</h1>
+  <div class="sub">THE VESSEL</div>
+</div>
+
 <div id="ch">DRAG · SCROLL TO ZOOM · RIGHT-DRAG TO PAN</div>
+
+ <div id="sl" class="w">
+    <div class="wi sl-i">
+      <span><span class="sl-l">WIND</span> <span id="sl-wind">— kn</span></span>
+      <span><span class="sl-l">SWELL</span> <span id="sl-swell">— m</span></span>
+      <span><span class="sl-l">TIME</span> <span id="sl-time">— Z</span></span>
+      <span><span class="sl-l">HDG</span> <span id="sl-heading">—°</span></span>
+    </div>
+  </div>
+
+<div id="ph" class="w wi">— FPS · — DC · — tri</div>
+
+<div id="mb">EDIT</div>
+
+<div id="tb">
+  <div class="tb-s"></div>
+</div>
+
+<div id="pn">
+  <div id="pn-h">
+    <h3 id="pn-t"></h3>
+    <button id="pn-x">✕</button>
+  </div>
+  <div id="pn-b"></div>
+</div>
+
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

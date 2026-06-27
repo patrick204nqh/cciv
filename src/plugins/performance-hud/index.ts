@@ -15,22 +15,7 @@ export const performanceHudPlugin: ScenePlugin = (() => {
 
     init(k: PluginContext) {
       ctx = k;
-      el = document.createElement('div');
-      el.id = 'perf-hud';
-      Object.assign(el.style, {
-        position: 'fixed',
-        top: '12px',
-        right: '12px',
-        padding: '6px 10px',
-        borderRadius: '4px',
-        color: '#8c8',
-        font: '12px monospace',
-        background: 'rgba(0,0,0,0.6)',
-        zIndex: '999',
-        pointerEvents: 'none',
-        userSelect: 'none',
-      });
-      document.body.appendChild(el);
+      el = document.getElementById('ph')!;
     },
 
     render(dt: number) {
@@ -41,12 +26,10 @@ export const performanceHudPlugin: ScenePlugin = (() => {
         frameCount = 0;
         fpsAccum = 0;
       }
-      const info = ctx.renderer.info;
+      const info = ctx.renderer!.info;
       el.textContent = `${fps} FPS · ${info.render.calls} DC · ${info.render.triangles} tri`;
     },
 
-    destroy() {
-      el?.remove();
-    },
+    destroy() {},
   };
 })();

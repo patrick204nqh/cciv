@@ -1,9 +1,10 @@
 import type { ScenePlugin, PluginContext } from '../types';
 import { LOCATION_PRESETS, CCIV_WORLD } from '../../state/worlds';
+import { registerTool, destroyTool } from '../sidebar';
 
 export const locationSwitcherPlugin: ScenePlugin = (() => {
   let ctx: PluginContext;
-  let select: HTMLSelectElement;
+  let select: HTMLSelectElement | null = null;
   let transitioning = false;
 
   function switchTo(locationId: string) {
@@ -39,6 +40,21 @@ export const locationSwitcherPlugin: ScenePlugin = (() => {
     tick();
   }
 
+  function initPanel(container: HTMLElement) {
+    select = document.createElement('select');
+
+    for (const locId of CCIV_WORLD.locations) {
+      const opt = document.createElement('option');
+      opt.value = locId;
+      opt.textContent = locId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      select.appendChild(opt);
+    }
+
+    select.value = ctx.store.get('activeLocation') as string;
+    select.addEventListener('change', () => switchTo(select.value));
+    container.appendChild(select);
+  }
+
   return {
     id: 'location-switcher',
     label: 'Location Switcher',
@@ -47,23 +63,17 @@ export const locationSwitcherPlugin: ScenePlugin = (() => {
 
     init(k: PluginContext) {
       ctx = k;
-      select = document.createElement('select');
-      select.style.cssText = 'position:fixed;top:8px;left:8px;z-index:1000;padding:4px 8px;font-size:13px;';
-
-      for (const locId of CCIV_WORLD.locations) {
-        const opt = document.createElement('option');
-        opt.value = locId;
-        opt.textContent = locId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        select.appendChild(opt);
-      }
-
-      select.value = ctx.store.get('activeLocation') as string;
-      select.addEventListener('change', () => switchTo(select.value));
-      document.body.appendChild(select);
+      registerTool({
+        id: 'location-switcher',
+        label: 'Locations',
+        icon: '🌍',
+        init: initPanel,
+      });
     },
 
     destroy() {
-      select.remove();
+      select = null;
+      destroyTool('location-switcher');
     },
   };
 })();

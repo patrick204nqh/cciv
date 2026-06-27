@@ -33,7 +33,11 @@ export class Kernel {
     this._mode = m
     entityManager.setPaused(m === 'edit')
     for (const p of this.registry.getAll()) {
-      p.onModeSwitch?.(prev, m)
+      try {
+        p.onModeSwitch?.(prev, m)
+      } catch (e) {
+        console.warn(`[kernel] onModeSwitch error in plugin "${p.id}":`, e)
+      }
     }
   }
 

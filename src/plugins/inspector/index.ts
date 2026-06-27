@@ -1,9 +1,10 @@
 import GUI from 'lil-gui';
 import type { ScenePlugin, PluginContext } from '../types';
+import { registerTool, destroyTool } from '../sidebar';
 
 export const inspectorPlugin: ScenePlugin = (() => {
   let ctx: PluginContext;
-  let gui: GUI;
+  let gui: GUI | null = null;
   let folders: GUI[] = [];
   let unsub: (() => void) | null = null;
 
@@ -14,6 +15,19 @@ export const inspectorPlugin: ScenePlugin = (() => {
     buildInstances();
   }
 
+  function initPanel(container: HTMLElement) {
+    gui = new GUI({ container, title: 'CCIV Inspector' });
+    rebuild();
+    unsub = ctx.store.subscribe('activeLocation', () => rebuild());
+  }
+
+  function destroyPanel() {
+    unsub?.();
+    gui?.destroy();
+    gui = null;
+    folders = [];
+  }
+
   return {
     id: 'inspector',
     label: 'Inspector',
@@ -22,31 +36,34 @@ export const inspectorPlugin: ScenePlugin = (() => {
 
     init(k: PluginContext) {
       ctx = k;
-      gui = new GUI({ title: 'CCIV Inspector' });
-      rebuild();
-      unsub = ctx.store.subscribe('activeLocation', () => rebuild());
+      registerTool({
+        id: 'inspector',
+        label: 'Inspector',
+        icon: '⚙',
+        init: initPanel,
+        destroy: destroyPanel,
+      });
     },
 
     destroy() {
-      unsub?.();
-      gui.destroy();
-      folders = [];
+      destroyPanel();
+      destroyTool('inspector');
     },
   };
 
   function buildEnvironment() {
     const env = ctx.store.get('environment') as any;
-    const sky = gui.addFolder('Sky');
+    const sky = gui!.addFolder('Sky');
     sky.add(env.sky, 'gradientTop').name('Top Color').onChange((v: string) => ctx.store.set('environment.sky.gradientTop', v));
     sky.add(env.sky, 'gradientBottom').name('Bottom Color').onChange((v: string) => ctx.store.set('environment.sky.gradientBottom', v));
     folders.push(sky);
 
-    const fog = gui.addFolder('Fog');
+    const fog = gui!.addFolder('Fog');
     fog.add(env.fog, 'color').name('Color').onChange((v: string) => ctx.store.set('environment.fog.color', v));
     fog.add(env.fog, 'density', 0, 0.01).name('Density').onChange((v: number) => ctx.store.set('environment.fog.density', v));
     folders.push(fog);
 
-    const sun = gui.addFolder('Sun');
+    const sun = gui!.addFolder('Sun');
     const l = env.lighting;
     sun.add(l.sun, 'enabled').name('Enabled').onChange((v: boolean) => ctx.store.set('environment.lighting.sun.enabled', v));
     sun.add(l.sun, 'intensity', 0, 10).name('Intensity').onChange((v: number) => ctx.store.set('environment.lighting.sun.intensity', v));
@@ -55,7 +72,7 @@ export const inspectorPlugin: ScenePlugin = (() => {
     sun.add(l.sun, 'elevation', 0, Math.PI / 2).name('Elevation').onChange((v: number) => ctx.store.set('environment.lighting.sun.elevation', v));
     folders.push(sun);
 
-    const ocean = gui.addFolder('Ocean');
+    const ocean = gui!.addFolder('Ocean');
     ocean.add(env.ocean, 'color').name('Color').onChange((v: string) => ctx.store.set('environment.ocean.color', v));
     ocean.add(env.ocean, 'opacity', 0, 1).name('Opacity').onChange((v: number) => ctx.store.set('environment.ocean.opacity', v));
     folders.push(ocean);
@@ -63,7 +80,7 @@ export const inspectorPlugin: ScenePlugin = (() => {
 
   function buildInstances() {
     const inst = ctx.store.get('instances') as any;
-    const ship = gui.addFolder('Ship');
+    const ship = gui!.addFolder('Ship');
     ship.add(inst.ship, 'visible').name('Visible').onChange((v: boolean) => ctx.store.set('instances.ship.visible', v));
 
     const mat = ship.addFolder('Materials');
