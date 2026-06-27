@@ -1,7 +1,7 @@
 {
-  "ship_pinnace": {
+  "ship": {
     "source": "polyhaven",
-    "id": "ship_pinnace",
+    "asset": "ship_pinnace",
     "resolution": "4k",
     "copyright": "CC0"
   }

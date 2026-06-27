@@ -6,3 +6,5 @@ dist/
 .opencode/skills/
 docs/superpowers/
 *.local.json
+public/models/ship.glb
+public/textures/

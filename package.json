@@ -6,10 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "model:pull": "node scripts/pull-reference.mjs",
-    "model:build": "node scripts/build-model.mjs",
-    "model:compile": "tsx src/scripts/compile-model.ts"
+"preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pipeline:compile": "tsx scripts/pipeline/compile.ts",
+    "pipeline:publish": "tsx scripts/pipeline/publish.ts",
+    "build:models": "tsx scripts/pipeline/index.ts",
+    "reference:pull": "tsx scripts/reference/pull.ts",
+    "setup": "npm run build:models"
   },
   "dependencies": {
     "@gltf-transform/core": "^4.4.0",
@@ -20,6 +24,7 @@
     "@types/three": "^0.174.0",
     "tsx": "^4.22.4",
     "typescript": "^5.7.0",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^4.1.9"
   }
 }

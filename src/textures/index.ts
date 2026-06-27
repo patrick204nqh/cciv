@@ -1,5 +1,7 @@
 import * as THREE from 'three';
-import { TEXTURES, type TextureSet } from './sources';
+import manifest from './manifest.json';
+
+const TEXTURES = manifest as Record<string, Record<string, string>>;
 
 let loader: THREE.TextureLoader | null = null;
 function getLoader(): THREE.TextureLoader {
