@@ -9,6 +9,7 @@ import { gizmosPlugin } from './plugins/gizmos';
 import { snapshotPlugin } from './plugins/snapshot';
 import { locationSwitcherPlugin } from './plugins/location-switcher';
 import { simulationPlugin } from './plugins/simulation';
+import { modeTogglePlugin } from './plugins/mode-toggle';
 
 async function main() {
   const kernel = new Kernel();
@@ -17,6 +18,7 @@ async function main() {
   kernel.registerPlugin(snapshotPlugin);
   kernel.registerPlugin(locationSwitcherPlugin);
   kernel.registerPlugin(simulationPlugin);
+  kernel.registerPlugin(modeTogglePlugin);
   const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};
