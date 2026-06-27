@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { Kernel } from './kernel';
-import { createOceanEntity, createSkyEntity, createLightingEntity, createSprayEntity, createWakeEntity, createShipEntity, entityManager } from './entity';
+import { createOceanEntity, createSkyEntity, createLightingEntity, createSprayEntity, createWakeEntity, createShipEntity, createInstanceManager, entityManager } from './entity';
 import { GlbLoader, ModelLoaderImpl, ModelCatalogReader, WorldLoader } from './loaders';
 import { northSea } from './worlds';
+import { LOCATION_PRESETS } from './state/worlds';
 import { inspectorPlugin } from './plugins/inspector';
 import { gizmosPlugin } from './plugins/gizmos';
 import { snapshotPlugin } from './plugins/snapshot';
@@ -30,17 +31,19 @@ async function main() {
   const worldLoader = new WorldLoader();
   const worldResult = await worldLoader.load(northSea, modelLoader);
 
-  for (const { model } of worldResult.entries) {
-    if (model.id === 'ship') {
-      entityManager.attach(createShipEntity(model, store), scene);
-    } else {
-      entityManager.attach({
-        id: model.id,
-        onAttach(s: THREE.Scene) { s.add(model.root); },
-        onDetach() { model.dispose(); },
-      }, scene);
+  const shipEntry = worldResult.entries.find(e => e.model.id === 'ship');
+  if (shipEntry) {
+    entityManager.attach(createShipEntity(shipEntry.model, store), scene);
+  }
+
+  const allRefs = new Set<string>();
+  for (const preset of Object.values(LOCATION_PRESETS)) {
+    for (const def of Object.values(preset.instances)) {
+      allRefs.add(def.ref);
     }
   }
+  await modelLoader.preload(Array.from(allRefs));
+  entityManager.attach(createInstanceManager(modelLoader, scene, store), scene);
 
   entityManager.attach(createOceanEntity(store), scene);
   entityManager.attach(createSkyEntity(store), scene);
