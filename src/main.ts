@@ -4,10 +4,12 @@ import { createOceanEntity, createSkyEntity, createLightingEntity, createSprayEn
 import { GlbLoader, ModelLoaderImpl, ModelCatalogReader, WorldLoader } from './loaders';
 import { northSea } from './worlds';
 import { inspectorPlugin } from './plugins/inspector';
+import { gizmosPlugin } from './plugins/gizmos';
 
 async function main() {
   const kernel = new Kernel();
   kernel.registerPlugin(inspectorPlugin);
+  kernel.registerPlugin(gizmosPlugin);
   const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};
