@@ -1,20 +1,16 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import type { ISceneObject, SceneHandle } from '../scene/types';
-import { SceneObject } from '../scene/object';
-import { physicsWorld } from './world';
-import type { Disposer } from '../util/disposer';
-
-const _tmpVec3 = new THREE.Vector3();
-const _tmpQuat = new THREE.Quaternion();
 
 export class PhysicsDebugRenderer {
-  private meshes: Map<CANNON.Body, THREE.Mesh> = new Map();
-  private _visible = false;
+  private meshes = new Map<CANNON.Body, THREE.Mesh>();
   private _root: THREE.Group;
 
+  get root(): THREE.Object3D {
+    return this._root;
+  }
+
   get visible(): boolean {
-    return this._visible;
+    return this._root.visible;
   }
 
   constructor() {
@@ -22,57 +18,37 @@ export class PhysicsDebugRenderer {
     this._root.visible = false;
   }
 
-  attach(scene: SceneHandle, disposer?: Disposer): void {
-    scene.add(new SceneObject(this._root));
-    disposer?.add(this._root);
-  }
+  sync(bodies: CANNON.Body[]): void {
+    const existing = new Set(this.meshes.keys());
 
-  track(body: CANNON.Body, color = 0x00ff00): void {
-    if (this.meshes.has(body)) return;
-    const mesh = this.buildWireframe(body);
-    if (!mesh) return;
-    mesh.material = new THREE.MeshBasicMaterial({
-      color,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.5,
-      depthWrite: false,
-    });
-    this.meshes.set(body, mesh);
-    this._root.add(mesh);
-  }
+    for (const body of bodies) {
+      if (!existing.has(body)) {
+        this.trackBody(body);
+      } else {
+        existing.delete(body);
+      }
+    }
 
-  untrack(body: CANNON.Body): void {
-    const mesh = this.meshes.get(body);
-    if (mesh) {
-      this._root.remove(mesh);
-      mesh.geometry.dispose();
-      (mesh.material as THREE.Material).dispose();
-      this.meshes.delete(body);
+    for (const body of existing) {
+      this.untrackBody(body);
+    }
+
+    for (const [body, mesh] of this.meshes) {
+      mesh.position.set(body.position.x, body.position.y, body.position.z);
+      mesh.quaternion.set(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w);
     }
   }
 
   show(): void {
-    this._visible = true;
     this._root.visible = true;
   }
 
   hide(): void {
-    this._visible = false;
     this._root.visible = false;
   }
 
   toggle(): void {
-    this._visible ? this.hide() : this.show();
-  }
-
-  sync(): void {
-    if (!this._visible) return;
-    for (const [body, mesh] of this.meshes) {
-      mesh.position.set(body.position.x, body.position.y, body.position.z);
-      _tmpQuat.set(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w);
-      mesh.quaternion.copy(_tmpQuat);
-    }
+    this._root.visible = !this._root.visible;
   }
 
   dispose(): void {
@@ -84,22 +60,46 @@ export class PhysicsDebugRenderer {
     this._root.removeFromParent();
   }
 
+  private trackBody(body: CANNON.Body): void {
+    const mesh = this.buildWireframe(body);
+    if (!mesh) return;
+    this.meshes.set(body, mesh);
+    this._root.add(mesh);
+  }
+
+  private untrackBody(body: CANNON.Body): void {
+    const mesh = this.meshes.get(body);
+    if (!mesh) return;
+    this._root.remove(mesh);
+    mesh.geometry.dispose();
+    (mesh.material as THREE.Material).dispose();
+    this.meshes.delete(body);
+  }
+
   private buildWireframe(body: CANNON.Body): THREE.Mesh | null {
     const shape = body.shapes[0];
-    if (shape instanceof CANNON.Trimesh) {
-      const verts = shape.vertices;
-      const indices = shape.indices;
-      const geo = new THREE.BufferGeometry();
-      const positions = new Float32Array(indices.length * 3);
-      for (let i = 0; i < indices.length; i++) {
-        const idx = indices[i] * 3;
-        positions[i * 3] = verts[idx];
-        positions[i * 3 + 1] = verts[idx + 1];
-        positions[i * 3 + 2] = verts[idx + 2];
-      }
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      return new THREE.Mesh(geo);
+    if (!(shape instanceof CANNON.Trimesh)) return null;
+
+    const verts = shape.vertices;
+    const indices = shape.indices;
+    const positions = new Float32Array(indices.length * 3);
+    for (let i = 0; i < indices.length; i++) {
+      const idx = indices[i] * 3;
+      positions[i * 3] = verts[idx];
+      positions[i * 3 + 1] = verts[idx + 1];
+      positions[i * 3 + 2] = verts[idx + 2];
     }
-    return null;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false,
+    });
+
+    return new THREE.Mesh(geo, mat);
   }
 }

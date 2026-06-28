@@ -12,6 +12,7 @@ import { modeTogglePlugin } from './plugins/mode-toggle';
 import { sceneGraphPlugin } from './plugins/scene-graph';
 import { performanceHudPlugin } from './plugins/performance-hud';
 import { shipHudPlugin } from './plugins/ship-hud';
+import { physicsDebugPlugin } from './plugins/physics-debug';
 async function main() {
   const kernel = new Kernel();
   kernel.registerPlugin(inspectorPlugin);
@@ -23,6 +24,7 @@ async function main() {
   kernel.registerPlugin(sceneGraphPlugin);
   kernel.registerPlugin(performanceHudPlugin);
   kernel.registerPlugin(shipHudPlugin);
+  kernel.registerPlugin(physicsDebugPlugin);
   const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};
