@@ -17,7 +17,7 @@ describe('simulationPlugin', () => {
   });
 
   it('init and destroy are no-ops', () => {
-    expect(() => simulationPlugin.init()).not.toThrow();
+    expect(() => simulationPlugin.init({} as any)).not.toThrow();
     expect(() => simulationPlugin.destroy()).not.toThrow();
   });
 });

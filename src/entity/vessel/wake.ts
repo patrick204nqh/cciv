@@ -5,6 +5,7 @@ import { SceneObject } from '../../scene/object';
 import { MaterialAdapter } from '../../scene/material-adapter';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
+import { bus } from '../../event-bus';
 
 const SEGMENTS = 16;
 const TRAIL_LENGTH = 60;
@@ -62,6 +63,7 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
 
       let prevPos = new THREE.Vector3();
       let intensity = 0;
+      let currentSpeed = 0;
 
       if (disposer) {
         const targetId = vesselId ?? 'vessel';
@@ -80,6 +82,15 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
           mesh.position.y = -0.35;
           mesh.quaternion.copy(evQuat);
         }, disposer);
+
+        const unsubSpeed = bus.on('entity:position-changed', (ev) => {
+          if (ev.entityId === targetId) {
+            currentSpeed = Math.sqrt(ev.vx * ev.vx + ev.vy * ev.vy + ev.vz * ev.vz);
+            const speedIntensity = Math.min(currentSpeed * 0.15, 0.2);
+            mat.opacity = Math.max(mat.opacity, speedIntensity);
+          }
+        });
+        disposer.add(unsubSpeed);
       }
     },
 

@@ -1,5 +1,7 @@
 import type { ScenePlugin } from '../types';
 import { entityManager } from '../../entity/manager';
+import { worldClock } from '../../time';
+import { physicsWorld } from '../../physics';
 
 export const simulationPlugin: ScenePlugin = {
   id: 'simulation',
@@ -8,6 +10,8 @@ export const simulationPlugin: ScenePlugin = {
   priority: 30,
 
   render(dt: number) {
+    worldClock.update(dt);
+    physicsWorld.step(dt);
     entityManager.update(dt);
   },
 

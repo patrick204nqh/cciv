@@ -5,6 +5,7 @@ import { SceneObject } from '../../scene/object';
 import { MaterialAdapter } from '../../scene/material-adapter';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
+import { bus } from '../../event-bus';
 
 const MAX_PARTICLES = 300;
 const BOW_OFFSET = new THREE.Vector3(0, 4, 56);
@@ -45,6 +46,7 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
   let mat: IMaterial;
   let vesselPos = new THREE.Vector3();
   let vesselQuat = new THREE.Quaternion();
+  let shipVelocity = new THREE.Vector3();
 
   function emit() {
     const bow = new THREE.Vector3().copy(BOW_OFFSET).applyQuaternion(vesselQuat).add(vesselPos);
@@ -52,10 +54,12 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
     p.pos.copy(bow);
     p.pos.x += (Math.random() - 0.5) * 1.5;
     p.pos.z += (Math.random() - 0.5) * 1.5;
+
+    const vel = shipVelocity.clone().multiplyScalar(0.15);
     p.vel.set(
-      (Math.random() - 0.5) * 1.8,
-      4 + Math.random() * 5,
-      -1.5 - Math.random() * 2,
+      vel.x + (Math.random() - 0.5) * 1.8,
+      vel.y + 4 + Math.random() * 5,
+      vel.z - 1.5 - Math.random() * 2,
     );
     p.vel.applyQuaternion(vesselQuat);
     p.maxLife = 0.8 + Math.random() * 1.0;
@@ -100,6 +104,13 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
           vesselPos.copy(pos);
           vesselQuat.copy(quat);
         }, disposer);
+
+        const unsubVel = bus.on('entity:position-changed', (ev) => {
+          if (ev.entityId === targetId) {
+            shipVelocity.set(ev.vx, ev.vy, ev.vz);
+          }
+        });
+        disposer.add(unsubVel);
       }
     },
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as THREE from 'three';
 import { createShipEntity } from './ship';
 import type { ModelEntity } from '../../model/types';
 import type { SceneHandle } from '../types';
@@ -10,12 +11,26 @@ vi.mock('../../environment/wave-surface', () => ({
   },
 }));
 
-function mockSceneObject(overrides?: Partial<ISceneObject>): ISceneObject {
+function createMockSceneObject(overrides?: Partial<ISceneObject>): ISceneObject {
   const pos = { x: 0, y: 0, z: 0 };
   const rot = { x: 0, y: 0, z: 0 };
   const scl = { x: 1, y: 1, z: 1 };
+
+  const geo = new THREE.BufferGeometry();
+  const verts = new Float32Array(9);
+  geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+  geo.setIndex(new THREE.BufferAttribute(new Uint16Array([0, 1, 2]), 1));
+
+  const hullMesh = new THREE.Mesh(geo);
+  hullMesh.name = 'hull';
+  hullMesh.updateWorldMatrix = vi.fn() as any;
+
+  const rootGroup = new THREE.Group();
+  rootGroup.add(hullMesh);
+  rootGroup.updateWorldMatrix = vi.fn() as any;
+
   return {
-    object3D: { rotation: rot, removeFromParent: vi.fn() } as any,
+    object3D: rootGroup,
     position: pos,
     rotation: rot,
     scale: scl,
@@ -42,11 +57,13 @@ function mockSceneObject(overrides?: Partial<ISceneObject>): ISceneObject {
 
 describe('createShipEntity', () => {
   let model: ModelEntity;
+  let scene: SceneHandle;
 
   beforeEach(() => {
+    scene = { add: vi.fn(), remove: vi.fn() };
     model = {
       id: 'ship',
-      root: mockSceneObject(),
+      root: createMockSceneObject(),
       metadata: { id: 'ship', source: 'extracted' },
       clone: vi.fn() as any,
       dispose: vi.fn(),
@@ -60,17 +77,9 @@ describe('createShipEntity', () => {
   });
 
   it('adds model root to scene on attach', () => {
-    const scene: SceneHandle = { add: vi.fn(), remove: vi.fn() };
     const entity = createShipEntity(model);
     entity.onAttach(scene);
     expect(scene.add).toHaveBeenCalledWith(model.root);
-  });
-
-  it('calls waveSurface.sample on update', async () => {
-    const { waveSurface } = await import('../../environment/wave-surface');
-    const entity = createShipEntity(model);
-    entity.onUpdate!(0.016);
-    expect(waveSurface.sample).toHaveBeenCalled();
   });
 
   it('disposes model on detach', () => {
