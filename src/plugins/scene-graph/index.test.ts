@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as THREE from 'three';
 import { sceneGraphPlugin } from './index';
 import type { PluginContext } from '../types';
+import { useToolbarStore } from '../../ui/stores/toolbar-store';
 
 function mockPluginContext(): PluginContext {
   const scene = new THREE.Scene();
@@ -27,7 +28,7 @@ describe('sceneGraphPlugin', () => {
   let ctx: PluginContext;
 
   beforeEach(() => {
-    document.body.innerHTML = '<div id="tb"></div><div id="pn"><div id="pn-b"></div><div id="pn-t"></div><div id="pn-x"></div></div>';
+    useToolbarStore.setState({ tools: [], activeToolId: null });
     ctx = mockPluginContext();
   });
 
@@ -45,17 +46,17 @@ describe('sceneGraphPlugin', () => {
     expect(sceneGraphPlugin.priority).toBe(15);
   });
 
-  it('creates toolbar button on init', () => {
+  it('registers tool on init', () => {
     sceneGraphPlugin.init(ctx);
-    const btn = document.querySelector('.tb-b');
-    expect(btn).toBeTruthy();
-    expect(btn!.getAttribute('data-tool')).toBe('scene-graph');
+    const tools = useToolbarStore.getState().tools;
+    expect(tools.some(t => t.id === 'scene-graph')).toBe(true);
     sceneGraphPlugin.destroy();
   });
 
-  it('removes toolbar button on destroy', () => {
+  it('removes tool on destroy', () => {
     sceneGraphPlugin.init(ctx);
     sceneGraphPlugin.destroy();
-    expect(document.querySelector('.tb-b')).toBeNull();
+    const tools = useToolbarStore.getState().tools;
+    expect(tools.some(t => t.id === 'scene-graph')).toBe(false);
   });
 });

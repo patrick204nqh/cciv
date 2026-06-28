@@ -5,14 +5,38 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './
 import { Slider } from './ui/slider';
 import { Switch } from './ui/switch';
 import { Button } from './ui/button';
+import { useToastStore } from '../stores/toast-store';
+
+function formatValue(value: number): string {
+  if (Math.abs(value) < 0.01) return value.toExponential(2);
+  if (Number.isInteger(value)) return value.toString();
+  return value.toFixed(3);
+}
 
 function FieldRow({ path, ctx }: { path: string; ctx: PluginContext }) {
   const value = (ctx.state.get as (p: string) => unknown)(path);
 
   if (typeof value === 'boolean') {
     return (
-      <div className="flex items-center justify-between py-1.5">
-        <span className="text-xs font-mono text-muted-foreground truncate mr-2">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '4px 8px',
+        }}
+      >
+        <span
+          style={{
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--ink-muted)',
+            marginRight: '8px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
           {path.split('.').pop()}
         </span>
         <Switch
@@ -25,12 +49,33 @@ function FieldRow({ path, ctx }: { path: string; ctx: PluginContext }) {
 
   if (typeof value === 'number') {
     return (
-      <div className="py-1.5 space-y-1">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-mono text-muted-foreground">
+      <div style={{ padding: '4px 8px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '2px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '11px',
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--ink-muted)',
+            }}
+          >
             {path.split('.').pop()}
           </span>
-          <span className="text-xs font-mono text-foreground">{Number(value).toFixed(4)}</span>
+          <span
+            style={{
+              fontSize: '11px',
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--ink)',
+            }}
+          >
+            {formatValue(value)}
+          </span>
         </div>
         <Slider
           value={[value]}
@@ -45,18 +90,51 @@ function FieldRow({ path, ctx }: { path: string; ctx: PluginContext }) {
 
   if (typeof value === 'string' && value.startsWith('#')) {
     return (
-      <div className="flex items-center justify-between py-1.5">
-        <span className="text-xs font-mono text-muted-foreground truncate mr-2">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '4px 8px',
+        }}
+      >
+        <span
+          style={{
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--ink-muted)',
+            marginRight: '8px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
           {path.split('.').pop()}
         </span>
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <input
             type="color"
             value={value}
             onChange={(e) => ctx.state.set(path, e.target.value)}
-            className="h-7 w-10 rounded border border-border bg-background cursor-pointer"
+            style={{
+              width: '28px',
+              height: '28px',
+              border: '1px solid var(--border)',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              padding: 0,
+            }}
           />
-          <span className="text-[10px] font-mono text-ink-muted w-16">{value}</span>
+          <span
+            style={{
+              fontSize: '10px',
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--ink-muted)',
+              width: '64px',
+            }}
+          >
+            {value}
+          </span>
         </div>
       </div>
     );
@@ -67,7 +145,7 @@ function FieldRow({ path, ctx }: { path: string; ctx: PluginContext }) {
 
 function SectionContent({ section, ctx }: { section: { label: string; fields: { path: string; label: string; type: string }[] }; ctx: PluginContext }) {
   return (
-    <div className="space-y-0.5">
+    <div>
       {section.fields.map((field) => (
         <FieldRow key={field.path} path={field.path} ctx={ctx} />
       ))}
@@ -89,6 +167,7 @@ export function InspectorPanel({ ctx }: { ctx: PluginContext }) {
     a.download = `ship-materials-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    useToastStore.getState().show('Preset saved', 'success');
   }, [ctx]);
 
   const loadPreset = useCallback(() => {
@@ -102,12 +181,13 @@ export function InspectorPanel({ ctx }: { ctx: PluginContext }) {
       const text = await file.text();
       const data = JSON.parse(text);
       if (data.format !== 'cciv-material-preset' || data.version !== 1) {
-        console.warn('Invalid material preset file');
+        useToastStore.getState().show('Invalid preset file', 'error');
         return;
       }
       ctx.state.set('instances.ship.materials', data.materials);
+      useToastStore.getState().show('Preset loaded', 'success');
     } catch {
-      console.warn('Failed to load material preset');
+      useToastStore.getState().show('Failed to load preset', 'error');
     }
     e.target.value = '';
   }, [ctx]);
@@ -125,7 +205,15 @@ export function InspectorPanel({ ctx }: { ctx: PluginContext }) {
         ))}
       </Accordion>
 
-      <div className="border-t border-border mt-2 pt-2 px-3 flex gap-2">
+      <div
+        style={{
+          borderTop: '1px solid var(--border)',
+          marginTop: '8px',
+          padding: '8px 12px',
+          display: 'flex',
+          gap: '8px',
+        }}
+      >
         <Button variant="outline" size="sm" onClick={savePreset} className="flex-1 text-xs">
           Save Preset
         </Button>

@@ -16,7 +16,8 @@ import { physicsDebugPlugin } from './plugins/physics-debug';
 import { mountReactShell } from './ui/main';
 import { bridgeStore } from './ui/bridge';
 async function main() {
-  const kernel = new Kernel();
+  const canvasContainer = mountReactShell();
+  const kernel = new Kernel({ container: canvasContainer });
   kernel.registerPlugin(inspectorPlugin);
   kernel.registerPlugin(gizmosPlugin);
   kernel.registerPlugin(snapshotPlugin);
@@ -56,8 +57,6 @@ async function main() {
   }
   await modelLoader.preload(Array.from(allRefs));
   entityManager.attach(createInstanceManager(modelLoader, scene, store), scene);
-
-  mountReactShell();
 
   await kernel.init();
 

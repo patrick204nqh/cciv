@@ -16,7 +16,6 @@ export function ControlHint() {
 
   return (
     <div
-      id="ch"
       style={{
         position: 'fixed',
         bottom: '20px',

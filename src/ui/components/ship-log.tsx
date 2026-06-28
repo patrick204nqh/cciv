@@ -12,8 +12,6 @@ export function ShipLog() {
 
   return (
     <div
-      id="sl"
-      className="w on"
       style={{
         position: 'fixed',
         top: '8px',
@@ -27,7 +25,6 @@ export function ShipLog() {
       }}
     >
       <div
-        className="wi sl-i"
         style={{
           display: 'flex',
           gap: '20px',
@@ -43,11 +40,11 @@ export function ShipLog() {
           WebkitBackdropFilter: 'blur(6px)',
         }}
       >
-        <span><span className="sl-l" style={{ color: 'var(--ink-muted)' }}>WIND</span> {windSpeed} kn</span>
-        <span><span className="sl-l" style={{ color: 'var(--ink-muted)' }}>SWELL</span> {swellHeight} m</span>
-        <span><span className="sl-l" style={{ color: 'var(--ink-muted)' }}>TIME</span> {timeString} Z</span>
-        <span><span className="sl-l" style={{ color: 'var(--ink-muted)' }}>HDG</span> {heading}°</span>
-        <span><span className="sl-l" style={{ color: 'var(--ink-muted)' }}>SPD</span> {speed} kn</span>
+        <span><span style={{ color: 'var(--ink-muted)' }}>WIND</span> {windSpeed} kn</span>
+        <span><span style={{ color: 'var(--ink-muted)' }}>SWELL</span> {swellHeight} m</span>
+        <span><span style={{ color: 'var(--ink-muted)' }}>TIME</span> {timeString} Z</span>
+        <span><span style={{ color: 'var(--ink-muted)' }}>HDG</span> {heading}°</span>
+        <span><span style={{ color: 'var(--ink-muted)' }}>SPD</span> {speed} kn</span>
       </div>
     </div>
   );

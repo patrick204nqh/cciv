@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { modeTogglePlugin } from './index';
+import { useModeStore } from '../../ui/stores/mode-store';
 import type { PluginContext } from '../types';
 
 function mockPluginContext(): PluginContext {
@@ -17,7 +18,7 @@ describe('modeTogglePlugin', () => {
   let ctx: PluginContext;
 
   beforeEach(() => {
-    document.body.innerHTML = '<div id="mb">EDIT</div><div id="ch">hint</div>';
+    useModeStore.setState({ mode: 'edit' });
     ctx = mockPluginContext();
   });
 
@@ -35,11 +36,9 @@ describe('modeTogglePlugin', () => {
     expect(modeTogglePlugin.priority).toBe(100);
   });
 
-  it('sets badge text on init', () => {
+  it('syncs store on init', () => {
     modeTogglePlugin.init(ctx);
-    const badge = document.getElementById('mb');
-    expect(badge).toBeTruthy();
-    expect(badge!.textContent).toBe('EDIT');
+    expect(useModeStore.getState().mode).toBe('edit');
     modeTogglePlugin.destroy();
   });
 });

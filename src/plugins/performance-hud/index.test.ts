@@ -19,7 +19,6 @@ describe('performanceHudPlugin', () => {
   let ctx: PluginContext;
 
   beforeEach(() => {
-    document.body.innerHTML = '<div id="ph">— FPS · — DC · — tri</div>';
     ctx = mockPluginContext();
   });
 
@@ -33,9 +32,8 @@ describe('performanceHudPlugin', () => {
     expect(performanceHudPlugin.modes.has('play')).toBe(true);
   });
 
-  it('creates HUD element on init', () => {
-    performanceHudPlugin.init(ctx);
-    expect(document.getElementById('ph')).toBeTruthy();
+  it('init does not throw', () => {
+    expect(() => performanceHudPlugin.init(ctx)).not.toThrow();
     performanceHudPlugin.destroy();
   });
 

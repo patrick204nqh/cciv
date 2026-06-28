@@ -18,8 +18,6 @@ export function ModeBadge() {
 
   return (
     <button
-      id="mb"
-      className={isEdit ? 'e' : 'p'}
       onClick={handleClick}
       style={{
         position: 'fixed',
@@ -37,6 +35,12 @@ export function ModeBadge() {
         border: isEdit ? '1px solid var(--accent-dim)' : '1px solid var(--ink-muted)',
         transition: 'background 300ms ease, border-color 300ms ease',
         pointerEvents: 'auto',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--gold-dim)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = isEdit ? 'var(--gold-dim)' : 'var(--ink-muted)';
       }}
     >
       {isEdit ? 'EDIT' : 'PLAY'}

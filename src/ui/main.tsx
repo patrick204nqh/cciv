@@ -1,13 +1,11 @@
 import { createRoot } from 'react-dom/client';
-import { ReactShell } from './shell';
+import { flushSync } from 'react-dom';
+import { MainShell } from './shell';
+import { bridgeStore } from './bridge';
 
-export function mountReactShell() {
-  const host = document.createElement('div');
-  host.id = '__react';
-  host.style.cssText = 'position:fixed;inset:0;z-index:1;pointer-events:none';
-  document.body.appendChild(host);
-
+export function mountReactShell(): HTMLElement {
+  const host = document.getElementById('root')!;
   const root = createRoot(host);
-  root.render(<ReactShell />);
-  return root;
+  flushSync(() => root.render(<MainShell />));
+  return bridgeStore.getState().canvasContainer!;
 }

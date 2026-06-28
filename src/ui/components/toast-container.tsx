@@ -1,7 +1,7 @@
 import { useToastStore } from '../stores/toast-store';
 
 const TYPE_COLORS = {
-  info: 'var(--accent)',
+  info: 'var(--gold)',
   success: 'oklch(0.60 0.15 150)',
   error: 'oklch(0.60 0.20 30)',
 };
