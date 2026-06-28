@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import type { ScenePlugin, PluginContext } from '../types';
 import type { ISceneObject } from '../../scene/types';
 import { registerTool, destroyTool } from '../sidebar';
@@ -7,44 +6,22 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
   let ctx: PluginContext;
   let treeEl: HTMLElement | null = null;
   let propsEl: HTMLElement | null = null;
-  let nodeMap = new Map<string, THREE.Object3D>();
+  let nodeMap = new Map<string, ISceneObject>();
   let selectedRow: HTMLElement | null = null;
 
-  function vendorOf(obj: ISceneObject): THREE.Object3D {
-    return (obj as any).object3D;
-  }
-
-  function getLabel(obj: THREE.Object3D): string {
+  function getLabel(obj: ISceneObject): string {
     return obj.name || obj.type;
   }
 
-  function selectObject(obj: THREE.Object3D) {
+  function selectObject(obj: ISceneObject) {
     if (selectedRow) selectedRow.classList.remove('s');
     ctx.selectedObject = obj;
-
-    ctx.scene.traverse(child => {
-      const vendor = vendorOf(child);
-      if ((vendor as any).isTransformControls) {
-        (vendor as any).attach(obj);
-        vendor.visible = true;
-      }
-    });
-
     updateProps(obj);
   }
 
-  function onRowClick(obj: THREE.Object3D, row: HTMLElement) {
-    return () => {
-      selectObject(obj);
-      row.classList.add('s');
-      selectedRow = row;
-    };
-  }
-
-  function addNode(obj: THREE.Object3D, depth: number, container: HTMLElement) {
+  function addNode(obj: ISceneObject, depth: number, container: HTMLElement) {
     for (const child of obj.children) {
-      if ((child as any).isTransformControls) continue;
-      nodeMap.set(child.id.toString(), child);
+      nodeMap.set(child.id, child);
 
       const row = document.createElement('div');
       row.className = 'sg-r';
@@ -52,11 +29,12 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
 
       const icon = document.createElement('span');
       icon.className = 'sg-i';
-      if (child instanceof THREE.Mesh) icon.textContent = '◇';
-      else if (child instanceof THREE.Light) icon.textContent = '☀';
-      else if (child instanceof THREE.Points) icon.textContent = '•';
-      else if (child instanceof THREE.Group) icon.textContent = '▤';
-      else icon.textContent = '○';
+      switch (child.type) {
+        case 'Mesh': icon.textContent = '◇'; break;
+        case 'Group': icon.textContent = '▤'; break;
+        case 'Points': icon.textContent = '•'; break;
+        default: icon.textContent = '○'; break;
+      }
       row.appendChild(icon);
 
       const label = document.createElement('span');
@@ -69,7 +47,11 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
       badge.textContent = child.type;
       row.appendChild(badge);
 
-      row.addEventListener('click', onRowClick(child, row));
+      row.addEventListener('click', () => {
+        selectObject(child);
+        row.classList.add('s');
+        selectedRow = row;
+      });
       container.appendChild(row);
       addNode(child, depth + 1, container);
     }
@@ -78,16 +60,24 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
   function buildTree(container: HTMLElement) {
     nodeMap.clear();
     container.innerHTML = '';
-    addNode(ctx.scene, 0, container);
+    const processed = new Set<string>();
+    ctx.scene.traverse(child => {
+      if (processed.has(child.id)) return;
+      if (!child.parent || !processed.has(child.parent.id)) {
+        addNode(child, 0, container);
+      }
+      processed.add(child.id);
+    });
   }
 
-  function updateProps(obj: THREE.Object3D) {
+  function updateProps(obj: ISceneObject) {
     if (!propsEl) return;
     propsEl.innerHTML = '';
+    const p = obj.position;
     const fields: [string, string][] = [
       ['Name', obj.name || '(unnamed)'],
       ['Type', obj.type],
-      ['Position', `${obj.position.x.toFixed(1)}, ${obj.position.y.toFixed(1)}, ${obj.position.z.toFixed(1)}`],
+      ['Position', `${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`],
       ['Visible', String(obj.visible)],
       ['Children', String(obj.children.length)],
     ];

@@ -33,14 +33,24 @@ export interface IScene extends SceneHandle {
   getObjectByName(name: string): ISceneObject | undefined;
   traverse(fn: (obj: ISceneObject) => void): void;
   createMesh(geometry: import('three').BufferGeometry, material: IMaterial): ISceneObject;
+
+  createDirectionalLight(color: string, intensity: number): ISceneObject;
+  createAmbientLight(color: string, intensity: number): ISceneObject;
+  createHemisphereLight(skyColor: string, groundColor: string, intensity: number): ISceneObject;
+  createPlaneGeometry(width: number, height: number, segW: number, segH: number): import('three').BufferGeometry;
+  createSphereGeometry(radius: number, widthSeg: number, heightSeg: number): import('three').BufferGeometry;
+  createPoints(geometry: import('three').BufferGeometry, material: IMaterial): ISceneObject;
 }
 
 export interface IMaterial {
   dispose(): void;
+  _vendor?: any;
 }
 
 export interface ISceneObject {
   readonly id: string;
+  readonly name: string;
+  readonly type: string;
   readonly userData: Record<string, any>;
   position: Vec3Like;
   rotation: EulerLike;
@@ -68,4 +78,7 @@ export interface ISceneObject {
   updateWorldMatrix(updateParents: boolean, updateChildren: boolean): void;
   clone(): ISceneObject;
   dispose(): void;
+
+  getWorldMatrix(): Float32Array;
+  getGeometryData(): { positions: Float32Array; indices: Uint16Array | Uint32Array } | null;
 }

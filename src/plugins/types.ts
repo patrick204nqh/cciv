@@ -1,7 +1,7 @@
-import type { Object3D } from 'three';
 import type { PluginStateAPI } from './plugin-state-api';
 import type { PluginSceneAPI } from './plugin-scene-api';
 import type { IRenderer, ICamera } from '../rendering/types';
+import type { ISceneObject } from '../scene/types';
 
 export interface PluginContext {
   readonly scene: PluginSceneAPI
@@ -9,7 +9,7 @@ export interface PluginContext {
   readonly mode: 'edit' | 'play'
   readonly renderer?: IRenderer
   readonly camera?: ICamera
-  selectedObject: Object3D | null
+  selectedObject: ISceneObject | null
   setMode(m: 'edit' | 'play'): void
 }
 

@@ -1,60 +1,41 @@
-import * as THREE from 'three';
+import { PlaneGeometry } from 'three';
 import type { SceneEntity, SceneHandle } from '../types';
-import { SceneObject } from '../../scene/object';
 import { createTSLOceanMaterial } from '../../environment/tsl-ocean';
 import type { Disposer } from '../../util/disposer';
-import type { StateStore } from '../../state/store';
-import { EntityStateBinding } from '../../state/binding';
+import { createBasicMaterial } from '../../scene/scene-adapter';
 import { entityRegistry } from '../entity-registry';
 import type { ModelLoader } from '../../loaders/types';
 import type { WorldConfig } from '../../state/types';
 
 entityRegistry.register({
-  async match(config: WorldConfig, _modelLoader: ModelLoader, store?: StateStore) {
+  async match(config: WorldConfig, _modelLoader: ModelLoader) {
     if (!config.environment.ocean) return { entities: [], errors: [] };
-    return { entities: [createOceanEntity(store)], errors: [] };
+    return { entities: [createOceanEntity()], errors: [] };
   },
 });
 
-export function createOceanEntity(store?: StateStore): SceneEntity {
-  let ocean: THREE.Mesh;
+export function createOceanEntity(): SceneEntity {
+  let ocean: any;
 
   return {
     id: 'ocean',
 
     onAttach(scene: SceneHandle, disposer?: Disposer) {
-      const seg = 80;
+      const s = scene as any;
       const size = 1800;
+      const seg = 80;
 
-      const geo = new THREE.PlaneGeometry(size, size, seg, seg);
+      const geo = new PlaneGeometry(size, size, seg, seg);
       geo.rotateX(-Math.PI / 2);
 
       const mat = createTSLOceanMaterial();
+      ocean = s.createMesh(geo, { _vendor: mat, dispose: () => mat.dispose() });
+      s.add(ocean);
 
-      ocean = new THREE.Mesh(geo, mat);
-      ocean.position.y = -0.35;
-      ocean.receiveShadow = true;
-      scene.add(new SceneObject(ocean));
-
-      disposer?.add(geo);
-      disposer?.add(mat);
-      disposer?.add(ocean);
-
-      if (store && disposer) {
-        const binding = new EntityStateBinding(
-          store,
-          'environment.ocean',
-          (cfg: any) => {
-            mat.color.set(cfg.color);
-            mat.opacity = cfg.opacity;
-          }
-        );
-        binding.attach(disposer);
-      }
+      if (disposer) disposer.add(() => ocean.dispose());
     },
 
     onUpdate() {},
-
     onDetach() {},
   };
 }

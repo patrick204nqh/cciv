@@ -1,4 +1,6 @@
-import * as THREE from 'three/webgpu';
+import {
+  WebGPURenderer, PerspectiveCamera, Scene, FogExp2, Color, PCFSoftShadowMap, ACESFilmicToneMapping,
+} from 'three/webgpu';
 import type { IScene } from '../scene/types';
 import { SceneAdapter } from '../scene/scene-adapter';
 import { OrbitControls } from '../three/addons';
@@ -8,16 +10,16 @@ import type { IRenderer, ICamera } from './types';
 export interface RenderingModuleOptions {
   container?: HTMLElement;
   renderer?: any;
-  camera?: THREE.PerspectiveCamera;
+  camera?: PerspectiveCamera;
   onBeforeRender?: (dt: number) => void;
 }
 
 export class RenderingModule {
   readonly _renderer: any;
-  readonly _camera: THREE.PerspectiveCamera;
+  readonly _camera: PerspectiveCamera;
   readonly controls: OrbitControls;
   readonly sceneHandle: IScene;
-  private _scene: THREE.Scene;
+  private _scene: Scene;
   private container: HTMLElement;
   private onBeforeRender?: (dt: number) => void;
 
@@ -43,24 +45,24 @@ export class RenderingModule {
     this.container = opts?.container ?? document.body;
     this.onBeforeRender = opts?.onBeforeRender;
 
-    this._scene = new THREE.Scene();
-    this._scene.fog = new THREE.FogExp2(0x406888, 0.0018);
-    this._scene.background = new THREE.Color(0x5080a0);
+    this._scene = new Scene();
+    this._scene.fog = new FogExp2(0x406888, 0.0018);
+    this._scene.background = new Color(0x5080a0);
     this.sceneHandle = new SceneAdapter(this._scene);
 
     this._renderer = opts?.renderer ?? (() => {
-      const r = new THREE.WebGPURenderer({ antialias: true, forceWebGL: true });
+      const r = new WebGPURenderer({ antialias: true, forceWebGL: true });
       r.setPixelRatio(Math.min(devicePixelRatio, 2));
       r.setSize(innerWidth, innerHeight);
       r.shadowMap.enabled = true;
-      r.shadowMap.type = THREE.PCFSoftShadowMap;
-      r.toneMapping = THREE.ACESFilmicToneMapping;
+      r.shadowMap.type = PCFSoftShadowMap;
+      r.toneMapping = ACESFilmicToneMapping;
       r.toneMappingExposure = 1.15;
       this.container.appendChild(r.domElement);
       return r;
     })();
 
-    this._camera = opts?.camera ?? new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000);
+    this._camera = opts?.camera ?? new PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000);
     this._camera.position.set(140, 65, -90);
 
     this.controls = createOrbitControls(this._camera, this._renderer.domElement);

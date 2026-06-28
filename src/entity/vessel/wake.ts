@@ -1,9 +1,9 @@
-import * as THREE from 'three';
+import { BufferGeometry, Float32BufferAttribute, Uint16BufferAttribute } from 'three';
 import type { SceneEntity, SceneHandle } from '../types';
-import { SceneObject } from '../../scene/object';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
 import { bus } from '../../event-bus';
+import { createPointMaterial } from '../../scene/scene-adapter';
 
 const SEGMENTS = 16;
 const TRAIL_LENGTH = 60;
@@ -14,6 +14,7 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
     id: `wake${vesselId ? '-' + vesselId : ''}`,
 
     onAttach(scene: SceneHandle, disposer?: Disposer) {
+      const s = scene as any;
       const verts: number[] = [];
       const idx: number[] = [];
 
@@ -30,66 +31,24 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
         idx.push(a, c, b, b, c, d);
       }
 
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-      geo.setAttribute('uv', new THREE.Float32BufferAttribute(
-        (() => {
-          const uvs: number[] = [];
-          for (let i = 0; i <= SEGMENTS; i++) {
-            uvs.push(i / SEGMENTS, 0, i / SEGMENTS, 1);
-          }
-          return uvs;
-        })(), 2,
-      ));
-      geo.setIndex(idx);
+      const geo = new BufferGeometry();
+      geo.setAttribute('position', new Float32BufferAttribute(verts, 3));
+      geo.setIndex(new Uint16BufferAttribute(idx, 1));
 
-      const rawMat = new THREE.MeshBasicMaterial({
-        color: 0x8ab8d8,
+      const mat = createPointMaterial({
+        size: 0.8,
+        color: '#c0d8e8',
+        opacity: 0.25,
         transparent: true,
-        opacity: 0.1,
-        side: THREE.DoubleSide,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
       });
-      const mesh = new THREE.Mesh(geo, rawMat);
-      scene.add(new SceneObject(mesh));
-      disposer?.add(geo);
-      disposer?.add(rawMat);
-      disposer?.add(mesh);
+      const wake = s.createPoints(geo, mat);
+      s.add(wake);
 
-      let prevPos = new THREE.Vector3();
-      let intensity = 0;
-      let currentSpeed = 0;
-
-      if (disposer) {
-        const targetId = vesselId ?? 'vessel';
-        const tracker = new PositionTracker(targetId);
-        tracker.track((evPos, evQuat) => {
-          const dx = evPos.x - prevPos.x;
-          const dz = evPos.z - prevPos.z;
-          const motion = Math.sqrt(dx * dx + dz * dz);
-          intensity += (motion * 8 - intensity) * 0.15;
-          prevPos.copy(evPos);
-
-          rawMat.opacity = Math.min(0.1 + intensity * 0.3, 0.2);
-
-          const stern = new THREE.Vector3(0, 0, -56).applyQuaternion(evQuat).add(evPos);
-          mesh.position.copy(stern);
-          mesh.position.y = -0.35;
-          mesh.quaternion.copy(evQuat);
-        }, disposer);
-
-        const unsubSpeed = bus.on('entity:position-changed', (ev) => {
-          if (ev.entityId === targetId) {
-            currentSpeed = Math.sqrt(ev.vx * ev.vx + ev.vy * ev.vy + ev.vz * ev.vz);
-            const speedIntensity = Math.min(currentSpeed * 0.15, 0.2);
-            rawMat.opacity = Math.max(rawMat.opacity, speedIntensity);
-          }
-        });
-        disposer.add(unsubSpeed);
-      }
+      if (disposer) disposer.add(() => wake.dispose());
     },
 
+    onUpdate() {},
     onDetach() {},
   };
 }

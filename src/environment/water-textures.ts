@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { DataTexture, CanvasTexture, RGBAFormat, RepeatWrapping } from 'three';
 
 function canvas(w: number, h: number, fn: (ctx: CanvasRenderingContext2D) => void): HTMLCanvasElement {
   const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -30,7 +30,7 @@ function fbm(x: number, y: number, octaves: number): number {
   return v;
 }
 
-export function createWaterNormalMap(): THREE.CanvasTexture {
+export function createWaterNormalMap(): DataTexture {
   const w = 512, h = 512;
   const imgData = new Uint8Array(w * h * 4);
   for (let y = 0; y < h; y++) {
@@ -50,16 +50,16 @@ export function createWaterNormalMap(): THREE.CanvasTexture {
       imgData[i + 3] = 255;
     }
   }
-  const tex = new THREE.DataTexture(imgData, w, h, THREE.RGBAFormat);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  const tex = new DataTexture(imgData, w, h, RGBAFormat);
+  tex.wrapS = tex.wrapT = RepeatWrapping;
   tex.repeat.set(6, 6);
   tex.anisotropy = 4;
   tex.needsUpdate = true;
   return tex;
 }
 
-export function createWaterDiffuseMap(): THREE.CanvasTexture {
-  const tex = new THREE.CanvasTexture(canvas(256, 256, ctx => {
+export function createWaterDiffuseMap(): CanvasTexture {
+  const tex = new CanvasTexture(canvas(256, 256, ctx => {
     for (let y = 0; y < 256; y++) {
       for (let x = 0; x < 256; x++) {
         const u = x / 256 * 6, v = y / 256 * 6;
@@ -72,7 +72,7 @@ export function createWaterDiffuseMap(): THREE.CanvasTexture {
       }
     }
   }));
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.wrapS = tex.wrapT = RepeatWrapping;
   tex.repeat.set(4, 4);
   tex.anisotropy = 4;
   return tex;

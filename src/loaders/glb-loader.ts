@@ -1,10 +1,10 @@
-import * as THREE from 'three';
+import { Group, Mesh } from 'three';
 import { GLTFLoader, DRACOLoader } from '../three/addons';
 
 export interface GlbLoaderResult {
-  scene: THREE.Group;
-  animations: THREE.AnimationClip[];
-  meshes: THREE.Mesh[];
+  scene: Group;
+  animations: import('three').AnimationClip[];
+  meshes: Mesh[];
 }
 
 export class GlbLoader {
@@ -26,9 +26,9 @@ export class GlbLoader {
       this.loader.load(
         url,
         (gltf) => {
-          const meshes: THREE.Mesh[] = [];
+          const meshes: Mesh[] = [];
           gltf.scene.traverse((child) => {
-            if (child instanceof THREE.Mesh) meshes.push(child);
+            if (child instanceof Mesh) meshes.push(child);
           });
           resolve({
             scene: gltf.scene,

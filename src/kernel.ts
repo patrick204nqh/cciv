@@ -8,7 +8,7 @@ import { createDefaultState } from './state/defaults';
 import { entityManager } from './entity/manager';
 import { FollowCamera } from './controls/follow-camera';
 import type { PluginContext, ScenePlugin } from './plugins/types';
-import type { Object3D } from 'three';
+import type { ISceneObject } from './scene/types';
 
 export interface KernelOptions extends RenderingModuleOptions {}
 
@@ -18,7 +18,7 @@ export class Kernel {
   readonly plugins: PluginManager
   readonly followCamera: FollowCamera
   private _mode: 'edit' | 'play' = 'edit'
-  selectedObject: Object3D | null = null
+  selectedObject: ISceneObject | null = null
   private locationTracker: LocationTracker
 
   get mode() { return this._mode }

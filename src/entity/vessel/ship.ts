@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import type { SceneEntity, SceneHandle } from '../types';
 import { bus } from '../../event-bus';
@@ -44,30 +43,24 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
 
     onAttach(scene: SceneHandle, disposer?: Disposer) {
       scene.add(model.root);
-      disposer?.add((model.root as any).object3D);
+      disposer?.add(() => model.root.dispose());
 
       const hullData = extractHullData(model);
       if (!hullData) return;
 
       model.root.updateWorldMatrix(true, true);
-
-      let hullMatrix: THREE.Matrix4 | null = null;
-      (model.root as any).object3D.traverse((child: THREE.Object3D) => {
-        if (child instanceof THREE.Mesh && child.name === 'hull') {
-          hullMatrix = child.matrixWorld.clone();
-        }
-      });
-
+ 
+      const hullMatrix = model.root.getWorldMatrix();
       if (!hullMatrix) return;
 
-      const vec = new THREE.Vector3();
       const worldPos = new Float32Array(hullData.positions.length);
       for (let i = 0; i < hullData.positions.length; i += 3) {
-        vec.set(hullData.positions[i], hullData.positions[i + 1], hullData.positions[i + 2]);
-        vec.applyMatrix4(hullMatrix);
-        worldPos[i] = vec.x;
-        worldPos[i + 1] = vec.y;
-        worldPos[i + 2] = vec.z;
+        const wx = hullData.positions[i] * hullMatrix[0] + hullData.positions[i + 1] * hullMatrix[4] + hullData.positions[i + 2] * hullMatrix[8] + hullMatrix[12];
+        const wy = hullData.positions[i] * hullMatrix[1] + hullData.positions[i + 1] * hullMatrix[5] + hullData.positions[i + 2] * hullMatrix[9] + hullMatrix[13];
+        const wz = hullData.positions[i] * hullMatrix[2] + hullData.positions[i + 1] * hullMatrix[6] + hullData.positions[i + 2] * hullMatrix[10] + hullMatrix[14];
+        worldPos[i] = wx;
+        worldPos[i + 1] = wy;
+        worldPos[i + 2] = wz;
       }
 
       physicsBody = new PhysicsBody({
@@ -148,18 +141,5 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
 export { createVesselEntity as createShipEntity };
 
 function extractHullData(model: ModelEntity): { positions: Float32Array; indices: Uint16Array | Uint32Array } | null {
-  let positions: Float32Array | null = null;
-  let indices: Uint16Array | Uint32Array | null = null;
-
-  (model.root as any).object3D.traverse((child: THREE.Object3D) => {
-    if (child instanceof THREE.Mesh && child.name === 'hull') {
-      const geo = child.geometry;
-      const pos = geo.attributes.position;
-      positions = new Float32Array(pos.array as Float32Array);
-      indices = new (geo.index!.array.constructor as any)(geo.index!.array);
-    }
-  });
-
-  if (!positions || !indices) return null;
-  return { positions, indices };
+  return model.root.getGeometryData();
 }

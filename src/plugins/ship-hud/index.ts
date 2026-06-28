@@ -1,10 +1,14 @@
-import * as THREE from 'three';
 import { bus } from '../../event-bus';
 import { activeVessel } from '../../controls/active-vessel';
 import type { ScenePlugin } from '../types';
 
 const MS_TO_KN = 1.94384;
-const _euler = new THREE.Euler();
+
+function quatToHeading(qx: number, qy: number, qz: number, qw: number): number {
+  const sinY = 2 * (qw * qy - qz * qx);
+  const cosY = 1 - 2 * (qy * qy + qz * qz);
+  return (Math.atan2(sinY, cosY) * 180 / Math.PI + 360) % 360;
+}
 
 export const shipHudPlugin: ScenePlugin = (() => {
   let logEl: HTMLElement | null = null;
@@ -37,9 +41,7 @@ export const shipHudPlugin: ScenePlugin = (() => {
 
       bus.on('entity:position-changed', (ev) => {
         if (ev.entityId === activeVessel.activeId) {
-          const q = new THREE.Quaternion(ev.qx, ev.qy, ev.qz, ev.qw);
-          _euler.setFromQuaternion(q, 'YXZ');
-          currentHeading = ((_euler.y * 180) / Math.PI + 360) % 360;
+          currentHeading = quatToHeading(ev.qx, ev.qy, ev.qz, ev.qw);
 
           const vx = ev.vx ?? 0;
           const vy = ev.vy ?? 0;

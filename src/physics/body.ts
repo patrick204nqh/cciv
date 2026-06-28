@@ -1,15 +1,21 @@
 import * as CANNON from 'cannon-es';
-import * as THREE from 'three';
 import type { ISceneObject } from '../scene/types';
+import type { Vec3Like } from '../scene/types';
 import type { PhysicsBodyConfig } from './types';
 import { physicsWorld } from './world';
+
+function quatToEuler(qx: number, qy: number, qz: number, qw: number) {
+  const sinP = 2 * (qw * qy - qz * qx);
+  return {
+    x: Math.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy)),
+    y: Math.asin(Math.max(-1, Math.min(1, sinP))),
+    z: Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz)),
+  };
+}
 
 export class PhysicsBody {
   readonly body: CANNON.Body;
   private _scale: number;
-  private _tmpVec = new THREE.Vector3();
-  private _tmpQuat = new THREE.Quaternion();
-  private _tmpEuler = new THREE.Euler();
 
   constructor(config: PhysicsBodyConfig) {
     this._scale = config.shape.type === 'trimesh' ? (config.shape.scale ?? 1) : 1;
@@ -43,11 +49,10 @@ export class PhysicsBody {
     target.position.z = bp.z;
 
     const bq = this.body.quaternion;
-    this._tmpQuat.set(bq.x, bq.y, bq.z, bq.w);
-    this._tmpEuler.setFromQuaternion(this._tmpQuat);
-    target.rotation.x = this._tmpEuler.x;
-    target.rotation.y = this._tmpEuler.y;
-    target.rotation.z = this._tmpEuler.z;
+    const euler = quatToEuler(bq.x, bq.y, bq.z, bq.w);
+    target.rotation.x = euler.x;
+    target.rotation.y = euler.y;
+    target.rotation.z = euler.z;
   }
 
   readFrom(target: ISceneObject): void {
@@ -57,8 +62,12 @@ export class PhysicsBody {
     this.body.quaternion.set(wq.x, wq.y, wq.z, wq.w);
   }
 
-  get velocity(): THREE.Vector3 {
-    return this._tmpVec.set(this.body.velocity.x, this.body.velocity.y, this.body.velocity.z);
+  get velocity(): Vec3Like {
+    return {
+      x: this.body.velocity.x,
+      y: this.body.velocity.y,
+      z: this.body.velocity.z,
+    };
   }
 
   applyForce(force: [number, number, number], worldPoint: [number, number, number]): void {

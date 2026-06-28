@@ -1,13 +1,11 @@
-import * as THREE from 'three';
 import type { ISceneObject } from '../scene/types';
 
 export function traverseMeshes(
   root: ISceneObject,
-  fn: (mesh: THREE.Mesh, material: THREE.MeshStandardMaterial) => void,
+  fn: (mesh: ISceneObject, material: any) => void,
 ): void {
-  (root as any).object3D.traverse((child: THREE.Object3D) => {
-    if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
-      fn(child, child.material);
-    }
+  root.traverseMeshes((mesh) => {
+    const vendorObj = (mesh as any)._obj;
+    fn(mesh, vendorObj?.material);
   });
 }

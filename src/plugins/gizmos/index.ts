@@ -1,18 +1,19 @@
-import * as THREE from 'three';
+import { Object3D, Mesh, Camera, Raycaster, Vector2 } from 'three';
 import { TransformControls } from '../../three/addons';
 import type { ScenePlugin, PluginContext } from '../types';
 import type { ISceneObject } from '../../scene/types';
+import { SceneObject } from '../../scene/object';
 
-function vendorOf(obj: ISceneObject): THREE.Object3D {
-  return (obj as any).object3D;
+function vendorOf(obj: ISceneObject): Object3D {
+  return (obj as any)._obj;
 }
 
 export const gizmosPlugin: ScenePlugin = (() => {
   let ctx: PluginContext;
   let controls: TransformControls;
-  let vendorCam: THREE.Camera;
-  const raycaster = new THREE.Raycaster();
-  const pointer = new THREE.Vector2();
+  let vendorCam: Camera;
+  const raycaster = new Raycaster();
+  const pointer = new Vector2();
 
   function onPointerDown(e: PointerEvent) {
     if (controls.enabled === false) return;
@@ -21,21 +22,21 @@ export const gizmosPlugin: ScenePlugin = (() => {
     pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(pointer, vendorCam);
 
-    const meshes: THREE.Object3D[] = [];
+    const meshes: Object3D[] = [];
     ctx.scene.traverse(child => {
       const vendor = vendorOf(child);
-      if (vendor instanceof THREE.Mesh) meshes.push(vendor);
+      if (vendor instanceof Mesh) meshes.push(vendor);
     });
 
     const hits = raycaster.intersectObjects(meshes, false);
     if (hits.length > 0) {
-      ctx.selectedObject = hits[0].object;
+      ctx.selectedObject = hits[0].object as any;
       controls.attach(hits[0].object);
-      controls.visible = true;
+      (controls as any).visible = true;
     } else {
       ctx.selectedObject = null;
       controls.detach();
-      controls.visible = false;
+      (controls as any).visible = false;
     }
   }
 
@@ -51,8 +52,8 @@ export const gizmosPlugin: ScenePlugin = (() => {
       controls = new TransformControls(vendorCam, ctx.renderer!.domElement);
       controls.setMode('translate');
       controls.setSize(0.8);
-      controls.visible = false;
-      ctx.scene.add((controls as any)._root);
+      (controls as any).visible = false;
+      ctx.scene.add(new SceneObject((controls as any)._root));
 
       ctx.renderer!.domElement.addEventListener('pointerdown', onPointerDown);
       controls.addEventListener('mouseDown', () => controls.enabled = false);

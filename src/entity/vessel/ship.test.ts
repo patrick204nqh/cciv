@@ -31,7 +31,10 @@ function createMockSceneObject(overrides?: Partial<ISceneObject>): ISceneObject 
   rootGroup.updateWorldMatrix = vi.fn() as any;
 
   return {
-    object3D: rootGroup,
+    getWorldMatrix: () => new Float32Array(),
+    getGeometryData: () => null,
+    name: '',
+    type: 'Group',
     position: pos,
     rotation: rot,
     scale: scl,

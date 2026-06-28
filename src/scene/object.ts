@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { ISceneObject, Vec3Like, EulerLike, QuatLike, ReadonlyVec3Like } from './types';
-
+import { BufferGeometry, Material, Mesh, Object3D, Quaternion, Vector3 } from 'three';
 class Vec3Property implements Vec3Like {
   constructor(private target: THREE.Vector3) {}
   get x(): number { return this.target.x; }
@@ -31,100 +31,105 @@ function quatSnapshot(q: THREE.Quaternion): QuatLike {
 
 export class SceneObject implements ISceneObject {
   readonly id: string;
-  readonly object3D: THREE.Object3D;
+  readonly name: string;
+  readonly type: string;
+
+  private readonly _obj: Object3D;
 
   private _pos: Vec3Property;
   private _rot: EulerProperty;
   private _scl: Vec3Property;
 
-  constructor(obj: THREE.Object3D) {
+  constructor(obj: Object3D) {
     this.id = obj.uuid;
-    this.object3D = obj;
+    this.name = obj.name;
+    this.type = obj.type;
+    this._obj = obj;
     this._pos = new Vec3Property(obj.position);
     this._rot = new EulerProperty(obj.rotation);
     this._scl = new Vec3Property(obj.scale);
   }
 
   get userData(): Record<string, any> {
-    return this.object3D.userData;
+    return this._obj.userData;
   }
 
   get position(): Vec3Like { return this._pos; }
-  set position(v: Vec3Like) { this.object3D.position.set(v.x, v.y, v.z); }
+  set position(v: Vec3Like) { this._obj.position.set(v.x, v.y, v.z); }
 
   get rotation(): EulerLike { return this._rot; }
-  set rotation(v: EulerLike) { this.object3D.rotation.set(v.x, v.y, v.z); }
+  set rotation(v: EulerLike) { this._obj.rotation.set(v.x, v.y, v.z); }
 
   get scale(): Vec3Like { return this._scl; }
-  set scale(v: Vec3Like) { this.object3D.scale.set(v.x, v.y, v.z); }
+  set scale(v: Vec3Like) { this._obj.scale.set(v.x, v.y, v.z); }
 
-  get visible(): boolean { return this.object3D.visible; }
-  set visible(v: boolean) { this.object3D.visible = v; }
+  get visible(): boolean { return this._obj.visible; }
+  set visible(v: boolean) { this._obj.visible = v; }
 
   get worldPosition(): ReadonlyVec3Like {
-    const v = new THREE.Vector3();
-    this.object3D.getWorldPosition(v);
+    const v = new Vector3();
+    this._obj.getWorldPosition(v);
     return snapshot(v);
   }
 
   get worldQuaternion(): QuatLike {
-    const q = new THREE.Quaternion();
-    this.object3D.getWorldQuaternion(q);
+    const q = new Quaternion();
+    this._obj.getWorldQuaternion(q);
     return quatSnapshot(q);
   }
 
   get forward(): ReadonlyVec3Like {
-    const v = new THREE.Vector3();
-    this.object3D.getWorldDirection(v);
+    const v = new Vector3();
+    this._obj.getWorldDirection(v);
     return snapshot(v);
   }
 
   get right(): ReadonlyVec3Like {
-    const q = this.object3D.quaternion;
-    const v = new THREE.Vector3(1, 0, 0).applyQuaternion(q);
+    const q = this._obj.quaternion;
+    const v = new Vector3(1, 0, 0).applyQuaternion(q);
     return snapshot(v);
   }
 
   get up(): ReadonlyVec3Like {
-    const q = this.object3D.quaternion;
-    const v = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
+    const q = this._obj.quaternion;
+    const v = new Vector3(0, 1, 0).applyQuaternion(q);
     return snapshot(v);
   }
 
   get parent(): ISceneObject | null {
-    return this.object3D.parent ? new SceneObject(this.object3D.parent) : null;
+    return this._obj.parent ? new SceneObject(this._obj.parent) : null;
   }
 
   get children(): readonly ISceneObject[] {
-    return this.object3D.children.map(c => new SceneObject(c));
+    return this._obj.children.map(c => new SceneObject(c));
   }
 
   addChild(child: ISceneObject): this {
-    this.object3D.add(child.object3D);
+    this._obj.add((child as SceneObject)._obj);
     return this;
   }
 
   removeChild(child: ISceneObject): this {
-    this.object3D.remove(child.object3D);
+    this._obj.remove((child as SceneObject)._obj);
     return this;
   }
 
   detach(): this {
-    this.object3D.removeFromParent();
+    this._obj.removeFromParent();
     return this;
   }
 
   findChild(predicate: (child: ISceneObject) => boolean, deep?: boolean): ISceneObject | null {
     if (deep) {
       const result: ISceneObject[] = [];
-      this.object3D.traverse((child) => {
-        if (child === this.object3D) return;
+      this._obj.traverse((child) => {
+        if (child === this._obj) return;
         const wrapped = new SceneObject(child);
         if (predicate(wrapped)) result.push(wrapped);
       });
       return result[0] ?? null;
     }
-    for (const child of this.object3D.children) {
+    for (const child of this._obj.children) {
       const wrapped = new SceneObject(child);
       if (predicate(wrapped)) return wrapped;
     }
@@ -132,12 +137,12 @@ export class SceneObject implements ISceneObject {
   }
 
   traverse(fn: (child: ISceneObject) => void): this {
-    this.object3D.traverse((child) => fn(new SceneObject(child)));
+    this._obj.traverse((child) => fn(new SceneObject(child)));
     return this;
   }
 
   traverseAncestors(fn: (ancestor: ISceneObject) => void): this {
-    let p = this.object3D.parent;
+    let p = this._obj.parent;
     while (p) {
       fn(new SceneObject(p));
       p = p.parent;
@@ -146,8 +151,8 @@ export class SceneObject implements ISceneObject {
   }
 
   traverseMeshes(fn: (obj: ISceneObject) => void): this {
-    this.object3D.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
+    this._obj.traverse((child) => {
+      if (child instanceof Mesh) {
         fn(new SceneObject(child));
       }
     });
@@ -155,14 +160,39 @@ export class SceneObject implements ISceneObject {
   }
 
   updateWorldMatrix(updateParents: boolean, updateChildren: boolean): void {
-    this.object3D.updateWorldMatrix(updateParents, updateChildren);
+    this._obj.updateWorldMatrix(updateParents, updateChildren);
   }
 
   clone(): ISceneObject {
-    return new SceneObject(this.object3D.clone());
+    return new SceneObject(this._obj.clone());
   }
 
   dispose(): void {
-    this.object3D.removeFromParent();
+    this._obj.removeFromParent();
+    this._obj.traverse((child: Object3D) => {
+      const mesh = child as Mesh;
+      if (mesh.isMesh) {
+        mesh.geometry.dispose();
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach((material: Material) => material.dispose());
+        } else if (mesh.material) {
+          mesh.material.dispose();
+        }
+      }
+    });
+  }
+
+  getWorldMatrix(): Float32Array {
+    return new Float32Array(this._obj.matrixWorld.elements);
+  }
+
+  getGeometryData(): { positions: Float32Array; indices: Uint16Array | Uint32Array } | null {
+    const mesh = this._obj as Mesh;
+    if (!mesh.isMesh) return null;
+    const geometry = mesh.geometry as BufferGeometry;
+    const positions = geometry.attributes.position;
+    const indices = geometry.index;
+    if (!positions || !indices) return null;
+    return { positions: positions.array as Float32Array, indices: indices.array as Uint16Array | Uint32Array };
   }
 }

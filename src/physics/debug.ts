@@ -1,12 +1,17 @@
-import * as THREE from 'three';
+import {
+  Group, Mesh, Object3D, BufferGeometry, BufferAttribute,
+  MeshBasicMaterial, Material as TResinMaterial,
+} from 'three';
 import * as CANNON from 'cannon-es';
+import type { ISceneObject } from '../scene/types';
+import { SceneObject } from '../scene/object';
 
 export class PhysicsDebugRenderer {
-  private meshes = new Map<CANNON.Body, THREE.Mesh>();
-  private _root: THREE.Group;
+  private meshes = new Map<CANNON.Body, Mesh>();
+  private _root: Group;
 
-  get root(): THREE.Object3D {
-    return this._root;
+  get root(): ISceneObject {
+    return new SceneObject(this._root);
   }
 
   get visible(): boolean {
@@ -14,7 +19,7 @@ export class PhysicsDebugRenderer {
   }
 
   constructor() {
-    this._root = new THREE.Group();
+    this._root = new Group();
     this._root.visible = false;
   }
 
@@ -54,7 +59,7 @@ export class PhysicsDebugRenderer {
   dispose(): void {
     for (const mesh of this.meshes.values()) {
       mesh.geometry.dispose();
-      (mesh.material as THREE.Material).dispose();
+      (mesh.material as TResinMaterial).dispose();
     }
     this.meshes.clear();
     this._root.removeFromParent();
@@ -72,11 +77,11 @@ export class PhysicsDebugRenderer {
     if (!mesh) return;
     this._root.remove(mesh);
     mesh.geometry.dispose();
-    (mesh.material as THREE.Material).dispose();
+    (mesh.material as TResinMaterial).dispose();
     this.meshes.delete(body);
   }
 
-  private buildWireframe(body: CANNON.Body): THREE.Mesh | null {
+  private buildWireframe(body: CANNON.Body): Mesh | null {
     const shape = body.shapes[0];
     if (!(shape instanceof CANNON.Trimesh)) return null;
 
@@ -89,10 +94,10 @@ export class PhysicsDebugRenderer {
       positions[i * 3 + 1] = verts[idx + 1];
       positions[i * 3 + 2] = verts[idx + 2];
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new BufferAttribute(positions, 3));
 
-    const mat = new THREE.MeshBasicMaterial({
+    const mat = new MeshBasicMaterial({
       color: 0x00ff00,
       wireframe: true,
       transparent: true,
@@ -100,6 +105,6 @@ export class PhysicsDebugRenderer {
       depthWrite: false,
     });
 
-    return new THREE.Mesh(geo, mat);
+    return new Mesh(geo, mat);
   }
 }
