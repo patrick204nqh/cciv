@@ -1,24 +1,23 @@
 import * as THREE from 'three';
 import type { SceneEntity, SceneHandle } from '../types';
-import type { IMaterial } from '../../scene/types';
 import { SceneObject } from '../../scene/object';
-import { buildOceanGrid } from '../../environment/ocean-grid';
 import { createTSLOceanMaterial } from '../../environment/tsl-ocean';
 import type { Disposer } from '../../util/disposer';
 import type { StateStore } from '../../state/store';
 import { EntityStateBinding } from '../../state/binding';
 
 export function createOceanEntity(store?: StateStore): SceneEntity {
-  const seg = 80;
-  const size = 1800;
-
   let ocean: THREE.Mesh;
 
   return {
     id: 'ocean',
 
     onAttach(scene: SceneHandle, disposer?: Disposer) {
-      const { geo } = buildOceanGrid(size, seg);
+      const seg = 80;
+      const size = 1800;
+
+      const geo = new THREE.PlaneGeometry(size, size, seg, seg);
+      geo.rotateX(-Math.PI / 2);
 
       const mat = createTSLOceanMaterial();
 

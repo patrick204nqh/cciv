@@ -36,10 +36,6 @@ export interface IScene extends SceneHandle {
 
 export interface IMaterial {
   readonly raw: import('three').Material;
-  color: string;
-  opacity: number;
-  visible: boolean;
-  dispose(): void;
 }
 
 export interface ISceneObject {

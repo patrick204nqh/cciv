@@ -5,7 +5,6 @@ const DEFAULT_FIXED_DT = 1 / 60;
 
 export class PhysicsWorld {
   readonly world: CANNON.World;
-  private accumulator = 0;
   private _fixedDt: number;
 
   get fixedDt(): number {
@@ -22,15 +21,10 @@ export class PhysicsWorld {
   }
 
   step(dt: number): void {
-    this.accumulator += dt;
-    while (this.accumulator >= this._fixedDt) {
-      this.world.step(this._fixedDt);
-      this.accumulator -= this._fixedDt;
-    }
+    this.world.step(this._fixedDt, dt, 3);
   }
 
   reset(): void {
-    this.accumulator = 0;
     while (this.world.bodies.length) {
       this.world.removeBody(this.world.bodies[0]);
     }

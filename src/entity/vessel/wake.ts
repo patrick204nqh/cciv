@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 import type { SceneEntity, SceneHandle } from '../types';
-import type { IMaterial } from '../../scene/types';
 import { SceneObject } from '../../scene/object';
-import { MaterialAdapter } from '../../scene/material-adapter';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
 import { bus } from '../../event-bus';
@@ -53,8 +51,6 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       });
-      const mat: IMaterial = new MaterialAdapter(rawMat);
-
       const mesh = new THREE.Mesh(geo, rawMat);
       scene.add(new SceneObject(mesh));
       disposer?.add(geo);
@@ -75,7 +71,7 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
           intensity += (motion * 8 - intensity) * 0.15;
           prevPos.copy(evPos);
 
-          mat.opacity = Math.min(0.1 + intensity * 0.3, 0.2);
+          rawMat.opacity = Math.min(0.1 + intensity * 0.3, 0.2);
 
           const stern = new THREE.Vector3(0, 0, -56).applyQuaternion(evQuat).add(evPos);
           mesh.position.copy(stern);
@@ -87,7 +83,7 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
           if (ev.entityId === targetId) {
             currentSpeed = Math.sqrt(ev.vx * ev.vx + ev.vy * ev.vy + ev.vz * ev.vz);
             const speedIntensity = Math.min(currentSpeed * 0.15, 0.2);
-            mat.opacity = Math.max(mat.opacity, speedIntensity);
+            rawMat.opacity = Math.max(rawMat.opacity, speedIntensity);
           }
         });
         disposer.add(unsubSpeed);

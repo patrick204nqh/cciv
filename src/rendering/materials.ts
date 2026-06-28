@@ -1,12 +1,15 @@
 import * as THREE from 'three';
 import type { IMaterial } from '../scene/types';
-import { MaterialAdapter } from '../scene/material-adapter';
 import { createWaterNormalMap, createWaterDiffuseMap } from '../environment/water-textures';
+
+function wrap(m: THREE.Material): IMaterial {
+  return { raw: m };
+}
 
 export function createWaterMaterial(color?: string, opacity?: number): IMaterial {
   const normTex = createWaterNormalMap();
   const diffTex = createWaterDiffuseMap();
-  return new MaterialAdapter(new THREE.MeshStandardMaterial({
+  return wrap(new THREE.MeshStandardMaterial({
     map: diffTex,
     normalMap: normTex,
     normalScale: new THREE.Vector2(0.6, 0.6),
@@ -20,11 +23,11 @@ export function createWaterMaterial(color?: string, opacity?: number): IMaterial
 }
 
 export function createSkyMaterial(): IMaterial {
-  return new MaterialAdapter(new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide }));
+  return wrap(new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide }));
 }
 
 export function createRingMaterial(): IMaterial {
-  return new MaterialAdapter(new THREE.MeshBasicMaterial({
+  return wrap(new THREE.MeshBasicMaterial({
     color: 0x6090b0,
     side: THREE.BackSide,
     transparent: true,
@@ -33,7 +36,7 @@ export function createRingMaterial(): IMaterial {
 }
 
 export function createWakeMaterial(): IMaterial {
-  return new MaterialAdapter(new THREE.MeshBasicMaterial({
+  return wrap(new THREE.MeshBasicMaterial({
     color: 0xffffff,
     transparent: true,
     opacity: 0.65,
@@ -43,7 +46,7 @@ export function createWakeMaterial(): IMaterial {
 }
 
 export function createSprayMaterial(): IMaterial {
-  return new MaterialAdapter(new THREE.PointsMaterial({
+  return wrap(new THREE.PointsMaterial({
     color: 0xffffff,
     size: 0.4,
     transparent: true,
