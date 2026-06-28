@@ -82,7 +82,7 @@ export class Kernel {
     this.locationTracker.start()
   }
 
-  startLoop(): void {
-    this.rendering.startLoop()
+  async startLoop(): Promise<void> {
+    await this.rendering.startLoop()
   }
 }

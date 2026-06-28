@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { WebGPURenderer } from 'three/webgpu';
 import type { IScene } from '../scene/types';
 import { SceneAdapter } from '../scene/scene-adapter';
 import { OrbitControls } from '../three/addons';
@@ -7,13 +8,13 @@ import type { IRenderer, ICamera } from './types';
 
 export interface RenderingModuleOptions {
   container?: HTMLElement;
-  renderer?: THREE.WebGLRenderer;
+  renderer?: any;
   camera?: THREE.PerspectiveCamera;
   onBeforeRender?: (dt: number) => void;
 }
 
 export class RenderingModule {
-  readonly _renderer: THREE.WebGLRenderer;
+  readonly _renderer: any;
   readonly _camera: THREE.PerspectiveCamera;
   readonly controls: OrbitControls;
   readonly sceneHandle: IScene;
@@ -50,7 +51,7 @@ export class RenderingModule {
     this.sceneHandle = new SceneAdapter(this._scene);
 
     this._renderer = opts?.renderer ?? (() => {
-      const r = new THREE.WebGLRenderer({ antialias: true });
+      const r = new WebGPURenderer({ antialias: true, forceWebGL: true });
       r.setPixelRatio(Math.min(devicePixelRatio, 2));
       r.setSize(innerWidth, innerHeight);
       r.shadowMap.enabled = true;
@@ -75,7 +76,8 @@ export class RenderingModule {
     this._renderer.setSize(innerWidth, innerHeight);
   };
 
-  startLoop(): void {
+  async startLoop(): Promise<void> {
+    await this._renderer.init();
     let prevTime = performance.now();
     const loop = () => {
       requestAnimationFrame(loop);

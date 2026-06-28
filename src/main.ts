@@ -57,7 +57,7 @@ async function main() {
 
   await kernel.init();
 
-  kernel.startLoop();
+  await kernel.startLoop();
 }
 
 main().catch(console.error);

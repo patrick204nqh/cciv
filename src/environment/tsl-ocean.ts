@@ -59,8 +59,6 @@ function buildWaveNodes() {
     const sinA = sin(arg);
     const cosA = cos(arg);
     const c = w.Qi * w.amp;
-    const kDirX = w.k * w.dir[0];
-    const kDirZ = w.k * w.dir[1];
     const ampK = w.amp * w.k;
 
     height = height.add(sinA.mul(w.amp)) as any;
@@ -92,11 +90,11 @@ export function createTSLOceanMaterial(): MeshPhysicalNodeMaterial {
   const material = new MeshPhysicalNodeMaterial();
   material.positionNode = positionNode;
   material.normalNode = normalNode;
-  material.color = new THREE.Color(0x083060);
+  material.color.setHex(0x083060);
   material.roughness = 0.15;
-  material.metalness = 0.05;
+  material.metalness = 0.0;
   material.transparent = true;
-  material.opacity = 0.85;
+  material.opacity = 0.88;
   material.envMapIntensity = 1.0;
 
   return material;

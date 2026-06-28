@@ -10,10 +10,10 @@ import { ShipControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/ship-
 import { activeVessel } from '../../controls/active-vessel';
 
 export const SHIP_MASS = 5000;
-export const SHIP_LINEAR_DAMPING = 0.92;
-export const SHIP_ANGULAR_DAMPING = 0.85;
-export const BUOYANCY_DENSITY = 0.8;
-export const MAX_SPEED = 15;
+export const SHIP_LINEAR_DAMPING = 0.05;
+export const SHIP_ANGULAR_DAMPING = 0.15;
+export const BUOYANCY_DENSITY = 1.0;
+export const MAX_SPEED = 18;
 
 const _localForce = new CANNON.Vec3();
 
@@ -105,7 +105,7 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
         physicsBody.body.applyLocalForce(_localForce);
       }
 
-      physicsBody.body.torque.y = controls.steer * MAX_STEER_TORQUE;
+      physicsBody.body.torque.set(0, controls.steer * MAX_STEER_TORQUE, 0);
 
       const gravity = physicsWorld.world.gravity.length();
       buoyancy.apply(physicsBody.body, waveSurface, gravity);
