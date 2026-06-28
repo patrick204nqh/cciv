@@ -40,12 +40,7 @@ export class StateStore {
     }
     this.notify(path, value);
     this.fireWatchers();
-    if (path === 'environment' || path === 'instances' || path.startsWith('environment.') || path.startsWith('instances.')) {
-      const active = this.state.activeLocation;
-      if (!this.state.dirtyLocations.includes(active)) {
-        this.state.dirtyLocations.push(active);
-      }
-    }
+
   }
 
   /** Typed read accessor. Returns the result of the selector function. */
@@ -88,7 +83,11 @@ export class StateStore {
 
   private notify(path: string, value: unknown): void {
     for (const [key, fns] of this.listeners) {
-      if (path === key || path.startsWith(key + '.') || key.startsWith(path + '.')) {
+      // If the listener key is for the root (empty string), notify for any path
+      if (key === '') {
+        const v = this.get(key); // Get the entire state for root listener
+        for (const fn of fns) fn(v, path);
+      } else if (path === key || path.startsWith(key + '.') || key.startsWith(path + '.')) {
         const v = key === path ? value : this.get(key);
         for (const fn of fns) fn(v, path);
       }

@@ -84,18 +84,7 @@ describe('StateStore', () => {
     expect(fn).not.toHaveBeenCalled();
   });
 
-  it('tracks dirty locations when active state changes', () => {
-    const store = new StateStore(createDefaultState());
-    expect(store.get('dirtyLocations')).toEqual([]);
-    store.set('environment.fog.color', '#ff0000');
-    expect(store.get('dirtyLocations')).toEqual(['north-sea']);
-  });
 
-  it('tracks dirty when entire environment is replaced', () => {
-    const store = new StateStore(createDefaultState());
-    store.set('environment', createDefaultState().environment);
-    expect(store.get('dirtyLocations')).toEqual(['north-sea']);
-  });
 
   it('notifies child subscribers when parent path is set', () => {
     const store = new StateStore(createDefaultState());

@@ -34,7 +34,7 @@ export const shipHudPlugin: ScenePlugin = (() => {
     render(dt: number) {
       if (!logEl) return;
 
-      const env = ctx.store.get('environment') as any;
+      const env = ctx.state.get('environment') as any;
 
       const windSpeed = (env.ocean?.windSpeed ?? 12).toFixed(1);
       const swellHeight = (env.ocean?.swellHeight ?? 2.4).toFixed(1);

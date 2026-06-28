@@ -1,9 +1,10 @@
 import * as THREE from 'three';
-import { StateStore } from '../state/store';
+import type { PluginStateAPI } from './plugin-state-api';
+import type { PluginSceneAPI } from './plugin-scene-api';
 
 export interface PluginContext {
-  readonly scene: THREE.Scene
-  readonly store: StateStore
+  readonly scene: PluginSceneAPI
+  readonly state: PluginStateAPI
   readonly mode: 'edit' | 'play'
   readonly renderer?: THREE.WebGLRenderer
   readonly camera?: THREE.PerspectiveCamera

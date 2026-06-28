@@ -1,77 +1,58 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createOrbitControls } from './controls/orbitControls';
+import { RenderingModule, RenderingModuleOptions } from './rendering/module';
 import { StateStore } from './state/store';
-import { PluginRegistry } from './plugins/registry';
+import { LocationTracker } from './state/location-tracker';
+import { PluginManager } from './plugins/plugin-manager';
+import { createPluginStateAPI } from './plugins/plugin-state-api';
+import { createPluginSceneAPI } from './plugins/plugin-scene-api';
 import { createDefaultState } from './state/defaults';
 import { entityManager } from './entity/manager';
 import type { PluginContext, ScenePlugin } from './plugins/types';
 
-export interface KernelOptions {
-  container?: HTMLElement;
-  renderer?: THREE.WebGLRenderer;
-  camera?: THREE.PerspectiveCamera;
-}
+export interface KernelOptions extends RenderingModuleOptions {}
 
 export class Kernel {
-  readonly scene: THREE.Scene
-  readonly renderer: THREE.WebGLRenderer
-  readonly camera: THREE.PerspectiveCamera
-  readonly controls: OrbitControls
+  readonly rendering: RenderingModule
   readonly store: StateStore
-  readonly registry: PluginRegistry
-  readonly container: HTMLElement
+  readonly plugins: PluginManager
   private _mode: 'edit' | 'play' = 'edit'
   selectedObject: THREE.Object3D | null = null
-  private initialized = false
+  private locationTracker: LocationTracker
 
   get mode() { return this._mode }
+  get scene() { return this.rendering.scene }
+  get renderer() { return this.rendering.renderer }
+  get camera() { return this.rendering.camera }
+  get controls() { return this.rendering.controls }
+  get registry() { return this.plugins.registry }
 
   setMode(m: 'edit' | 'play'): void {
     const prev = this._mode
     if (prev === m) return
     this._mode = m
     entityManager.setPaused(m === 'edit')
-    for (const p of this.registry.getAll()) {
-      try {
-        p.onModeSwitch?.(prev, m)
-      } catch (e) {
-        console.warn(`[kernel] onModeSwitch error in plugin "${p.id}":`, e)
-      }
-    }
+    this.plugins.onModeSwitch(prev, m)
   }
 
   constructor(opts?: KernelOptions) {
-    this.container = opts?.container ?? document.body
-    this.scene = new THREE.Scene()
-    this.scene.fog = new THREE.FogExp2(0x406888, 0.0018)
-    this.scene.background = new THREE.Color(0x5080a0)
+    this.rendering = new RenderingModule({
+      ...opts,
+      onBeforeRender: (dt) => this.onBeforeRender(dt),
+    });
 
-    this.renderer = opts?.renderer ?? (() => {
-      const r = new THREE.WebGLRenderer({ antialias: true })
-      r.setPixelRatio(Math.min(devicePixelRatio, 2))
-      r.setSize(innerWidth, innerHeight)
-      r.shadowMap.enabled = true
-      r.shadowMap.type = THREE.PCFSoftShadowMap
-      r.toneMapping = THREE.ACESFilmicToneMapping
-      r.toneMappingExposure = 1.15
-      this.container.appendChild(r.domElement)
-      return r
-    })()
-
-    this.camera = opts?.camera ?? new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000)
-    this.camera.position.set(140, 65, -90)
-
-    this.controls = createOrbitControls(this.camera, this.renderer.domElement)
     this.store = new StateStore(createDefaultState())
-    this.registry = new PluginRegistry()
+    this.plugins = new PluginManager()
+    this.locationTracker = new LocationTracker(this.store)
+  }
+
+  private onBeforeRender(dt: number): void {
+    this.plugins.render(dt, this.mode)
   }
 
   private createPluginContext(): PluginContext {
     const self = this;
     return {
-      scene: this.scene,
-      store: this.store,
+      scene: createPluginSceneAPI(this.rendering.scene),
+      state: createPluginStateAPI(this.store),
       get mode() { return self.mode; },
       renderer: this.renderer,
       camera: this.camera,
@@ -82,41 +63,19 @@ export class Kernel {
   }
 
   registerPlugin(plugin: ScenePlugin): void {
-    this.registry.register(plugin)
-    if (this.initialized && plugin.modes.has(this.mode)) {
+    this.plugins.register(plugin)
+    if (this.plugins.isInitialized() && plugin.modes.has(this.mode)) {
       plugin.init(this.createPluginContext())
     }
   }
 
   async init(): Promise<void> {
     const ctx = this.createPluginContext()
-    for (const p of this.registry.getActive(this.mode)) {
-      p.init(ctx)
-    }
-    this.initialized = true
-    window.addEventListener('resize', this.onResize)
-  }
-
-  private onResize = () => {
-    this.camera.aspect = innerWidth / innerHeight
-    this.camera.updateProjectionMatrix()
-    this.renderer.setSize(innerWidth, innerHeight)
+    this.plugins.init(ctx, this.mode)
+    this.locationTracker.start()
   }
 
   startLoop(): void {
-    let prevTime = performance.now()
-    const loop = () => {
-      requestAnimationFrame(loop)
-      const now = performance.now()
-      const dt = Math.min((now - prevTime) / 1000, 0.05)
-      prevTime = now
-
-      for (const p of this.registry.getActive(this.mode)) {
-        p.render?.(dt)
-      }
-      this.controls.update()
-      this.renderer.render(this.scene, this.camera)
-    }
-    loop()
+    this.rendering.startLoop()
   }
 }

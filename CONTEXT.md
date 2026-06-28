@@ -4,6 +4,12 @@
 
 **Disposer** (`src/util/disposer.ts`) — collects `THREE.BufferGeometry`, `Material`, `Object3D` instances, unsubscribe functions, and arbitrary cleanup callbacks. Calling `dispose()` runs them all in order. Owned by EntityManager per attached entity — entities receive a Disposer from EntityManager via `onAttach(scene, disp)` rather than creating their own.
 
+## State
+
+**StateStore** (`src/state/store.ts`) — central state management with dotted-path subscriptions. Provides `get(path)`, `set(path, value)`, `subscribe(path, fn)`, `select(selector)`, `watch(selector, fn)`. Pure state primitive — no domain logic.
+
+**LocationTracker** (`src/state/location-tracker.ts`) — observes StateStore changes at `environment.*` and `instances.*` paths, marks the active location as dirty. Decouples dirty-tracking logic from the state store. Started by Kernel during init.
+
 ## Models
 
 **Model** — a 3D object in the world. Has geometry, materials, textures, and a transform. Produced via one of three source types.
@@ -48,9 +54,19 @@
 
 **Behavior** — optional field on a WorldConfig instance. `'vessel'` enables wave-response physics, event emission, spray, and wake. Default (undefined) is static placement.
 
-**WorldLoader** — loads a WorldConfig, resolves all model refs, creates all SceneEntities (models + environment entities + vessel effects) from config. Returns `SceneEntity[]` ready for EntityManager.attach(). Replaces hardcoded entity factories in main.ts.
+**WorldLoader** — loads a WorldConfig, orchestrates entity creation via EntityFactory. Returns `SceneEntity[]` ready for EntityManager.attach(). Pure orchestration — delegates construction to EntityFactory.
 
-**Kernel** — bootstrap orchestrator. Accepts renderer/camera as optional constructor deps (tests inject mocks). `setMode(m)` replaces the `mode` setter to avoid side effects in property access. `setMode` propagates to EntityManager (`setPaused`) and plugins (`onModeSwitch`).
+**EntityFactory** (`src/entity/entity-factory.ts`) — creates SceneEntities from WorldConfig. Provides `createEnvironmentEntities()` (ocean, sky, lighting) and `createInstanceEntities()` (vessels with spray/wake). Concentrates entity construction logic in one module.
+
+**Kernel** — bootstrap orchestrator. Thin orchestrator that delegates to specialized modules: RenderingModule (Three.js), PluginManager (plugin lifecycle), StateStore (app state), LocationTracker (dirty tracking). `setMode(m)` propagates to EntityManager (`setPaused`) and plugins (`onModeSwitch`).
+
+**RenderingModule** (`src/rendering/module.ts`) — owns the Three.js scene, renderer, camera, and OrbitControls. Manages window resize events and the RAF render loop. Accepts an `onBeforeRender` callback for pre-render updates (plugin rendering, entity updates).
+
+**PluginManager** (`src/plugins/plugin-manager.ts`) — owns the PluginRegistry, manages plugin lifecycle (init, onModeSwitch, render). Isolates plugin crashes during mode switching. Provides `render(dt, mode)` to execute all active plugins' render callbacks.
+
+**PluginStateAPI** (`src/plugins/plugin-state-api.ts`) — adapter providing plugins a stable interface to application state (get, set, select, watch, subscribe). Decouples plugins from direct StateStore implementation.
+
+**PluginSceneAPI** (`src/plugins/plugin-scene-api.ts`) — adapter providing plugins a stable interface to the 3D scene (add, remove, getObjectByName, traverse). Decouples plugins from direct THREE.Scene implementation.
 
 **EntityManager** — owns the entity list and per-entity Disposers. `setPaused(bool)` controls whether `update(dt)` advances entity state. Paused in 'edit' mode, unpaused in 'play' mode.
 

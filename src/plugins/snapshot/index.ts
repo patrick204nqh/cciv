@@ -15,7 +15,7 @@ export const snapshotPlugin: ScenePlugin = (() => {
   }
 
   function save() {
-    const snap = ctx.store.snapshot();
+    const snap = ctx.state.snapshot();
     const blob = new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -35,7 +35,7 @@ export const snapshotPlugin: ScenePlugin = (() => {
       const text = await file.text();
       try {
         const state = JSON.parse(text);
-        ctx.store.restore(state);
+        ctx.state.restore(state);
       } catch {
         console.warn('Invalid snapshot file');
       }

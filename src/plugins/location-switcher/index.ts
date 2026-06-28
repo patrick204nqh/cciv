@@ -13,7 +13,7 @@ export const locationSwitcherPlugin: ScenePlugin = (() => {
     if (!preset) return;
 
     transitioning = true;
-    const prevEnv = ctx.store.get('environment') as Record<string, unknown>;
+    const prevEnv = ctx.state.get('environment') as Record<string, unknown>;
 
     const start = performance.now();
     const duration = 2000;
@@ -21,17 +21,17 @@ export const locationSwitcherPlugin: ScenePlugin = (() => {
       const t = Math.min((performance.now() - start) / duration, 1);
       const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
-      const currFog = ctx.store.get('environment.fog') as Record<string, unknown>;
+      const currFog = ctx.state.get('environment.fog') as Record<string, unknown>;
       if (typeof currFog.density === 'number' && prevEnv.fog && typeof prevEnv.fog === 'object') {
         const prevDensity = (prevEnv.fog as Record<string, unknown>).density as number;
         const nextDensity = preset.environment.fog.density;
-        ctx.store.set('environment.fog.density', prevDensity + (nextDensity - prevDensity) * ease);
+        ctx.state.set('environment.fog.density', prevDensity + (nextDensity - prevDensity) * ease);
       }
 
       if (t >= 1) {
-        ctx.store.set('environment', preset.environment as unknown as Record<string, unknown>);
-        ctx.store.set('instances', preset.instances as unknown as Record<string, unknown>);
-        ctx.store.set('activeLocation', locationId);
+        ctx.state.set('environment', preset.environment as unknown as Record<string, unknown>);
+        ctx.state.set('instances', preset.instances as unknown as Record<string, unknown>);
+        ctx.state.set('activeLocation', locationId);
         transitioning = false;
       } else {
         requestAnimationFrame(tick);
@@ -50,7 +50,7 @@ export const locationSwitcherPlugin: ScenePlugin = (() => {
       select.appendChild(opt);
     }
 
-    select.value = ctx.store.get('activeLocation') as string;
+    select.value = ctx.state.get('activeLocation') as string;
     select.addEventListener('change', () => switchTo(select.value));
     container.appendChild(select);
   }
