@@ -4,7 +4,7 @@ import { bus } from '../../event-bus';
 import type { ModelEntity } from '../../model/types';
 import { waveSurface } from '../../environment/wave-surface';
 import type { Disposer } from '../../util/disposer';
-import { PhysicsBody, BuoyancySolver, physicsWorld, createHullCollider } from '../../physics';
+import { PhysicsBody, HydrodynamicsSolver, physicsWorld, createHullCollider } from '../../physics';
 import { ShipControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/ship-controls';
 import { activeVessel } from '../../controls/active-vessel';
 import { behaviorRegistry } from '../behavior-registry';
@@ -28,6 +28,9 @@ export const SHIP_MASS = 5000;
 export const SHIP_LINEAR_DAMPING = 0.05;
 export const SHIP_ANGULAR_DAMPING = 0.15;
 export const BUOYANCY_DENSITY = 1.0;
+export const HULL_DRAG = 0.4;
+export const HULL_SLAM = 0.3;
+export const HULL_ADDED_MASS = 1.5;
 export const MAX_SPEED = 18;
 
 const _localForce = new CANNON.Vec3();
@@ -35,7 +38,7 @@ const _localForce = new CANNON.Vec3();
 export function createVesselEntity(model: ModelEntity, vesselId?: string): SceneEntity {
   const id = vesselId ?? 'vessel';
   let physicsBody: PhysicsBody | null = null;
-  let buoyancy: BuoyancySolver | null = null;
+  let hydrodynamics: HydrodynamicsSolver | null = null;
   let controls: ShipControls | null = null;
 
   return {
@@ -77,7 +80,12 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
       physicsBody.body.angularDamping = SHIP_ANGULAR_DAMPING;
       physicsBody.body.updateMassProperties();
 
-      buoyancy = new BuoyancySolver(bfPos, { density: BUOYANCY_DENSITY });
+      hydrodynamics = new HydrodynamicsSolver(bfPos, {
+        density: BUOYANCY_DENSITY,
+        dragCoefficient: HULL_DRAG,
+        slammingCoefficient: HULL_SLAM,
+        addedMassFactor: HULL_ADDED_MASS,
+      });
 
       controls = new ShipControls(id);
       controls.start();
@@ -88,8 +96,8 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
         disposer.add(() => {
           physicsBody?.dispose();
           physicsBody = null;
-          buoyancy?.dispose();
-          buoyancy = null;
+          hydrodynamics?.dispose();
+          hydrodynamics = null;
           controls?.dispose();
           controls = null;
           activeVessel.unregister(id);
@@ -98,7 +106,7 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
     },
 
     onUpdate(dt: number) {
-      if (!physicsBody || !buoyancy || !controls) return;
+      if (!physicsBody || !hydrodynamics || !controls) return;
 
       const vx = physicsBody.body.velocity.x;
       const vy = physicsBody.body.velocity.y;
@@ -119,7 +127,7 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
       physicsBody.body.torque.set(0, controls.steer * MAX_STEER_TORQUE, 0);
 
       const gravity = physicsWorld.world.gravity.length();
-      buoyancy.apply(physicsBody.body, waveSurface, gravity);
+      hydrodynamics.apply(physicsBody.body, waveSurface, gravity, dt);
 
       physicsBody.sync(model.root);
 

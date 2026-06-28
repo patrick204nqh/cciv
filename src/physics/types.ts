@@ -31,3 +31,10 @@ export interface ConvexHullShape {
 export interface BuoyancyConfig {
   density: number;
 }
+
+export interface HydrodynamicsConfig {
+  density: number;
+  dragCoefficient: number;
+  slammingCoefficient: number;
+  addedMassFactor: number;
+}
