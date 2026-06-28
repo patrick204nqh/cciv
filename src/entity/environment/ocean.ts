@@ -29,7 +29,7 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
 
       mat = createWaterMaterial();
 
-      ocean = new THREE.Mesh(geo, mat);
+      ocean = new THREE.Mesh(geo, mat.raw);
       ocean.position.y = -0.35;
       ocean.receiveShadow = true;
       scene.add(new SceneObject(ocean));

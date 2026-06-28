@@ -44,7 +44,7 @@ export const gizmosPlugin: ScenePlugin = (() => {
       controls.setMode('translate');
       controls.setSize(0.8);
       controls.visible = false;
-      ctx.scene.add(controls);
+      ctx.scene.add((controls as any)._root);
 
       ctx.renderer!.domElement.addEventListener('pointerdown', onPointerDown);
       controls.addEventListener('mouseDown', () => controls.enabled = false);

@@ -133,8 +133,6 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
       geo.attributes.alpha.needsUpdate = true;
     },
 
-    onDetach() {
-      unsub?.();
-    },
+    onDetach() {},
   };
 }
