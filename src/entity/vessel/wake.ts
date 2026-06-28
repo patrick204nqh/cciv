@@ -1,4 +1,3 @@
-import { BufferGeometry, Float32BufferAttribute, Uint16BufferAttribute } from 'three';
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
@@ -30,9 +29,9 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
         idx.push(a, c, b, b, c, d);
       }
 
-      const geo = new BufferGeometry();
-      geo.setAttribute('position', new Float32BufferAttribute(verts, 3));
-      geo.setIndex(new Uint16BufferAttribute(idx, 1));
+      const geo = scene.createBufferGeometry();
+      scene.setAttribute(geo, 'position', new Float32Array(verts), 3);
+      scene.setIndex(geo, new Uint16Array(idx));
 
       const mat = createPointMaterial({
         size: 0.8,

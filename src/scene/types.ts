@@ -27,19 +27,33 @@ export interface FogSpec {
   far?: number;
 }
 
+import type { BufferGeometry as ThreeBufferGeometry } from 'three';
+
+export const BACK_SIDE = 1; // THREE.BackSide
+export type GeometryHandle = ThreeBufferGeometry;
+
 export interface IScene extends SceneHandle {
   fog: FogSpec | null;
   background: string | null;
   getObjectByName(name: string): ISceneObject | undefined;
   traverse(fn: (obj: ISceneObject) => void): void;
-  createMesh(geometry: import('three').BufferGeometry, material: IMaterial): ISceneObject;
+  createMesh(geometry: GeometryHandle, material: IMaterial): ISceneObject;
 
   createDirectionalLight(color: string, intensity: number): ISceneObject;
   createAmbientLight(color: string, intensity: number): ISceneObject;
   createHemisphereLight(skyColor: string, groundColor: string, intensity: number): ISceneObject;
-  createPlaneGeometry(width: number, height: number, segW: number, segH: number): import('three').BufferGeometry;
-  createSphereGeometry(radius: number, widthSeg: number, heightSeg: number): import('three').BufferGeometry;
-  createPoints(geometry: import('three').BufferGeometry, material: IMaterial): ISceneObject;
+  createPlaneGeometry(width: number, height: number, segW: number, segH: number): GeometryHandle;
+  createSphereGeometry(radius: number, widthSeg: number, heightSeg: number): GeometryHandle;
+  createPoints(geometry: GeometryHandle, material: IMaterial): ISceneObject;
+
+  /** Create an empty geometry. Use setAttribute/setIndex to populate. */
+  createBufferGeometry(): GeometryHandle;
+  /** Set a Float32 attribute on a geometry (position, color, etc.). */
+  setAttribute(geo: GeometryHandle, name: string, data: Float32Array, itemSize: number): void;
+  /** Set the index buffer on a geometry. */
+  setIndex(geo: GeometryHandle, data: Uint16Array): void;
+  /** Flag a geometry attribute as needing a GPU upload. */
+  markAttributeDirty(geo: GeometryHandle, name: string): void;
 }
 
 export interface IMaterial {

@@ -77,6 +77,23 @@ export class SceneAdapter implements IScene {
     return this.wrap(points);
   }
 
+  createBufferGeometry(): THREE.BufferGeometry {
+    return new THREE.BufferGeometry();
+  }
+
+  setAttribute(geo: THREE.BufferGeometry, name: string, data: Float32Array, itemSize: number): void {
+    geo.setAttribute(name, new THREE.BufferAttribute(data, itemSize));
+  }
+
+  setIndex(geo: THREE.BufferGeometry, data: Uint16Array): void {
+    geo.setIndex(new THREE.BufferAttribute(data, 1));
+  }
+
+  markAttributeDirty(geo: THREE.BufferGeometry, name: string): void {
+    const attr = geo.attributes[name];
+    if (attr) attr.needsUpdate = true;
+  }
+
   get fog(): FogSpec | null {
     const f = this.scene.fog;
     if (!f) return null;

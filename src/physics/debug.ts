@@ -83,8 +83,16 @@ export class PhysicsDebugRenderer {
 
   private buildWireframe(body: CANNON.Body): Mesh | null {
     const shape = body.shapes[0];
-    if (!(shape instanceof CANNON.Trimesh)) return null;
+    if (shape instanceof CANNON.Trimesh) {
+      return this._buildTrimeshWireframe(shape);
+    }
+    if (shape instanceof CANNON.ConvexPolyhedron) {
+      return this._buildConvexWireframe(shape);
+    }
+    return null;
+  }
 
+  private _buildTrimeshWireframe(shape: CANNON.Trimesh): Mesh {
     const verts = shape.vertices;
     const indices = shape.indices;
     const positions = new Float32Array(indices.length * 3);
@@ -102,6 +110,44 @@ export class PhysicsDebugRenderer {
       wireframe: true,
       transparent: true,
       opacity: 0.35,
+      depthWrite: false,
+    });
+
+    return new Mesh(geo, mat);
+  }
+
+  private _buildConvexWireframe(shape: CANNON.ConvexPolyhedron): Mesh {
+    const verts = shape.vertices;
+    const faces = shape.faces;
+    const edgeSet = new Set<string>();
+    const edgeList: number[] = [];
+
+    for (const face of faces) {
+      for (let i = 0; i < face.length; i++) {
+        const a = face[i];
+        const b = face[(i + 1) % face.length];
+        const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+        if (!edgeSet.has(key)) {
+          edgeSet.add(key);
+          const ax = verts[a * 3], ay = verts[a * 3 + 1], az = verts[a * 3 + 2];
+          const bx = verts[b * 3], by = verts[b * 3 + 1], bz = verts[b * 3 + 2];
+          edgeList.push(ax, ay, az, bx, by, bz);
+        }
+      }
+    }
+
+    const idx = new Uint16Array(edgeList.length / 3);
+    for (let i = 0; i < idx.length; i++) idx[i] = i;
+
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new BufferAttribute(new Float32Array(edgeList), 3));
+    geo.setIndex(new BufferAttribute(idx, 1));
+
+    const mat = new MeshBasicMaterial({
+      color: 0x00ff88,
+      wireframe: false,
+      transparent: true,
+      opacity: 0.5,
       depthWrite: false,
     });
 

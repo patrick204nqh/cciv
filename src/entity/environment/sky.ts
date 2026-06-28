@@ -1,5 +1,5 @@
-import { BufferAttribute, BackSide } from 'three';
 import type { SceneEntity } from '../types';
+import { BACK_SIDE } from '../../scene/types';
 import type { Disposer } from '../../util/disposer';
 import { createBasicMaterial } from '../../scene/scene-adapter';
 
@@ -28,9 +28,9 @@ export function createSkyEntity(
         colors[i * 3 + 1] = botRgb[1] + (topRgb[1] - botRgb[1]) * t;
         colors[i * 3 + 2] = botRgb[2] + (topRgb[2] - botRgb[2]) * t;
       }
-      skyGeo.setAttribute('color', new BufferAttribute(colors, 3));
+      scene.setAttribute(skyGeo, 'color', colors, 3);
 
-      const mat = createBasicMaterial({ vertexColors: true, side: BackSide });
+      const mat = createBasicMaterial({ vertexColors: true, side: BACK_SIDE });
       const mesh = scene.createMesh(skyGeo, mat);
       scene.add(mesh);
 

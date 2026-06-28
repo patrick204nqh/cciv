@@ -1,5 +1,4 @@
-import { BufferGeometry, Float32BufferAttribute } from 'three';
-import type { SceneEntity } from '../types';
+import type { SceneEntity, GeometryHandle, IScene } from '../../scene/types';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
 import { bus } from '../../event-bus';
@@ -19,7 +18,8 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
   const particles: Particle[] = [];
   let positions: Float32Array;
   let colors: Float32Array;
-  let geo: BufferGeometry;
+  let geo: GeometryHandle | null = null;
+  let _scene: IScene | null = null;
   let pointsObj: any;
   let tracker: PositionTracker | null = null;
   let lastPos = { x: 0, y: 0, z: 0 };
@@ -57,12 +57,13 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
     id: `spray${vesselId ? '-' + vesselId : ''}`,
 
     onAttach(scene, disposer?: Disposer) {
-      geo = new BufferGeometry();
+      _scene = scene;
+      geo = scene.createBufferGeometry();
       const count = MAX_PARTICLES;
       positions = new Float32Array(count * 3);
       colors = new Float32Array(count * 3);
-      geo.setAttribute('position', new Float32BufferAttribute(positions, 3));
-      geo.setAttribute('color', new Float32BufferAttribute(colors, 3));
+      scene.setAttribute(geo, 'position', positions, 3);
+      scene.setAttribute(geo, 'color', colors, 3);
 
       const mat = createPointMaterial({
         size: 1.2,
@@ -85,7 +86,7 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
     },
 
     onUpdate(dt: number) {
-      if (!pointsObj) return;
+      if (!pointsObj || !geo || !_scene) return;
       const speed = Math.sqrt(
         (lastPos.x - (tracker?.lastPos?.x ?? lastPos.x)) ** 2 +
         (lastPos.y - (tracker?.lastPos?.y ?? lastPos.y)) ** 2 +
@@ -127,8 +128,8 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
       }
 
       if (needsUpdate) {
-        (geo.attributes.position as any).needsUpdate = true;
-        (geo.attributes.color as any).needsUpdate = true;
+        _scene.markAttributeDirty(geo, 'position');
+        _scene.markAttributeDirty(geo, 'color');
       }
     },
 
