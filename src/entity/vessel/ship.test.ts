@@ -12,51 +12,61 @@ vi.mock('../../environment/wave-surface', () => ({
   },
 }));
 
-function createMockSceneObject(overrides?: Partial<ISceneObject>): ISceneObject {
+function createMockSceneObject(isRoot = true, overrides?: Partial<ISceneObject>): ISceneObject {
   const pos = { x: 0, y: 0, z: 0 };
   const rot = { x: 0, y: 0, z: 0 };
   const scl = { x: 1, y: 1, z: 1 };
 
-  const geo = new THREE.BufferGeometry();
-  const verts = new Float32Array(9);
-  geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-  geo.setIndex(new THREE.BufferAttribute(new Uint16Array([0, 1, 2]), 1));
+  const hullVerts = new Float32Array(9);
+  const hullIdx = new Uint16Array([0, 1, 2]);
+  const identityMat = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
-  const hullMesh = new THREE.Mesh(geo);
-  hullMesh.name = 'hull';
-  hullMesh.updateWorldMatrix = vi.fn() as any;
-
-  const rootGroup = new THREE.Group();
-  rootGroup.add(hullMesh);
-  rootGroup.updateWorldMatrix = vi.fn() as any;
+  if (isRoot) {
+    return {
+      getWorldMatrix: () => identityMat,
+      getGeometryData: () => null,
+      name: '',
+      type: 'Group',
+      position: pos, rotation: rot, scale: scl,
+      visible: true,
+      worldPosition: { x: 0, y: 0, z: 0 },
+      worldQuaternion: { x: 0, y: 0, z: 0, w: 1 },
+      forward: { x: 0, y: 0, z: -1 },
+      right: { x: 1, y: 0, z: 0 },
+      up: { x: 0, y: 1, z: 0 },
+      parent: null, children: [],
+      addChild: vi.fn(), removeChild: vi.fn(), detach: vi.fn(),
+      findChild: vi.fn().mockImplementation((predicate: any) => {
+        if (predicate({ name: 'hull' } as any)) {
+          return createMockSceneObject(false);
+        }
+        return undefined;
+      }),
+      traverse: vi.fn(), traverseAncestors: vi.fn(), traverseMeshes: vi.fn(),
+      updateWorldMatrix: vi.fn(),
+      userData: {}, clone: vi.fn(), dispose: vi.fn(),
+      ...overrides,
+    };
+  }
 
   return {
-    getWorldMatrix: () => new Float32Array(),
-    getGeometryData: () => null,
-    name: '',
-    type: 'Group',
-    position: pos,
-    rotation: rot,
-    scale: scl,
+    getWorldMatrix: () => identityMat,
+    getGeometryData: () => ({ positions: hullVerts, indices: hullIdx }),
+    name: 'hull',
+    type: 'Mesh',
+    position: pos, rotation: rot, scale: scl,
     visible: true,
     worldPosition: { x: 0, y: 0, z: 0 },
     worldQuaternion: { x: 0, y: 0, z: 0, w: 1 },
     forward: { x: 0, y: 0, z: -1 },
     right: { x: 1, y: 0, z: 0 },
     up: { x: 0, y: 1, z: 0 },
-    parent: null,
-    children: [],
-    addChild: vi.fn(),
-    removeChild: vi.fn(),
-    detach: vi.fn(),
+    parent: null, children: [],
+    addChild: vi.fn(), removeChild: vi.fn(), detach: vi.fn(),
     findChild: vi.fn(),
-    traverse: vi.fn(),
-    traverseAncestors: vi.fn(),
-    traverseMeshes: vi.fn(),
+    traverse: vi.fn(), traverseAncestors: vi.fn(), traverseMeshes: vi.fn(),
     updateWorldMatrix: vi.fn(),
-    userData: {},
-    clone: vi.fn(),
-    dispose: vi.fn(),
+    userData: {}, clone: vi.fn(), dispose: vi.fn(),
     ...overrides,
   };
 }

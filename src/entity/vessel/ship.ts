@@ -4,7 +4,7 @@ import { bus } from '../../event-bus';
 import type { ModelEntity } from '../../model/types';
 import { waveSurface } from '../../environment/wave-surface';
 import type { Disposer } from '../../util/disposer';
-import { PhysicsBody, BuoyancySolver, physicsWorld } from '../../physics';
+import { PhysicsBody, BuoyancySolver, physicsWorld, createHullCollider } from '../../physics';
 import { ShipControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/ship-controls';
 import { activeVessel } from '../../controls/active-vessel';
 import { behaviorRegistry } from '../behavior-registry';
@@ -45,27 +45,29 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
       scene.add(model.root);
       disposer?.add(() => model.root.dispose());
 
-      const hullData = extractHullData(model);
-      if (!hullData) return;
+      const hullResult = extractHullData(model);
+      if (!hullResult) return;
 
       model.root.updateWorldMatrix(true, true);
- 
-      const hullMatrix = model.root.getWorldMatrix();
-      if (!hullMatrix) return;
+      const rootMat = model.root.getWorldMatrix();
+      if (!rootMat) return;
 
-      const worldPos = new Float32Array(hullData.positions.length);
-      for (let i = 0; i < hullData.positions.length; i += 3) {
-        const wx = hullData.positions[i] * hullMatrix[0] + hullData.positions[i + 1] * hullMatrix[4] + hullData.positions[i + 2] * hullMatrix[8] + hullMatrix[12];
-        const wy = hullData.positions[i] * hullMatrix[1] + hullData.positions[i + 1] * hullMatrix[5] + hullData.positions[i + 2] * hullMatrix[9] + hullMatrix[13];
-        const wz = hullData.positions[i] * hullMatrix[2] + hullData.positions[i + 1] * hullMatrix[6] + hullData.positions[i + 2] * hullMatrix[10] + hullMatrix[14];
-        worldPos[i] = wx;
-        worldPos[i + 1] = wy;
-        worldPos[i + 2] = wz;
+      const bodyPos = model.root.worldPosition;
+
+      const bfPos = new Float32Array(hullResult.positions.length);
+      for (let i = 0; i < hullResult.positions.length; i += 3) {
+        const wx = hullResult.positions[i] * hullResult.matrix[0] + hullResult.positions[i + 1] * hullResult.matrix[4] + hullResult.positions[i + 2] * hullResult.matrix[8] + hullResult.matrix[12];
+        const wy = hullResult.positions[i] * hullResult.matrix[1] + hullResult.positions[i + 1] * hullResult.matrix[5] + hullResult.positions[i + 2] * hullResult.matrix[9] + hullResult.matrix[13];
+        const wz = hullResult.positions[i] * hullResult.matrix[2] + hullResult.positions[i + 1] * hullResult.matrix[6] + hullResult.positions[i + 2] * hullResult.matrix[10] + hullResult.matrix[14];
+        bfPos[i] = wx - bodyPos.x;
+        bfPos[i + 1] = wy - bodyPos.y;
+        bfPos[i + 2] = wz - bodyPos.z;
       }
 
+      const collider = createHullCollider(bfPos, hullResult.indices);
       physicsBody = new PhysicsBody({
         mass: SHIP_MASS,
-        shape: { type: 'trimesh', positions: worldPos, indices: hullData.indices },
+        shape: collider.asTrimesh(),
       });
 
       const wp = model.root.worldPosition;
@@ -75,7 +77,7 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
       physicsBody.body.angularDamping = SHIP_ANGULAR_DAMPING;
       physicsBody.body.updateMassProperties();
 
-      buoyancy = new BuoyancySolver(worldPos, { density: BUOYANCY_DENSITY });
+      buoyancy = new BuoyancySolver(bfPos, { density: BUOYANCY_DENSITY });
 
       controls = new ShipControls(id);
       controls.start();
@@ -140,6 +142,16 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
 
 export { createVesselEntity as createShipEntity };
 
-function extractHullData(model: ModelEntity): { positions: Float32Array; indices: Uint16Array | Uint32Array } | null {
-  return model.root.getGeometryData();
+interface HullExtractResult {
+  positions: Float32Array;
+  indices: Uint16Array | Uint32Array;
+  matrix: Float32Array;
+}
+
+function extractHullData(model: ModelEntity): HullExtractResult | null {
+  const hullChild = model.root.findChild((c) => c.name === 'hull', true);
+  if (!hullChild) return null;
+  const data = hullChild.getGeometryData();
+  if (!data) return null;
+  return { ...data, matrix: hullChild.getWorldMatrix() };
 }

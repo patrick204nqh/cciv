@@ -5,7 +5,7 @@ export interface PhysicsWorldConfig {
 
 export interface PhysicsBodyConfig {
   mass: number;
-  shape: TrimeshShape | BoxShape;
+  shape: TrimeshShape | BoxShape | ConvexHullShape;
   position?: [number, number, number];
   quaternion?: [number, number, number, number];
 }
@@ -20,6 +20,12 @@ export interface TrimeshShape {
 export interface BoxShape {
   type: 'box';
   halfExtents: [number, number, number];
+}
+
+export interface ConvexHullShape {
+  type: 'convex';
+  vertices: Float32Array;
+  faces: number[][];
 }
 
 export interface BuoyancyConfig {

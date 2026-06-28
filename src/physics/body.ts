@@ -18,7 +18,8 @@ export class PhysicsBody {
   private _scale: number;
 
   constructor(config: PhysicsBodyConfig) {
-    this._scale = config.shape.type === 'trimesh' ? (config.shape.scale ?? 1) : 1;
+    const rawScale = config.shape.type === 'trimesh' ? (config.shape.scale ?? 1) : 1;
+    this._scale = config.shape.type === 'convex' ? 1 : rawScale;
     this.body = new CANNON.Body({ mass: config.mass });
 
     if (config.shape.type === 'trimesh') {
@@ -30,6 +31,17 @@ export class PhysicsBody {
         for (let i = 0; i < posArr.length; i++) posArr[i] *= s;
       }
       this.body.addShape(new CANNON.Trimesh(posArr, idxArr));
+    }
+
+    if (config.shape.type === 'convex') {
+      const { vertices, faces } = config.shape;
+      const verts = vertices.length / 3;
+      const vertArr: number[] = Array.from(vertices);
+      const faceArr: number[][] = faces;
+      this.body.addShape(new CANNON.ConvexPolyhedron({
+        vertices: vertArr,
+        faces: faceArr,
+      }));
     }
 
     if (config.position) {
