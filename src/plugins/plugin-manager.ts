@@ -1,27 +1,31 @@
-import { PluginRegistry } from '../plugins/registry';
 import type { ScenePlugin, PluginContext } from '../plugins/types';
 
 export class PluginManager {
-  readonly registry: PluginRegistry;
+  private plugins: ScenePlugin[] = [];
   private initialized = false;
 
-  constructor() {
-    this.registry = new PluginRegistry();
+  register(plugin: ScenePlugin): void {
+    this.plugins.push(plugin);
+    this.plugins.sort((a, b) => a.priority - b.priority);
   }
 
-  register(plugin: ScenePlugin): void {
-    this.registry.register(plugin);
+  private getActive(mode: 'edit' | 'play'): ScenePlugin[] {
+    return this.plugins.filter(p => p.modes.has(mode));
+  }
+
+  getAll(): ScenePlugin[] {
+    return this.plugins;
   }
 
   init(ctx: PluginContext, mode: 'edit' | 'play'): void {
-    for (const p of this.registry.getActive(mode)) {
+    for (const p of this.getActive(mode)) {
       p.init(ctx);
     }
     this.initialized = true;
   }
 
   onModeSwitch(prev: 'edit' | 'play', next: 'edit' | 'play'): void {
-    for (const p of this.registry.getAll()) {
+    for (const p of this.plugins) {
       try {
         p.onModeSwitch?.(prev, next);
       } catch (e) {
@@ -31,7 +35,7 @@ export class PluginManager {
   }
 
   render(dt: number, mode: 'edit' | 'play'): void {
-    for (const p of this.registry.getActive(mode)) {
+    for (const p of this.getActive(mode)) {
       p.render?.(dt);
     }
   }

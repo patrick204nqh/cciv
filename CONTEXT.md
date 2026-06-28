@@ -44,7 +44,13 @@
 
 ## Scene
 
-**SceneEntity** — interface with lifecycle hooks: `onAttach(scene, disposer?)`, `onBeforeUpdate?(dt)`, `onUpdate(dt)`, `onDetach()`. Each entity owns its update logic. EntityManager provides a Disposer on attach; entities should use it rather than creating their own. (ADR-002)
+**SceneEntity** — interface with lifecycle hooks: `onAttach(scene, disposer?)`, `onBeforeUpdate?(dt)`, `onUpdate(dt)`, `onDetach()`. Each entity owns its update logic. EntityManager provides a Disposer on attach; entities should use it rather than creating自己的. (ADR-002)
+
+## Identity caching (scene gate)
+
+**ISceneObject.id** — stable domain identity string on every scene object wrapper. Set once at construction (delegates to the wrapped `THREE.Object3D.uuid`). Used by the scene gate's identity cache to guarantee wrapper referential identity across calls.
+
+**SceneAdapter identity cache** — internal Map in `SceneAdapter` that maps `ISceneObject.id` → `ISceneObject` wrapper. Prevents ephemeral wrapper creation: `getObjectByName()`, `traverse()`, and `children` accessors consult the cache before constructing a new `SceneObject`. Evicted only on `dispose()`. The single `(obj as any).object3D` cast happens inside `SceneAdapter.add()` and is the gate's private implementation detail — never at a plugin or application seam.
 
 **EntityManager** (singleton) — owns the entity list, lifecycle control. RAF loop is in Kernel. (ADR-002 — note: RAF loop was delegated to Kernel for edit/play mode switching; ADR-002's "owns the RAF loop" is stale.)
 
@@ -58,9 +64,13 @@
 
 **Behavior** — optional field on a WorldConfig instance. `'vessel'` enables wave-response physics, event emission, spray, and wake. Default (undefined) is static placement.
 
-**WorldLoader** — loads a WorldConfig, orchestrates entity creation via EntityFactory. Returns `SceneEntity[]` ready for EntityManager.attach(). Pure orchestration — delegates construction to EntityFactory.
+**WorldLoader** — loads a WorldConfig, orchestrates entity creation via EntityRegistry. Returns `SceneEntity[]` ready for EntityManager.attach(). Pure orchestration — delegates construction to registered factory adapters.
 
-**EntityFactory** (`src/entity/entity-factory.ts`) — creates SceneEntities from WorldConfig. Provides `createEnvironmentEntities()` (ocean, sky, lighting) and `createInstanceEntities()` (vessels with spray/wake). Concentrates entity construction logic in one module.
+**EntityFactory** — interface with a single seam: `match(config: WorldConfig): SceneEntity[]`. Each factory decides what entities to produce from the full config.
+
+**EntityRegistry** — singleton registry of EntityFactory adapters. Factories auto-register at import time via `EntityRegistry.register(factory)`. WorldLoader calls `registry.getAll()` and runs each factory's `match(config)`. Adding a new entity type is one file, no wiring changes.
+
+**Deprecated** (does not exist): `src/entity/entity-factory.ts` — aspirational file name from an earlier sketch. Entity creation was always inline in WorldLoader.
 
 **Kernel** — bootstrap orchestrator. Thin orchestrator that delegates to specialized modules: RenderingModule (Three.js), PluginManager (plugin lifecycle), StateStore (app state), LocationTracker (dirty tracking). `setMode(m)` propagates to EntityManager (`setPaused`) and plugins (`onModeSwitch`).
 
@@ -70,7 +80,19 @@
 
 **PluginStateAPI** (`src/plugins/plugin-state-api.ts`) — adapter providing plugins a stable interface to application state (get, set, select, watch, subscribe). Decouples plugins from direct StateStore implementation.
 
-**PluginSceneAPI** (`src/plugins/plugin-scene-api.ts`) — adapter providing plugins a stable interface to the 3D scene (add, remove, getObjectByName, traverse). Decouples plugins from direct THREE.Scene implementation.
+**PluginSceneAPI** (`src/plugins/plugin-scene-api.ts`) — adapter providing plugins a stable interface to the 3D scene (add, remove, getObjectByName, traverse). Accepts and returns `ISceneObject` (never vendor types). Delegates every call to `IScene` verbatim.
+
+**Plugin-level escape hatch** — when a plugin genuinely needs Three.js interop that the gate cannot reasonably wrap (TransformControls, raycaster internals), the vendor exposure is contained to that single plugin module rather than leaking through a gate interface. Used by gizmos plugin only. Exception to Rule 4, documented as deliberate carve-out.
+
+## Gate interfaces (deepened)
+
+**IMaterial** — material abstraction. No `.raw` escape hatch. Provides `dispose()` and domain-typed properties (color, roughness, metalness). Created via `createWaterMaterial()`, `createSkyMaterial()`, etc. in `src/rendering/materials.ts`.
+
+**IRenderer** — renderer abstraction. No `.raw`. Methods: `render(scene: IScene, camera: ICamera): void`, `setSize(w: number, h: number): void`, `domElement: HTMLElement`, `dispose(): void`.
+
+**ICamera** — camera abstraction. No `.raw`. Methods: `aspect: number`, `updateProjectionMatrix(): void`. Raycasting handled via `IScene.raycast(pointer: Vec2Like, camera: ICamera): ISceneObject[]` — not via camera escape hatch.
+
+**IScene.createMesh** — factory method on the scene gate: `createMesh(geometry: BufferGeometry, material: IMaterial): ISceneObject`. Entity code passes inline geometry and an IMaterial; the gate creates the vendor Mesh internally. No vendor types cross the seam.
 
 **EntityManager** — owns the entity list and per-entity Disposers. `setPaused(bool)` controls whether `update(dt)` advances entity state. Paused in 'edit' mode, unpaused in 'play' mode.
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { StateStore } from './state/store';
 import { createDefaultState } from './state/defaults';
-import { PluginRegistry } from './plugins/registry';
+import { PluginManager } from './plugins/plugin-manager';
 import type { ScenePlugin } from './plugins/types';
 
 // Test the independent components that Kernel wires together, not the full
@@ -22,28 +22,28 @@ describe('StateStore integration', () => {
   });
 });
 
-describe('PluginRegistry integration', () => {
+describe('PluginManager integration', () => {
   it('calls onModeSwitch on mode change', () => {
-    const reg = new PluginRegistry();
+    const mgr = new PluginManager();
     const onSwitch = vi.fn();
     const plugin: ScenePlugin = {
       id: 'test', label: 'Test', modes: new Set(['edit']), priority: 0,
       init: vi.fn(), destroy: vi.fn(),
       onModeSwitch: onSwitch,
     };
-    reg.register(plugin);
-    const active = reg.getActive('edit');
+    mgr.register(plugin);
+    const active = mgr.getAll().filter(p => p.modes.has('edit'));
     expect(active).toHaveLength(1);
   });
 
-  it('setMode isolates plugin crashes — one failing onModeSwitch does not block others', () => {
+  it('isolates plugin crashes — one failing onModeSwitch does not block others', () => {
     const goodFn = vi.fn();
     const badFn = vi.fn().mockImplementation(() => { throw new Error('plugin crash'); });
-    const reg = new PluginRegistry();
-    reg.register({ id: 'bad', label: 'Bad', modes: new Set(['edit', 'play']), priority: 0, init() {}, destroy() {}, onModeSwitch: badFn });
-    reg.register({ id: 'good', label: 'Good', modes: new Set(['edit', 'play']), priority: 10, init() {}, destroy() {}, onModeSwitch: goodFn });
+    const mgr = new PluginManager();
+    mgr.register({ id: 'bad', label: 'Bad', modes: new Set(['edit', 'play']), priority: 0, init() {}, destroy() {}, onModeSwitch: badFn });
+    mgr.register({ id: 'good', label: 'Good', modes: new Set(['edit', 'play']), priority: 10, init() {}, destroy() {}, onModeSwitch: goodFn });
 
-    const plugins = reg.getAll();
+    const plugins = mgr.getAll();
     for (const p of plugins) {
       try { p.onModeSwitch?.('edit', 'play'); } catch {}
     }

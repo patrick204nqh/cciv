@@ -24,7 +24,6 @@ export class Kernel {
   get mode() { return this._mode }
   get scene() { return this.rendering.sceneHandle }
   get controls() { return this.rendering.controls }
-  get registry() { return this.plugins.registry }
 
   setMode(m: 'edit' | 'play'): void {
     const prev = this._mode
