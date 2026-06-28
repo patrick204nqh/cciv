@@ -1,4 +1,4 @@
-# ADR-004: Procedural Model Pipeline via Three.js Generators
+# ADR-009: Procedural Model Pipeline via Three.js Generators
 
 ## Status
 Accepted

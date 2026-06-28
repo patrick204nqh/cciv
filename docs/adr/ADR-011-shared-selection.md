@@ -1,4 +1,4 @@
-# ADR-006: Shared Selection via Kernel.selectedObject
+# ADR-011: Shared Selection via Kernel.selectedObject
 
 ## Status
 Accepted

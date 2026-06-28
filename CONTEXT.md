@@ -89,13 +89,13 @@ The asset pipeline transforms model configs into compiled GLB artifacts. Two sta
 - **compile** (`scripts/pipeline/compile.ts`) — reads `src/models/<id>/config.ts` for each model. For extracted models, reads geometry from `.cache/references/<asset>/data/`. For procedural models, imports the generator function and runs it. Outputs `public/models/<id>.glb`.
 - **publish** (`scripts/pipeline/publish.ts`) — scans `public/models/` for GLBs, reads metadata from configs, writes `public/models/manifest.json`.
 
-Run via: `npm run build:models`
+Run via: `npm run setup`
 
 ### Reference Downloads
 
 External asset sources are downloaded via a standalone tool, not part of the pipeline:
 
-- **`npm run reference:pull`** — downloads assets from Poly Haven etc. to `.cache/references/<asset>/`. Implementations in `scripts/reference/providers/`.
+- **`npm run reference`** — downloads assets from Poly Haven etc. to `.cache/references/<asset>/`. Implementations in `scripts/reference/providers/`.
 
 ### Model Creation Paths
 
@@ -128,7 +128,6 @@ Three ways to create a model, defined in `src/models/<id>/config.ts`:
 npm run dev              # Vite dev server with HMR
 npm run build            # production build
 npm run test             # run all tests
-npm run build:models     # compile all models to GLB + publish manifest
-npm run setup            # setup after clone (build:models)
-npm run reference:pull   # clone external references (optional, for customization)
+npm run setup            # setup after clone (compile models + publish manifest)
+npm run reference   # download external references (optional, for customization)
 ```

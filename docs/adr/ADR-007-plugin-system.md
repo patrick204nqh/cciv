@@ -1,4 +1,4 @@
-# ADR-002: Plugin System with Mode-Based Activation
+# ADR-007: Plugin System with Mode-Based Activation
 
 ## Status
 Accepted

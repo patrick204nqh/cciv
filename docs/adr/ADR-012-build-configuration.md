@@ -1,4 +1,4 @@
-# ADR-007: Vite Build Configuration — Chunk Splitting and GLB Hot-Reload
+# ADR-012: Vite Build Configuration — Chunk Splitting and GLB Hot-Reload
 
 ## Status
 Accepted

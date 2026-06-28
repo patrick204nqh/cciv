@@ -1,4 +1,4 @@
-# Design (locked)
+# Design Invariants (locked)
 
 Philosophy, principles, and architectural invariants **locked on 2026-06-28**. Never modify — read before every change.
 

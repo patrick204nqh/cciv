@@ -1,4 +1,4 @@
-# ADR-001: StateStore with Dotted-Path Subscriptions
+# ADR-006: StateStore with Dotted-Path Subscriptions
 
 ## Status
 Accepted

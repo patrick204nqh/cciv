@@ -1,4 +1,4 @@
-# ADR-003: InstanceState as Flat Record for Placed Props
+# ADR-008: InstanceState as Flat Record for Placed Props
 
 ## Status
 Accepted

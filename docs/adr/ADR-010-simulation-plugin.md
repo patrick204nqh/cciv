@@ -1,4 +1,4 @@
-# ADR-005: Simulation as Plugin via EntityManager
+# ADR-010: Simulation as Plugin via EntityManager
 
 ## Status
 Accepted

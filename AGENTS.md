@@ -1,7 +1,7 @@
 # CCIV Project
 
-Designed architecture: `DESIGN.md` — read before any change (invariant).
-Current architecture state: `ARCHITECTURE.md` — changes as codebase evolves.
+Design invariants: `docs/design/invariants.md` — read before any change (locked).
+Architecture reference: `docs/design/architecture.md` — layer audit, file map, ADR index.
 
 ## Structure
 
@@ -17,10 +17,11 @@ Current architecture state: `ARCHITECTURE.md` — changes as codebase evolves.
   - `src/controls/` — OrbitControls from three/addons.
 - **`index.html`** — minimal HTML shell with inline CSS; loads `src/main.ts`.
 - **`scripts/`** — build tools.
-  - `pull-reference.mjs` — downloads + extracts external assets to `.cache/references/` (throwaway).
+  - `reference/pull.ts` — downloads external assets to `.cache/references/`.
   - `references.json` — list of external sources to pull.
-  - `build-model.mjs` — copies reference data into `src/models/<id>/`, renames with our conventions, generates config/textures.
-  - `models.json` — mapping from reference → owned model with mesh renames + material overrides.
+  - `pipeline/` — compile + publish stages for GLB artifacts.
+  - `build/` — procedural model generators (palm-island, ice-floe).
+  - `generate.ts` — CLI runner for procedural model generation.
 - **`public/textures/<model>/`** — owned textures (committed), copied from reference during build-model.
 
 ## Commands
@@ -35,14 +36,11 @@ npm run build
 # Preview production build
 npm run preview
 
-# Step 1: Pull external references → .cache/references/
-npm run model:pull
+# Setup after clone (compile models + publish manifest)
+npm run setup
 
-# Step 2: Build owned models from references
-npm run model:build
-
-# Step 3: Compile owned models to portable GLB artifacts
-npm run model:compile
+# Pull external references → .cache/references/
+npm run reference
 ```
 
 ## Skill sources (defined in bin/dev)
@@ -71,7 +69,6 @@ Add new sources by appending to `SOURCES` in `bin/dev:19-27`.
 - Coordinate convention: Y-up, Z-bow(+), X-starboard(-).
 - Ship model extracted into-code: `src/models/ship/` contains hardcoded Float32Array/Uint16Array geometry for all 7 mesh groups (hull, deck, sails, aft, rigging, details, interior).
 - Texture pipeline: external reference → `.cache/references/` (gitignored, throwaway). Then `scripts/build-model.mjs` copies textures to `public/textures/<model>/` and generates `src/textures/sources.ts`.
-- New models: add entry to `scripts/models.json`, run `build-model.mjs`. The model becomes owned code in `src/models/<id>/` with clean naming — no reference prefixes leak in.
 - Entity lifecycle: implement `SceneEntity` (in `src/entity/types.ts`) and attach via `entityManager.attach()`. Entities communicate via the event bus (`src/event-bus.ts`).
 - All Three.js scene graph interaction goes through `ISceneObject` (`src/scene/types.ts`). Never pass `THREE.Object3D` directly across module boundaries. `SceneObject` adapter wraps raw Three.js objects. Use `.object3D` escape hatch only when Three.js interop is unavoidable (TransformControls, raycaster).
 - Skills provide specialized instructions and workflows for specific tasks.

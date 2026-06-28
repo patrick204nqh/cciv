@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "setup": "tsx scripts/pipeline/index.ts",
-    "reference:pull": "tsx scripts/reference/pull.ts"
+    "reference": "tsx scripts/reference/pull.ts"
   },
   "dependencies": {
     "@gltf-transform/core": "^4.4.0",
