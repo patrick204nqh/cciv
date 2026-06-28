@@ -1,0 +1,27 @@
+export interface PhysicsWorldConfig {
+  gravity?: number;
+  fixedDt?: number;
+}
+
+export interface PhysicsBodyConfig {
+  mass: number;
+  shape: TrimeshShape | BoxShape;
+  position?: [number, number, number];
+  quaternion?: [number, number, number, number];
+}
+
+export interface TrimeshShape {
+  type: 'trimesh';
+  positions: Float32Array;
+  indices: Uint16Array | Uint32Array;
+  scale?: number;
+}
+
+export interface BoxShape {
+  type: 'box';
+  halfExtents: [number, number, number];
+}
+
+export interface BuoyancyConfig {
+  density: number;
+}
