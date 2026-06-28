@@ -8,13 +8,19 @@ import { PhysicsBody, HydrodynamicsSolver, physicsWorld, createHullCollider } fr
 import { ShipControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/ship-controls';
 import { activeVessel } from '../../controls/active-vessel';
 import { behaviorRegistry } from '../behavior-registry';
+import type { InstanceDef } from '../../state/types';
 import { createSprayEntity } from './spray';
 import { createWakeEntity } from './wake';
 import { createVesselGroup } from '../vessel-group';
 
 behaviorRegistry.register('vessel', {
-  async create(id: string, def, deps) {
+  async create(id: string, def: InstanceDef, deps) {
     const model = await deps.modelLoader.load(def.ref);
+    const tf = def.transform;
+    const r = model.root;
+    r.position = { x: tf.position[0], y: tf.position[1], z: tf.position[2] };
+    r.rotation = { x: tf.rotation[0], y: tf.rotation[1], z: tf.rotation[2] };
+    r.scale = { x: tf.scale, y: tf.scale, z: tf.scale };
     return [createVesselGroup(
       id,
       createVesselEntity(model, id),
