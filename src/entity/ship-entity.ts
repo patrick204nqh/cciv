@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { SceneEntity } from './types';
+import type { SceneEntity, SceneHandle } from './types';
 import { bus } from '../event-bus';
 import type { ModelEntity } from '../model/types';
 import { waveSurface } from '../environment/wave-surface';
@@ -13,7 +13,7 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
   return {
     id,
 
-    onAttach(scene: THREE.Scene, disposer?: Disposer) {
+    onAttach(scene: SceneHandle, disposer?: Disposer) {
       scene.add(model.root);
       disposer?.add(model.root);
     },

@@ -1,9 +1,10 @@
 import * as THREE from 'three';
-import type { SceneEntity } from './types';
+import type { SceneEntity, SceneHandle } from './types';
 import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
 import type { ModelLoader } from '../loaders/types';
 import type { InstanceDef } from '../state/types';
+import type { ModelEntity } from '../model/types';
 import { EntityStateBinding } from '../state/binding';
 
 export function createInstanceManager(
@@ -11,7 +12,7 @@ export function createInstanceManager(
   scene: THREE.Scene,
   store: StateStore,
 ): SceneEntity {
-  const instances = new Map<string, { root: THREE.Group; ref: string }>();
+  const instances = new Map<string, { entity: ModelEntity }>();
 
   function sync(next: Record<string, InstanceDef>) {
     const nextIds = new Set(
@@ -20,7 +21,7 @@ export function createInstanceManager(
 
     for (const [id, entry] of instances) {
       if (!nextIds.has(id)) {
-        scene.remove(entry.root);
+        scene.remove(entry.entity.root);
         instances.delete(id);
       }
     }
@@ -29,22 +30,25 @@ export function createInstanceManager(
       if ((def.behavior ?? 'static') === 'vessel') continue;
       const existing = instances.get(id);
       if (existing) {
+        const e = existing.entity;
         const tf = def.transform;
-        existing.root.position.set(tf.position[0], tf.position[1], tf.position[2]);
-        existing.root.rotation.set(tf.rotation[0], tf.rotation[1], tf.rotation[2]);
-        existing.root.scale.setScalar(tf.scale);
-        existing.root.visible = def.visible;
+        e.setPosition(tf.position[0], tf.position[1], tf.position[2]);
+        e.setRotation(tf.rotation[0], tf.rotation[1], tf.rotation[2]);
+        e.setScale(tf.scale);
+        e.setVisible(def.visible);
+        if (def.materials) e.applyMaterials(def.materials);
       } else {
         const model = modelLoader.getCached(def.ref);
         if (!model) continue;
-        const root = model.root.clone();
+        const e = model.clone();
         const tf = def.transform;
-        root.position.set(tf.position[0], tf.position[1], tf.position[2]);
-        root.rotation.set(tf.rotation[0], tf.rotation[1], tf.rotation[2]);
-        root.scale.setScalar(tf.scale);
-        root.visible = def.visible;
-        scene.add(root);
-        instances.set(id, { root, ref: def.ref });
+        e.setPosition(tf.position[0], tf.position[1], tf.position[2]);
+        e.setRotation(tf.rotation[0], tf.rotation[1], tf.rotation[2]);
+        e.setScale(tf.scale);
+        e.setVisible(def.visible);
+        if (def.materials) e.applyMaterials(def.materials);
+        scene.add(e.root);
+        instances.set(id, { entity: e });
       }
     }
   }
@@ -52,7 +56,7 @@ export function createInstanceManager(
   return {
     id: 'instance-manager',
 
-    onAttach(_scene: THREE.Scene, disposer?: Disposer) {
+    onAttach(_scene: SceneHandle, disposer?: Disposer) {
       const initial = store.get('instances') as Record<string, InstanceDef>;
       sync(initial);
       

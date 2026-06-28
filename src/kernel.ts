@@ -7,6 +7,8 @@ import { createPluginSceneAPI } from './plugins/plugin-scene-api';
 import { createDefaultState } from './state/defaults';
 import { entityManager } from './entity/manager';
 import type { PluginContext, ScenePlugin } from './plugins/types';
+import type { Object3D } from 'three';
+import type { RendererHandle, CameraHandle } from './rendering/types';
 
 export interface KernelOptions extends RenderingModuleOptions {}
 
@@ -15,8 +17,10 @@ export class Kernel {
   readonly store: StateStore
   readonly plugins: PluginManager
   private _mode: 'edit' | 'play' = 'edit'
-  selectedObject: THREE.Object3D | null = null
+  selectedObject: Object3D | null = null
   private locationTracker: LocationTracker
+  private _rendererHandle?: RendererHandle
+  private _cameraHandle?: CameraHandle
 
   get mode() { return this._mode }
   get scene() { return this.rendering.scene }
@@ -50,12 +54,27 @@ export class Kernel {
 
   private createPluginContext(): PluginContext {
     const self = this;
+    const r = this.rendering;
+    if (!this._rendererHandle) {
+      this._rendererHandle = {
+        get domElement() { return r.renderer.domElement; },
+        get info() { return r.renderer.info; },
+        dispose: () => r.renderer.dispose(),
+      };
+    }
+    if (!this._cameraHandle) {
+      this._cameraHandle = {
+        get raw() { return r.camera; },
+        get aspect() { return r.camera.aspect; },
+        updateProjectionMatrix: () => r.camera.updateProjectionMatrix(),
+      };
+    }
     return {
-      scene: createPluginSceneAPI(this.rendering.scene),
+      scene: createPluginSceneAPI(r.scene),
       state: createPluginStateAPI(this.store),
       get mode() { return self.mode; },
-      renderer: this.renderer,
-      camera: this.camera,
+      renderer: this._rendererHandle,
+      camera: this._cameraHandle,
       get selectedObject() { return self.selectedObject; },
       set selectedObject(o) { self.selectedObject = o; },
       setMode: (m) => self.setMode(m),

@@ -6,11 +6,8 @@ import type { PluginContext } from '../types';
 function mockPluginContext(): PluginContext {
   return {
     scene: {} as any,
-    renderer: { info: { render: { calls: 42, triangles: 1200 } } } as any,
-    camera: {} as any,
-    controls: {} as any,
-    store: {} as any,
-    container: document.body,
+    renderer: { domElement: document.body, info: { render: { calls: 42, triangles: 1200 } } } as any,
+    camera: { raw: {} as any, aspect: 1, updateProjectionMatrix: () => {} } as any,
     mode: 'edit',
     selectedObject: null,
     setMode: () => {},

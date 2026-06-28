@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import type { SceneEntity } from './types';
+import type { SceneEntity, SceneHandle } from './types';
 import { waveSurface } from '../environment/wave-surface';
 import { buildOceanGrid } from '../environment/ocean-grid';
 import { displaceOceanGrid } from '../environment/ocean-displacement';
-import { createWaterNormalMap, createWaterDiffuseMap } from '../environment/water-textures';
+import { createWaterMaterial } from '../rendering/materials';
 import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
 import { EntityStateBinding } from '../state/binding';
@@ -19,26 +19,13 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
   return {
     id: 'ocean',
 
-    onAttach(scene: THREE.Scene, disposer?: Disposer) {
+    onAttach(scene: SceneHandle, disposer?: Disposer) {
       const { geo } = buildOceanGrid(size, seg);
       const pos = geo.attributes.position.array as Float32Array;
       basePos = new Float32Array(pos.length);
       basePos.set(pos);
 
-      const normTex = createWaterNormalMap();
-      const diffTex = createWaterDiffuseMap();
-
-      mat = new THREE.MeshStandardMaterial({
-        map: diffTex,
-        normalMap: normTex,
-        normalScale: new THREE.Vector2(0.6, 0.6),
-        color: 0x2090d0,
-        roughness: 0.15,
-        metalness: 0.05,
-        transparent: true,
-        opacity: 0.82,
-        envMapIntensity: 1.0,
-      });
+      mat = createWaterMaterial();
 
       ocean = new THREE.Mesh(geo, mat);
       ocean.position.y = -0.35;

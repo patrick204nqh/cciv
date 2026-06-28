@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { TransformControls } from '../../three/addons';
 import type { ScenePlugin, PluginContext } from '../types';
 
 export const gizmosPlugin: ScenePlugin = (() => {
@@ -13,7 +13,7 @@ export const gizmosPlugin: ScenePlugin = (() => {
     const rect = ctx.renderer!.domElement.getBoundingClientRect();
     pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(pointer, ctx.camera);
+    raycaster.setFromCamera(pointer, ctx.camera!.raw);
 
     const meshes: THREE.Object3D[] = [];
     ctx.scene.traverse(child => {
@@ -40,7 +40,7 @@ export const gizmosPlugin: ScenePlugin = (() => {
 
     init(k: PluginContext) {
       ctx = k;
-      controls = new TransformControls(ctx.camera, ctx.renderer!.domElement);
+      controls = new TransformControls(ctx.camera!.raw, ctx.renderer!.domElement);
       controls.setMode('translate');
       controls.setSize(0.8);
       controls.visible = false;

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { SceneEntity } from './types';
+import type { SceneEntity, SceneHandle } from './types';
 import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
 import { EntityStateBinding } from '../state/binding';
@@ -8,7 +8,7 @@ export function createLightingEntity(store?: StateStore): SceneEntity {
   return {
     id: 'lighting',
 
-    onAttach(scene: THREE.Scene, disposer?: Disposer) {
+    onAttach(scene: SceneHandle, disposer?: Disposer) {
       const sun = new THREE.DirectionalLight(0xfff0d0, 2.8);
       sun.position.set(90, 130, -55);
       sun.castShadow = true;

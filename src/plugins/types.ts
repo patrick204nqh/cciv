@@ -1,14 +1,15 @@
-import * as THREE from 'three';
+import type { Object3D } from 'three';
 import type { PluginStateAPI } from './plugin-state-api';
 import type { PluginSceneAPI } from './plugin-scene-api';
+import type { RendererHandle, CameraHandle } from '../rendering/types';
 
 export interface PluginContext {
   readonly scene: PluginSceneAPI
   readonly state: PluginStateAPI
   readonly mode: 'edit' | 'play'
-  readonly renderer?: THREE.WebGLRenderer
-  readonly camera?: THREE.PerspectiveCamera
-  selectedObject: THREE.Object3D | null
+  readonly renderer?: RendererHandle
+  readonly camera?: CameraHandle
+  selectedObject: Object3D | null
   setMode(m: 'edit' | 'play'): void
 }
 

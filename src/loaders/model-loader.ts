@@ -5,6 +5,7 @@ import type { ModelEntity } from '../model/types';
 import { GlbLoader, type GlbLoaderResult } from './glb-loader';
 import { ModelCatalogReader } from './catalog';
 import { modelRegistry } from '../model/registry';
+import { traverseMeshes } from '../model/utils';
 import { Disposer } from '../util/disposer';
 
 export class ModelLoaderImpl implements ModelLoader {
@@ -45,17 +46,14 @@ export class ModelLoaderImpl implements ModelLoader {
     disp.add(root);
 
     if (entry.materialOverrides) {
-      root.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material) {
-          const override = entry.materialOverrides![child.name];
-          if (override && child.material instanceof THREE.MeshStandardMaterial) {
-            if (override.color != null) child.material.color.setHex(override.color);
-            if (override.roughness != null) child.material.roughness = override.roughness;
-            if (override.metalness != null) child.material.metalness = override.metalness;
-            if (override.transparent != null) child.material.transparent = override.transparent;
-            if (override.alphaTest != null) child.material.alphaTest = override.alphaTest;
-          }
-        }
+      traverseMeshes(root, (_mesh, mat) => {
+        const override = entry.materialOverrides![_mesh.name];
+        if (!override) return;
+        if (override.color != null) mat.color.setHex(override.color);
+        if (override.roughness != null) mat.roughness = override.roughness;
+        if (override.metalness != null) mat.metalness = override.metalness;
+        if (override.transparent != null) mat.transparent = override.transparent;
+        if (override.alphaTest != null) mat.alphaTest = override.alphaTest;
       });
     }
 
@@ -79,6 +77,28 @@ export class ModelLoaderImpl implements ModelLoader {
         source: 'extracted',
         license: entry.license,
         polyCount: entry.polyCount,
+      },
+      clone() {
+        const clonedRoot = root.clone();
+        clonedRoot.name = root.name;
+        const cloned = { ...entity, root: clonedRoot };
+        return cloned;
+      },
+      setPosition(x: number, y: number, z: number) { root.position.set(x, y, z); },
+      setRotation(x: number, y: number, z: number) { root.rotation.set(x, y, z); },
+      setScale(s: number) { root.scale.setScalar(s); },
+      setVisible(v: boolean) { root.visible = v; },
+      applyMaterials(materials) {
+        traverseMeshes(root, (mesh, mat) => {
+          const override = materials[mesh.name];
+          if (!override) return;
+          const cloned = mat.clone();
+          cloned.color.set(override.color);
+          cloned.roughness = override.roughness;
+          cloned.metalness = override.metalness;
+          cloned.visible = override.visible;
+          mesh.material = cloned;
+        });
       },
       dispose() {
         disp.dispose();

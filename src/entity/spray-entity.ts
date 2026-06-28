@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { SceneEntity } from './types';
+import type { SceneEntity, SceneHandle } from './types';
 import type { Disposer } from '../util/disposer';
 import { PositionTracker } from '../util/position-tracker';
 
@@ -63,7 +63,7 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
   return {
     id: `spray${vesselId ? '-' + vesselId : ''}`,
 
-    onAttach(scene: THREE.Scene, disposer?: Disposer) {
+    onAttach(scene: SceneHandle, disposer?: Disposer) {
       for (let i = 0; i < MAX_PARTICLES; i++) {
         particles.push({ pos: new THREE.Vector3(), vel: new THREE.Vector3(), life: 0, maxLife: 0 });
         sizeArr[i] = 0;

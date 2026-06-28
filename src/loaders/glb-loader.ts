@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { GLTFLoader, DRACOLoader } from '../three/addons';
 
 export interface GlbLoaderResult {
   scene: THREE.Group;

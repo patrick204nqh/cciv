@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { SceneEntity } from './types';
+import type { SceneEntity, SceneHandle } from './types';
 import type { Disposer } from '../util/disposer';
 import { PositionTracker } from '../util/position-tracker';
 
@@ -11,7 +11,7 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
   return {
     id: `wake${vesselId ? '-' + vesselId : ''}`,
 
-    onAttach(scene: THREE.Scene, disposer?: Disposer) {
+    onAttach(scene: SceneHandle, disposer?: Disposer) {
       const verts: number[] = [];
       const idx: number[] = [];
 

@@ -1,4 +1,4 @@
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OrbitControls } from '../three/addons';
 import * as THREE from 'three';
 
 export function createOrbitControls(camera: THREE.PerspectiveCamera, domElement: HTMLCanvasElement): OrbitControls {

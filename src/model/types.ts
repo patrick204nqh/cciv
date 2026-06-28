@@ -1,3 +1,5 @@
+import type { MaterialOverride } from '../state/types';
+
 export interface MaterialSpec {
   textureKey?: string;
   color?: number;
@@ -21,6 +23,12 @@ export interface ModelEntity {
     polyCount?: number;
   };
   dispose(): void;
+  clone(): ModelEntity;
+  setPosition(x: number, y: number, z: number): void;
+  setRotation(x: number, y: number, z: number): void;
+  setScale(s: number): void;
+  setVisible(v: boolean): void;
+  applyMaterials(materials: Record<string, MaterialOverride>): void;
 }
 
 export interface TransformSpec {
