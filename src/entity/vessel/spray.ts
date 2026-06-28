@@ -1,5 +1,5 @@
 import { BufferGeometry, Float32BufferAttribute } from 'three';
-import type { SceneEntity, SceneHandle } from '../types';
+import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
 import { bus } from '../../event-bus';
@@ -56,8 +56,7 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
   return {
     id: `spray${vesselId ? '-' + vesselId : ''}`,
 
-    onAttach(scene: SceneHandle, disposer?: Disposer) {
-      const s = scene as any;
+    onAttach(scene, disposer?: Disposer) {
       geo = new BufferGeometry();
       const count = MAX_PARTICLES;
       positions = new Float32Array(count * 3);
@@ -73,8 +72,8 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
         depthWrite: false,
         vertexColors: true,
       });
-      pointsObj = s.createPoints(geo, mat);
-      s.add(pointsObj);
+      pointsObj = scene.createPoints(geo, mat);
+      scene.add(pointsObj);
 
       bus.on('entity:position-changed', (ev) => {
         if (ev.entityId === (vesselId ?? 'vessel')) {

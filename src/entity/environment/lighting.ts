@@ -1,4 +1,4 @@
-import type { SceneEntity, SceneHandle } from '../types';
+import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 
 interface LightingCfg {
@@ -25,24 +25,22 @@ export function createLightingEntity(cfg?: LightingCfg): SceneEntity {
   return {
     id: 'lighting',
 
-    onAttach(scene: SceneHandle, disposer?: Disposer) {
-      const s = scene as any;
-
+    onAttach(scene, disposer?: Disposer) {
       if (c.sun.enabled) {
-        const sun = s.createDirectionalLight(c.sun.color, c.sun.intensity);
+        const sun = scene.createDirectionalLight(c.sun.color, c.sun.intensity);
         sun.position = sunPosition(c.sun.azimuth, c.sun.elevation);
-        s.add(sun);
+        scene.add(sun);
       }
 
       if (c.hemisphere.enabled) {
-        const hemi = s.createHemisphereLight(c.hemisphere.skyColor, c.hemisphere.groundColor, c.hemisphere.intensity);
+        const hemi = scene.createHemisphereLight(c.hemisphere.skyColor, c.hemisphere.groundColor, c.hemisphere.intensity);
         hemi.position = { x: 0, y: 100, z: 0 };
-        s.add(hemi);
+        scene.add(hemi);
       }
 
       if (c.fill.enabled) {
-        const ambient = s.createAmbientLight(c.fill.color, c.fill.intensity);
-        s.add(ambient);
+        const ambient = scene.createAmbientLight(c.fill.color, c.fill.intensity);
+        scene.add(ambient);
       }
 
       if (disposer) {

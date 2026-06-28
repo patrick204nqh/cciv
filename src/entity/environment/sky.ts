@@ -1,6 +1,5 @@
 import { BufferAttribute, BackSide } from 'three';
-import type { IScene } from '../../scene/types';
-import type { SceneEntity, SceneHandle } from '../types';
+import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import { createBasicMaterial } from '../../scene/scene-adapter';
 
@@ -18,9 +17,8 @@ export function createSkyEntity(
   return {
     id: 'sky',
 
-    onAttach(scene: SceneHandle, disposer?: Disposer) {
-      const s = scene as IScene;
-      const skyGeo = s.createSphereGeometry(900, 32, 24);
+    onAttach(scene, disposer?: Disposer) {
+      const skyGeo = scene.createSphereGeometry(900, 32, 24);
       const pos = skyGeo.attributes.position;
       const colors = new Float32Array(pos.count * 3);
       for (let i = 0; i < pos.count; i++) {
@@ -33,8 +31,8 @@ export function createSkyEntity(
       skyGeo.setAttribute('color', new BufferAttribute(colors, 3));
 
       const mat = createBasicMaterial({ vertexColors: true, side: BackSide });
-      const mesh = s.createMesh(skyGeo, mat);
-      s.add(mesh);
+      const mesh = scene.createMesh(skyGeo, mat);
+      scene.add(mesh);
 
       if (disposer) disposer.add(() => mesh.dispose());
     },

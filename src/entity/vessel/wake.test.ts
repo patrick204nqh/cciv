@@ -8,7 +8,7 @@ describe('createWakeEntity', () => {
   });
 
   it('attaches a mesh to the scene', () => {
-    const scene = { add: vi.fn() } as any;
+    const scene = { add: vi.fn(), createPoints: vi.fn().mockReturnValue({ dispose: vi.fn() }) } as any;
     const entity = createWakeEntity();
     entity.onAttach(scene);
     expect(scene.add).toHaveBeenCalled();

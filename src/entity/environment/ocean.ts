@@ -1,6 +1,4 @@
-import { PlaneGeometry } from 'three';
-import type { SceneEntity, SceneHandle } from '../types';
-import type { IScene } from '../../scene/types';
+import type { SceneEntity } from '../types';
 import { createTSLOceanMaterial } from '../../environment/tsl-ocean';
 import type { ComputedWave } from '../../environment/wave-config';
 import type { Disposer } from '../../util/disposer';
@@ -15,19 +13,16 @@ export function createOceanEntity(
   return {
     id: 'ocean',
 
-    onAttach(scene: SceneHandle, disposer?: Disposer) {
-      const s = scene as IScene;
-
-      const geo = new PlaneGeometry(extent, extent, gridSize, gridSize);
-      geo.rotateX(-Math.PI / 2);
+    onAttach(scene, disposer?: Disposer) {
+      const geo = scene.createPlaneGeometry(extent, extent, gridSize, gridSize);
 
       const mat = createTSLOceanMaterial(waves);
       const material: import('../../scene/types').IMaterial = {
         dispose: () => mat.dispose(),
+        _vendor: mat,
       };
-      (material as any)._vendor = mat;
-      mesh = s.createMesh(geo, material);
-      s.add(mesh);
+      mesh = scene.createMesh(geo, material);
+      scene.add(mesh);
 
       if (disposer) disposer.add(() => mesh!.dispose());
     },

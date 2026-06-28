@@ -7,3 +7,6 @@ dist/
 *.local.json
 public/models/
 public/textures/
+
+.env
+.envrc

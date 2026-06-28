@@ -1,5 +1,5 @@
 import { BufferGeometry, Float32BufferAttribute, Uint16BufferAttribute } from 'three';
-import type { SceneEntity, SceneHandle } from '../types';
+import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
 import { bus } from '../../event-bus';
@@ -13,8 +13,7 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
   return {
     id: `wake${vesselId ? '-' + vesselId : ''}`,
 
-    onAttach(scene: SceneHandle, disposer?: Disposer) {
-      const s = scene as any;
+    onAttach(scene, disposer?: Disposer) {
       const verts: number[] = [];
       const idx: number[] = [];
 
@@ -42,8 +41,8 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
         transparent: true,
         depthWrite: false,
       });
-      const wake = s.createPoints(geo, mat);
-      s.add(wake);
+      const wake = scene.createPoints(geo, mat);
+      scene.add(wake);
 
       if (disposer) disposer.add(() => wake.dispose());
     },

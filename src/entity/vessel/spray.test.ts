@@ -16,7 +16,7 @@ describe('createSprayEntity', () => {
   });
 
   it('attaches a points system to the scene', () => {
-    const scene = { add: vi.fn() } as any;
+    const scene = { add: vi.fn(), createPoints: vi.fn().mockReturnValue({ dispose: vi.fn() }) } as any;
     const entity = createSprayEntity();
     entity.onAttach(scene);
     expect(scene.add).toHaveBeenCalled();

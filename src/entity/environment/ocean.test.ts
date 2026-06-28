@@ -18,7 +18,11 @@ describe('createOceanEntity', () => {
   });
 
   it('attaches a mesh to the scene', () => {
-    const scene = { add: vi.fn(), createMesh: vi.fn() } as any;
+    const scene = {
+      add: vi.fn(),
+      createMesh: vi.fn(),
+      createPlaneGeometry: vi.fn().mockReturnValue({ rotateX: vi.fn() }),
+    } as any;
     const entity = createOceanEntity(makeWaves());
     entity.onAttach(scene);
     expect(scene.add).toHaveBeenCalled();

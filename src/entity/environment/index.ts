@@ -6,11 +6,10 @@ import { createSkyEntity } from './sky';
 import { createLightingEntity } from './lighting';
 import { createRainEntity } from './rain';
 import { entityRegistry } from '../entity-registry';
-import type { SceneEntity, SceneHandle } from '../types';
+import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import type { ModelLoader } from '../../loaders/types';
 import type { EnvironmentState, WorldConfig } from '../../state/types';
-import type { IScene } from '../../scene/types';
 
 entityRegistry.register({
   async match(config: WorldConfig, _modelLoader: ModelLoader) {
@@ -27,11 +26,9 @@ export function createEnvironmentEntity(env: EnvironmentState): SceneEntity {
   return {
     id: 'environment',
 
-    onAttach(scene: SceneHandle, disposer?: Disposer) {
+    onAttach(scene, disposer?: Disposer) {
       setWaveConfig(waves);
       subEntities = [];
-
-      const s = scene as IScene;
 
       if (effective.ocean) {
         const e = createOceanEntity(waves, effective.ocean.extent, effective.ocean.gridSize);

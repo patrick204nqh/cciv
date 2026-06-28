@@ -1,9 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as THREE from 'three';
 import { createShipEntity } from './ship';
 import type { ModelEntity } from '../../model/types';
-import type { SceneHandle } from '../types';
 import type { ISceneObject } from '../../scene/types';
 
 vi.mock('../../environment/wave-surface', () => ({
@@ -73,7 +71,7 @@ function createMockSceneObject(isRoot = true, overrides?: Partial<ISceneObject>)
 
 describe('createShipEntity', () => {
   let model: ModelEntity;
-  let scene: SceneHandle;
+  let scene: any;
 
   beforeEach(() => {
     scene = { add: vi.fn(), remove: vi.fn() };

@@ -1,6 +1,5 @@
 import { BufferGeometry, Float32BufferAttribute } from 'three';
-import type { SceneEntity, SceneHandle } from '../types';
-import type { IScene } from '../../scene/types';
+import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import { createPointMaterial } from '../../scene/scene-adapter';
 
@@ -16,8 +15,7 @@ export function createRainEntity(): SceneEntity {
   return {
     id: 'rain',
 
-    onAttach(scene: SceneHandle, disposer?: Disposer) {
-      const s = scene as IScene;
+    onAttach(scene, disposer?: Disposer) {
       const geo = new BufferGeometry();
       positions = new Float32Array(DROP_COUNT * 3);
 
@@ -36,8 +34,8 @@ export function createRainEntity(): SceneEntity {
         transparent: true,
         depthWrite: false,
       });
-      points = s.createPoints(geo, mat);
-      s.add(points);
+      points = scene.createPoints(geo, mat);
+      scene.add(points);
 
       if (disposer) disposer.add(() => points!.dispose());
     },

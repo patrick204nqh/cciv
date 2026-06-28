@@ -1,4 +1,4 @@
-import type { SceneEntity, SceneHandle } from '../types';
+import type { SceneEntity } from '../types';
 import type { IScene } from '../../scene/types';
 import type { Disposer } from '../../util/disposer';
 import type { StateStore } from '../../state/store';
@@ -58,7 +58,7 @@ export function createInstanceManager(
   return {
     id: 'instance-manager',
 
-    onAttach(_scene: SceneHandle, disposer?: Disposer) {
+    onAttach(_scene, disposer?: Disposer) {
       const initial = store.get('instances') as Record<string, InstanceDef>;
       sync(initial);
       

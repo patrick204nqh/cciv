@@ -1,4 +1,4 @@
-import type { SceneEntity, SceneHandle } from './types';
+import type { SceneEntity } from './types';
 import type { Disposer } from '../util/disposer';
 
 export function createVesselGroup(id: string, ...children: SceneEntity[]): SceneEntity {
@@ -7,7 +7,7 @@ export function createVesselGroup(id: string, ...children: SceneEntity[]): Scene
   return {
     id,
 
-    onAttach(scene: SceneHandle, disposer?: Disposer) {
+    onAttach(scene, disposer?: Disposer) {
       for (const child of children) {
         try {
           child.onAttach(scene, disposer);
