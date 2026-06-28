@@ -53,7 +53,7 @@ export class Kernel {
     this.plugins.render(dt, this.mode)
   }
 
-  private createPluginContext(): PluginContext {
+  createPluginContext(): PluginContext {
     const self = this;
     const r = this.rendering;
     return {

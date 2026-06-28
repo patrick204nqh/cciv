@@ -1,16 +1,24 @@
-interface ToolDef {
+import type { ComponentType } from 'react';
+import type { PluginContext } from './types';
+import { createRoot, type Root } from 'react-dom/client';
+import { PluginContextProvider } from '../ui/context/plugin-context';
+import { bridgeStore } from '../ui/bridge';
+
+export interface ToolDef {
   id: string
   label: string
   icon: string
   init?: (container: HTMLElement) => void
   destroy?: () => void
   render?: (container: HTMLElement) => void
+  component?: ComponentType<{ ctx: PluginContext }>
 }
 
 let tools: ToolDef[] = []
 let activeTool: string | null = null
 let panelContent: HTMLElement | null = null
 let destroyedFns = new Map<string, () => void>()
+let reactRoot: Root | null = null
 
 function getToolbar(): HTMLElement {
   return document.getElementById('tb')!
@@ -57,7 +65,19 @@ function openTool(id: string) {
   getPanelTitle().textContent = tool.label
   getPanel().classList.add('o')
 
-  tool.init?.(body)
+  if (tool.component) {
+    const ctx = bridgeStore.getState().pluginCtx;
+    if (ctx) {
+      reactRoot = createRoot(body);
+      reactRoot.render(
+        <PluginContextProvider value={ctx}>
+          <tool.component ctx={ctx} />
+        </PluginContextProvider>,
+      );
+    }
+  } else {
+    tool.init?.(body);
+  }
 }
 
 function closePanel() {
@@ -68,6 +88,8 @@ function closePanel() {
     destroyedFns.delete(activeTool)
     activeTool = null
   }
+  reactRoot?.unmount()
+  reactRoot = null
   getPanel().classList.remove('o')
   getPanelBody().innerHTML = ''
 }

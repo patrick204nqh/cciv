@@ -13,6 +13,8 @@ import { sceneGraphPlugin } from './plugins/scene-graph';
 import { performanceHudPlugin } from './plugins/performance-hud';
 import { shipHudPlugin } from './plugins/ship-hud';
 import { physicsDebugPlugin } from './plugins/physics-debug';
+import { mountReactShell } from './ui/main';
+import { bridgeStore } from './ui/bridge';
 async function main() {
   const kernel = new Kernel();
   kernel.registerPlugin(inspectorPlugin);
@@ -55,7 +57,11 @@ async function main() {
   await modelLoader.preload(Array.from(allRefs));
   entityManager.attach(createInstanceManager(modelLoader, scene, store), scene);
 
+  mountReactShell();
+
   await kernel.init();
+
+  bridgeStore.getState().setPluginCtx(kernel.createPluginContext());
 
   await kernel.startLoop();
 }

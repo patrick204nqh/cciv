@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { performanceHudPlugin } from './index';
+import { usePerfStore } from '../../ui/stores/perf-store';
 import type { PluginContext } from '../types';
 
 function mockPluginContext(): PluginContext {
@@ -43,12 +44,12 @@ describe('performanceHudPlugin', () => {
     expect(() => performanceHudPlugin.destroy()).not.toThrow();
   });
 
-  it('updates display on render', () => {
+  it('updates store on render', () => {
     performanceHudPlugin.init(ctx);
-    performanceHudPlugin.render(0.016);
-    const el = document.getElementById('ph')!;
-    expect(el.textContent).toContain('42');
-    expect(el.textContent).toContain('1200');
+    performanceHudPlugin.render(0.5);
+    const { fps, drawCalls, triangles } = usePerfStore.getState();
+    expect(drawCalls).toBe(42);
+    expect(triangles).toBe(1200);
     performanceHudPlugin.destroy();
   });
 });

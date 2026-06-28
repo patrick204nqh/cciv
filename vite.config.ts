@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 
 function glbHotReload(): Plugin {
@@ -20,7 +21,12 @@ export default defineConfig({
   root: '.',
   base: '/cciv/',
   publicDir: 'public',
-  plugins: [glbHotReload()],
+  plugins: [react(), glbHotReload()],
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
   build: {
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
