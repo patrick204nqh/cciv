@@ -73,3 +73,20 @@ Add new sources by appending to `SOURCES` in `bin/dev:19-27`.
 - All Three.js scene graph interaction goes through `ISceneObject` (`src/scene/types.ts`). Never pass `THREE.Object3D` directly across module boundaries. `SceneObject` adapter wraps raw Three.js objects. Use `.object3D` escape hatch only when Three.js interop is unavoidable (TransformControls, raycaster).
 - Skills provide specialized instructions and workflows for specific tasks.
   Use the skill tool to load a skill when a task matches its description.
+
+## Design invariant checks
+
+Before every code change, read `docs/design/invariants.md` (the 8 golden rules). During and after the change, flag any violations:
+
+| Rule | What to check |
+|---|---|
+| 1 | Does the new code straddle two layers (e.g., both orchestrates AND adapts)? |
+| 2 | Is a library imported directly outside its gate layer? |
+| 3 | Does a gate interface expose a vendor type (.raw, .object3D)? |
+| 4 | Does application code bypass a gate and call the library directly? |
+| 5 | Does this introduce a second way to do something that already exists? |
+| 6 | Could a built-in replace custom logic (e.g., PlaneGeometry, Raycaster)? |
+| 7 | Does the code match surrounding patterns in the same layer? |
+| 8 | Is the module's interface complete, or does it need future patches? |
+
+If a violation is unavoidable, stop and propose updating `docs/design/invariants.md` — never silently bypass a golden rule.
