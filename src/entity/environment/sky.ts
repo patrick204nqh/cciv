@@ -2,17 +2,7 @@ import { BufferAttribute, BackSide } from 'three';
 import type { IScene } from '../../scene/types';
 import type { SceneEntity, SceneHandle } from '../types';
 import type { Disposer } from '../../util/disposer';
-import { entityRegistry } from '../entity-registry';
-import type { ModelLoader } from '../../loaders/types';
-import type { WorldConfig } from '../../state/types';
 import { createBasicMaterial } from '../../scene/scene-adapter';
-
-entityRegistry.register({
-  async match(config: WorldConfig, _modelLoader: ModelLoader) {
-    if (!config.environment.sky) return { entities: [], errors: [] };
-    return { entities: [createSkyEntity(config.environment.sky)], errors: [] };
-  },
-});
 
 function hexToRgb(hex: string): [number, number, number] {
   const v = parseInt(hex.replace('#', ''), 16);

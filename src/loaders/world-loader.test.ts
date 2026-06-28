@@ -82,7 +82,7 @@ describe('WorldLoader', () => {
       },
     };
     const result = await worldLoader.load(world, mockModelLoader);
-    expect(result.entities.length).toBeGreaterThanOrEqual(4);
+    expect(result.entities.length).toBeGreaterThanOrEqual(2);
     const vesselEntity = result.entities.find(e => e.id === 'my-ship');
     expect(vesselEntity).toBeDefined();
     expect(mockModelLoader.load).toHaveBeenCalledWith('ship');

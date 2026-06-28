@@ -8,7 +8,12 @@ describe('createLightingEntity', () => {
   });
 
   it('adds lights to the scene', () => {
-    const scene = { add: vi.fn() } as any;
+    const scene = {
+      add: vi.fn(),
+      createDirectionalLight: vi.fn().mockReturnValue({ position: {}, dispose: vi.fn() }),
+      createHemisphereLight: vi.fn().mockReturnValue({ position: {}, dispose: vi.fn() }),
+      createAmbientLight: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    } as any;
     const entity = createLightingEntity();
     entity.onAttach(scene);
     expect(scene.add).toHaveBeenCalled();

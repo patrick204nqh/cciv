@@ -1,13 +1,22 @@
 import { ChevronDownIcon } from '@radix-ui/react-icons';
-import { useLocationStore, switchLocation } from '../stores/location-store';
+import { useLocationStore, switchLocation, setWeather } from '../stores/location-store';
+import type { WeatherType } from '../../state/types';
 
 function formatLabel(id: string): string {
   return id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+const WEATHERS: { id: WeatherType; icon: string }[] = [
+  { id: 'clear', icon: '☀' },
+  { id: 'cloudy', icon: '☁' },
+  { id: 'storm', icon: '🌧' },
+  { id: 'fog', icon: '🌫' },
+];
+
 export function LocationSwitcherPanel() {
   const locations = useLocationStore((s) => s.locations);
   const activeLocation = useLocationStore((s) => s.activeLocation);
+  const weather = useLocationStore((s) => s.weather);
   const transitioning = useLocationStore((s) => s.transitioning);
 
   return (
@@ -23,7 +32,7 @@ export function LocationSwitcherPanel() {
       >
         CURRENT LOCATION
       </div>
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative', marginBottom: '16px' }}>
         <select
           value={activeLocation}
           onChange={(e) => switchLocation(e.target.value)}
@@ -78,6 +87,44 @@ export function LocationSwitcherPanel() {
             transitioning...
           </div>
         )}
+      </div>
+
+      <div
+        style={{
+          fontSize: '10px',
+          fontFamily: 'var(--font-mono)',
+          color: 'var(--ink-muted)',
+          letterSpacing: '1px',
+          marginBottom: '6px',
+        }}
+      >
+        WEATHER
+      </div>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        {WEATHERS.map(({ id, icon }) => (
+          <button
+            key={id}
+            onClick={() => setWeather(id)}
+            style={{
+              flex: 1,
+              background: weather === id ? 'var(--gold-dim)' : 'var(--bg)',
+              color: weather === id ? '#000' : 'var(--ink)',
+              border: weather === id
+                ? '1px solid var(--gold)'
+                : '1px solid var(--border)',
+              borderRadius: '3px',
+              padding: '6px 4px',
+              font: '13px var(--font-ui)',
+              cursor: 'pointer',
+              textAlign: 'center',
+              transition: 'all 150ms ease',
+              opacity: transitioning ? 0.5 : 1,
+            }}
+            title={formatLabel(id)}
+          >
+            {icon}
+          </button>
+        ))}
       </div>
     </div>
   );

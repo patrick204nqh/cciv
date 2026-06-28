@@ -7,9 +7,7 @@ import { entityRegistry } from './entity-registry';
 import { behaviorRegistry } from './behavior-registry';
 
 // Side-effect imports — each module auto-registers at import time
-import './environment/ocean';
-import './environment/sky';
-import './environment/lighting';
+import './environment';
 import './vessel/ship';
 
 // Instance dispatch — iterates config.instances, delegates to BehaviorRegistry

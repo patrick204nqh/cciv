@@ -1,21 +1,11 @@
 import type { SceneEntity, SceneHandle } from '../types';
 import type { Disposer } from '../../util/disposer';
-import { entityRegistry } from '../entity-registry';
-import type { ModelLoader } from '../../loaders/types';
-import type { WorldConfig } from '../../state/types';
 
 interface LightingCfg {
   sun: { enabled: boolean; intensity: number; color: string; azimuth: number; elevation: number };
   hemisphere: { enabled: boolean; skyColor: string; groundColor: string; intensity: number };
   fill: { enabled: boolean; intensity: number; color: string };
 }
-
-entityRegistry.register({
-  async match(config: WorldConfig, _modelLoader: ModelLoader) {
-    if (!config.environment.lighting) return { entities: [], errors: [] };
-    return { entities: [createLightingEntity(config.environment.lighting)], errors: [] };
-  },
-});
 
 function sunPosition(azimuth: number, elevation: number, dist = 160): { x: number; y: number; z: number } {
   return {
