@@ -36,7 +36,7 @@ export interface InstanceDef {
   ref: string
   transform: { position: [number, number, number]; rotation: [number, number, number]; scale: number }
   visible: boolean
-  behavior?: 'vessel' | 'static'
+  behavior?: string
   materials?: Record<string, MaterialOverride>
 }
 
