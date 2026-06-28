@@ -7,7 +7,7 @@ export function createDefaultState(): AppState {
     activeLocation: 'north-sea',
     dirtyLocations: [],
     time: { speed: 1, paused: false, elapsed: 0 },
-    environment: structuredClone(preset.environment),
+    environment: { ...structuredClone(preset.environment), weather: 'clear' },
     instances: structuredClone(preset.instances),
     locations: structuredClone(LOCATION_PRESETS),
   };

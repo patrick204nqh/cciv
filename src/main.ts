@@ -12,6 +12,7 @@ import { modeTogglePlugin } from './plugins/mode-toggle';
 import { sceneGraphPlugin } from './plugins/scene-graph';
 import { performanceHudPlugin } from './plugins/performance-hud';
 import { shipHudPlugin } from './plugins/ship-hud';
+import { environmentControllerPlugin, initEnvController } from './plugins/environment-controller';
 import { physicsDebugPlugin } from './plugins/physics-debug';
 import { mountReactShell } from './ui/main';
 import { bridgeStore } from './ui/bridge';
@@ -28,6 +29,8 @@ async function main() {
   kernel.registerPlugin(performanceHudPlugin);
   kernel.registerPlugin(shipHudPlugin);
   kernel.registerPlugin(physicsDebugPlugin);
+  kernel.registerPlugin(environmentControllerPlugin);
+  initEnvController(kernel.scene);
   const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};

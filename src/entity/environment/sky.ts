@@ -10,11 +10,21 @@ import { createBasicMaterial } from '../../scene/scene-adapter';
 entityRegistry.register({
   async match(config: WorldConfig, _modelLoader: ModelLoader) {
     if (!config.environment.sky) return { entities: [], errors: [] };
-    return { entities: [createSkyEntity()], errors: [] };
+    return { entities: [createSkyEntity(config.environment.sky)], errors: [] };
   },
 });
 
-export function createSkyEntity(): SceneEntity {
+function hexToRgb(hex: string): [number, number, number] {
+  const v = parseInt(hex.replace('#', ''), 16);
+  return [(v >> 16) & 255, (v >> 8) & 255, v & 255].map(c => c / 255) as [number, number, number];
+}
+
+export function createSkyEntity(
+  skyCfg?: { gradientTop: string; gradientBottom: string },
+): SceneEntity {
+  const topRgb = skyCfg ? hexToRgb(skyCfg.gradientTop) : [0.4, 0.6, 0.9];
+  const botRgb = skyCfg ? hexToRgb(skyCfg.gradientBottom) : [0.9, 0.85, 0.7];
+
   return {
     id: 'sky',
 
@@ -26,8 +36,6 @@ export function createSkyEntity(): SceneEntity {
       for (let i = 0; i < pos.count; i++) {
         const y = pos.getY(i);
         const t = (y + 900) / 1800;
-        const topRgb = [0.4, 0.6, 0.9];
-        const botRgb = [0.9, 0.85, 0.7];
         colors[i * 3] = botRgb[0] + (topRgb[0] - botRgb[0]) * t;
         colors[i * 3 + 1] = botRgb[1] + (topRgb[1] - botRgb[1]) * t;
         colors[i * 3 + 2] = botRgb[2] + (topRgb[2] - botRgb[2]) * t;

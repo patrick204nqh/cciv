@@ -1,4 +1,7 @@
+export type WeatherType = 'clear' | 'cloudy' | 'storm' | 'fog'
+
 export interface EnvironmentState {
+  weather?: WeatherType
   sky?: {
     gradientTop: string
     gradientBottom: string
