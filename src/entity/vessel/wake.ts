@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import type { SceneEntity, SceneHandle } from './types';
-import type { IMaterial } from '../scene/types';
-import { SceneObject } from '../scene/object';
-import { MaterialAdapter } from '../scene/material-adapter';
-import type { Disposer } from '../util/disposer';
-import { PositionTracker } from '../util/position-tracker';
+import type { SceneEntity, SceneHandle } from '../types';
+import type { IMaterial } from '../../scene/types';
+import { SceneObject } from '../../scene/object';
+import { MaterialAdapter } from '../../scene/material-adapter';
+import type { Disposer } from '../../util/disposer';
+import { PositionTracker } from '../../util/position-tracker';
 
 const SEGMENTS = 16;
 const TRAIL_LENGTH = 60;
@@ -64,7 +64,7 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
       let intensity = 0;
 
       if (disposer) {
-        const targetId = vesselId ?? 'ship';
+        const targetId = vesselId ?? 'vessel';
         const tracker = new PositionTracker(targetId);
         tracker.track((evPos, evQuat) => {
           const dx = evPos.x - prevPos.x;

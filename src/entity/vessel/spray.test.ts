@@ -7,7 +7,7 @@ const mockCanvas = { width: 32, height: 32, getContext: () => ({
 }) } as any;
 vi.stubGlobal('document', { createElement: () => mockCanvas });
 
-import { createSprayEntity } from './spray-entity';
+import { createSprayEntity } from './spray';
 
 describe('createSprayEntity', () => {
   it('creates an entity with id "spray"', () => {

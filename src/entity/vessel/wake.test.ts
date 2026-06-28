@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createWakeEntity } from './wake-entity';
+import { createWakeEntity } from './wake';
 
 describe('createWakeEntity', () => {
   it('creates an entity with id "wake"', () => {

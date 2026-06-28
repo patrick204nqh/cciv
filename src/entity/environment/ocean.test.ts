@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createOceanEntity } from './ocean-entity';
+import { createOceanEntity } from './ocean';
 
-vi.mock('../environment/water-textures', () => ({
+vi.mock('../../environment/water-textures', () => ({
   createWaterNormalMap: () => ({ dispose: vi.fn() }),
   createWaterDiffuseMap: () => ({ dispose: vi.fn() }),
 }));

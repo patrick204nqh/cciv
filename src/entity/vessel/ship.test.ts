@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createShipEntity } from './ship-entity';
-import type { ModelEntity } from '../model/types';
-import type { SceneHandle } from './types';
-import type { ISceneObject } from '../scene/types';
+import { createShipEntity } from './ship';
+import type { ModelEntity } from '../../model/types';
+import type { SceneHandle } from '../types';
+import type { ISceneObject } from '../../scene/types';
 
-vi.mock('../environment/wave-surface', () => ({
+vi.mock('../../environment/wave-surface', () => ({
   waveSurface: {
     sample: vi.fn().mockReturnValue({ height: 1, dispX: 0, dispZ: 0, normal: { x: 0, y: 1, z: 0 } }),
   },
@@ -67,7 +67,7 @@ describe('createShipEntity', () => {
   });
 
   it('calls waveSurface.sample on update', async () => {
-    const { waveSurface } = await import('../environment/wave-surface');
+    const { waveSurface } = await import('../../environment/wave-surface');
     const entity = createShipEntity(model);
     entity.onUpdate!(0.016);
     expect(waveSurface.sample).toHaveBeenCalled();

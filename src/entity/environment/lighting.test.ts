@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createLightingEntity } from './lighting-entity';
+import { createLightingEntity } from './lighting';
 
 describe('createLightingEntity', () => {
   it('creates an entity with id "lighting"', () => {

@@ -1,8 +1,8 @@
-import type { SceneEntity, SceneHandle } from './types';
-import { bus } from '../event-bus';
-import type { ModelEntity } from '../model/types';
-import { waveSurface } from '../environment/wave-surface';
-import type { Disposer } from '../util/disposer';
+import type { SceneEntity, SceneHandle } from '../types';
+import { bus } from '../../event-bus';
+import type { ModelEntity } from '../../model/types';
+import { waveSurface } from '../../environment/wave-surface';
+import type { Disposer } from '../../util/disposer';
 
 interface PrevState {
   x: number; y: number; z: number;

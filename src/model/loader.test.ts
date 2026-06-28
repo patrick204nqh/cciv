@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ModelLoaderImpl } from './model-loader';
-import type { ModelCatalogEntry } from './types';
+import { ModelLoaderImpl } from './loader';
+import type { ModelCatalogEntry } from '../loaders/types';
 
 describe('ModelLoaderImpl', () => {
   let loader: ModelLoaderImpl;

@@ -1,9 +1,9 @@
 export { entityManager } from './manager';
 export type { SceneEntity } from './types';
-export { createOceanEntity } from './ocean-entity';
-export { createSkyEntity } from './sky-entity';
-export { createLightingEntity } from './lighting-entity';
-export { createSprayEntity } from './spray-entity';
-export { createWakeEntity } from './wake-entity';
-export { createShipEntity } from './ship-entity';
-export { createInstanceManager } from './instance-manager';
+export { createOceanEntity } from './environment/ocean';
+export { createSkyEntity } from './environment/sky';
+export { createLightingEntity } from './environment/lighting';
+export { createSprayEntity } from './vessel/spray';
+export { createWakeEntity } from './vessel/wake';
+export { createShipEntity } from './vessel/ship';
+export { createInstanceManager } from './instances/manager';

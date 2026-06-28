@@ -1,14 +1,14 @@
 import * as THREE from 'three';
-import type { SceneEntity, SceneHandle } from './types';
-import type { IMaterial } from '../scene/types';
-import { SceneObject } from '../scene/object';
-import { waveSurface } from '../environment/wave-surface';
-import { buildOceanGrid } from '../environment/ocean-grid';
-import { displaceOceanGrid } from '../environment/ocean-displacement';
-import { createWaterMaterial } from '../rendering/materials';
-import type { Disposer } from '../util/disposer';
-import type { StateStore } from '../state/store';
-import { EntityStateBinding } from '../state/binding';
+import type { SceneEntity, SceneHandle } from '../types';
+import type { IMaterial } from '../../scene/types';
+import { SceneObject } from '../../scene/object';
+import { waveSurface } from '../../environment/wave-surface';
+import { buildOceanGrid } from '../../environment/ocean-grid';
+import { displaceOceanGrid } from '../../environment/ocean-displacement';
+import { createWaterMaterial } from '../../rendering/materials';
+import type { Disposer } from '../../util/disposer';
+import type { StateStore } from '../../state/store';
+import { EntityStateBinding } from '../../state/binding';
 
 export function createOceanEntity(store?: StateStore): SceneEntity {
   const seg = 80;

@@ -1,11 +1,11 @@
-import type { SceneEntity, SceneHandle } from './types';
-import type { IScene } from '../scene/types';
-import type { Disposer } from '../util/disposer';
-import type { StateStore } from '../state/store';
-import type { ModelLoader } from '../loaders/types';
-import type { InstanceDef } from '../state/types';
-import type { ModelEntity } from '../model/types';
-import { EntityStateBinding } from '../state/binding';
+import type { SceneEntity, SceneHandle } from '../types';
+import type { IScene } from '../../scene/types';
+import type { Disposer } from '../../util/disposer';
+import type { StateStore } from '../../state/store';
+import type { ModelLoader } from '../../loaders/types';
+import type { InstanceDef } from '../../state/types';
+import type { ModelEntity } from '../../model/types';
+import { EntityStateBinding } from '../../state/binding';
 
 export function createInstanceManager(
   modelLoader: ModelLoader,

@@ -1,13 +1,49 @@
 import * as THREE from 'three';
-import type { ModelLoader, ModelCatalogEntry } from './types';
-import { ModelLoadError } from './types';
-import type { ModelEntity } from '../model/types';
+import type { ModelLoader, ModelCatalogEntry } from '../loaders/types';
+import { ModelLoadError } from '../loaders/types';
+import type { ModelEntity } from './types';
 import { SceneObject } from '../scene/object';
-import { GlbLoader, type GlbLoaderResult } from './glb-loader';
-import { ModelCatalogReader } from './catalog';
-import { modelRegistry } from '../model/registry';
-import { traverseMeshes } from '../model/utils';
+import { GlbLoader } from '../loaders/glb-loader';
+import { ModelCatalogReader } from '../loaders/catalog';
+import { modelRegistry } from './registry';
+import { traverseMeshes } from './utils';
 import { Disposer } from '../util/disposer';
+
+function buildModelEntity(
+  rawRoot: THREE.Group,
+  ref: string,
+  metadata: ModelEntity['metadata'],
+  onDispose?: () => void,
+): ModelEntity {
+  const root = new SceneObject(rawRoot);
+  const disp = new Disposer();
+  disp.add(rawRoot);
+  if (onDispose) disp.add(onDispose);
+
+  return {
+    id: ref,
+    root,
+    metadata,
+    clone() {
+      return buildModelEntity(rawRoot.clone(true), ref, metadata);
+    },
+    applyMaterials(materials) {
+      traverseMeshes(root, (mesh, mat) => {
+        const override = materials[mesh.name];
+        if (!override) return;
+        const cloned = mat.clone();
+        cloned.color.set(override.color);
+        cloned.roughness = override.roughness;
+        cloned.metalness = override.metalness;
+        cloned.visible = override.visible;
+        mesh.material = cloned;
+      });
+    },
+    dispose() {
+      disp.dispose();
+    },
+  };
+}
 
 export class ModelLoaderImpl implements ModelLoader {
   private cache = new Map<string, ModelEntity>();
@@ -43,13 +79,8 @@ export class ModelLoaderImpl implements ModelLoader {
     const rawRoot = result.scene;
     rawRoot.name = ref;
 
-    const disp = new Disposer();
-    disp.add(rawRoot);
-
-    const root = new SceneObject(rawRoot);
-
     if (entry.materialOverrides) {
-      traverseMeshes(root, (_mesh, mat) => {
+      traverseMeshes(new SceneObject(rawRoot), (_mesh, mat) => {
         const override = entry.materialOverrides![_mesh.name];
         if (!override) return;
         if (override.color != null) mat.color.setHex(override.color);
@@ -70,46 +101,13 @@ export class ModelLoaderImpl implements ModelLoader {
       if (tf.position) rawRoot.position.set(tf.position[0], tf.position[1], tf.position[2]);
     }
 
-    disp.add(() => modelRegistry.unregister(ref));
-
-    const entity: ModelEntity = {
+    const metadata = {
       id: ref,
-      root,
-      metadata: {
-        id: ref,
-        source: 'extracted',
-        license: entry.license,
-        polyCount: entry.polyCount,
-      },
-      clone() {
-        const cloned = new SceneObject(rawRoot.clone());
-        const result: ModelEntity = {
-          id: ref,
-          root: cloned,
-          metadata: entity.metadata,
-          clone: entity.clone,
-          dispose: entity.dispose,
-          applyMaterials: entity.applyMaterials,
-        };
-        return result;
-      },
-      applyMaterials(materials) {
-        traverseMeshes(root, (mesh, mat) => {
-          const override = materials[mesh.name];
-          if (!override) return;
-          const cloned = mat.clone();
-          cloned.color.set(override.color);
-          cloned.roughness = override.roughness;
-          cloned.metalness = override.metalness;
-          cloned.visible = override.visible;
-          mesh.material = cloned;
-        });
-      },
-      dispose() {
-        disp.dispose();
-      },
+      source: 'extracted' as const,
+      license: entry.license,
+      polyCount: entry.polyCount,
     };
-
+    const entity = buildModelEntity(rawRoot, ref, metadata, () => modelRegistry.unregister(ref));
     modelRegistry.register(entity);
     return entity;
   }

@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import type { SceneEntity, SceneHandle } from './types';
-import { SceneObject } from '../scene/object';
-import type { Disposer } from '../util/disposer';
-import type { StateStore } from '../state/store';
-import { EntityStateBinding } from '../state/binding';
+import type { SceneEntity, SceneHandle } from '../types';
+import { SceneObject } from '../../scene/object';
+import type { Disposer } from '../../util/disposer';
+import type { StateStore } from '../../state/store';
+import { EntityStateBinding } from '../../state/binding';
 
 export function createLightingEntity(store?: StateStore): SceneEntity {
   return {

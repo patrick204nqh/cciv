@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import type { SceneEntity, SceneHandle } from './types';
-import type { IMaterial } from '../scene/types';
-import { SceneObject } from '../scene/object';
-import { MaterialAdapter } from '../scene/material-adapter';
-import type { Disposer } from '../util/disposer';
-import { PositionTracker } from '../util/position-tracker';
+import type { SceneEntity, SceneHandle } from '../types';
+import type { IMaterial } from '../../scene/types';
+import { SceneObject } from '../../scene/object';
+import { MaterialAdapter } from '../../scene/material-adapter';
+import type { Disposer } from '../../util/disposer';
+import { PositionTracker } from '../../util/position-tracker';
 
 const MAX_PARTICLES = 300;
 const BOW_OFFSET = new THREE.Vector3(0, 4, 56);
@@ -94,7 +94,7 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
       disposer?.add(() => sprite.dispose());
 
       if (disposer) {
-        const targetId = vesselId ?? 'ship';
+        const targetId = vesselId ?? 'vessel';
         const tracker = new PositionTracker(targetId);
         tracker.track((pos, quat) => {
           vesselPos.copy(pos);

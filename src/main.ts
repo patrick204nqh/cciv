@@ -1,7 +1,7 @@
 import { Kernel } from './kernel';
 import { entityManager } from './entity/manager';
 import { GlbLoader, ModelLoaderImpl, ModelCatalogReader, WorldLoader } from './loaders';
-import { createInstanceManager } from './entity/instance-manager';
+import { createInstanceManager } from './entity/instances/manager';
 import { LOCATION_PRESETS, CCIV_WORLD } from './state/worlds';
 import { inspectorPlugin } from './plugins/inspector';
 import { gizmosPlugin } from './plugins/gizmos';
@@ -54,27 +54,6 @@ async function main() {
   entityManager.attach(createInstanceManager(modelLoader, scene, store), scene);
 
   await kernel.init();
-
-  const setFog = (cfg: { type: string; color: string; density: number }) => {
-    scene.fog = { type: cfg.type as 'exp2' | 'linear', color: cfg.color, density: cfg.density };
-  };
-  const initialFog = store.get('environment.fog') as any;
-  setFog(initialFog);
-  store.subscribe('environment.fog', (v) => setFog(v as any));
-
-  function lerpHex(a: string, b: string, t: number): string {
-    const ar = parseInt(a.slice(1), 16), br = parseInt(b.slice(1), 16);
-    const r = Math.round(((ar >> 16) & 0xff) * (1 - t) + ((br >> 16) & 0xff) * t);
-    const g = Math.round(((ar >> 8) & 0xff) * (1 - t) + ((br >> 8) & 0xff) * t);
-    const bl = Math.round((ar & 0xff) * (1 - t) + (br & 0xff) * t);
-    return `#${(r << 16 | g << 8 | bl).toString(16).padStart(6, '0')}`;
-  }
-  const setBackground = (cfg: { gradientTop: string; gradientBottom: string }) => {
-    scene.background = lerpHex(cfg.gradientBottom, cfg.gradientTop, 0.5);
-  };
-  const initialSky = store.get('environment.sky') as any;
-  setBackground(initialSky);
-  store.subscribe('environment.sky', (v) => setBackground(v as any));
 
   kernel.startLoop();
 }
