@@ -32,13 +32,15 @@ export interface IScene extends SceneHandle {
   background: string | null;
   getObjectByName(name: string): ISceneObject | undefined;
   traverse(fn: (obj: ISceneObject) => void): void;
+  createMesh(geometry: import('three').BufferGeometry, material: IMaterial): ISceneObject;
 }
 
 export interface IMaterial {
-  readonly raw: import('three').Material;
+  dispose(): void;
 }
 
 export interface ISceneObject {
+  readonly id: string;
   readonly userData: Record<string, any>;
   position: Vec3Like;
   rotation: EulerLike;

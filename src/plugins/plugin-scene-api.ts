@@ -1,28 +1,25 @@
-import * as THREE from 'three';
-import type { IScene } from '../scene/types';
-import { SceneObject } from '../scene/object';
+import type { IScene, ISceneObject } from '../scene/types';
 
 export interface PluginSceneAPI {
-  add(object: THREE.Object3D): void;
-  remove(object: THREE.Object3D): void;
-  getObjectByName(name: string): THREE.Object3D | undefined;
-  traverse(callback: (object: THREE.Object3D) => void): void;
+  add(object: ISceneObject): void;
+  remove(object: ISceneObject): void;
+  getObjectByName(name: string): ISceneObject | undefined;
+  traverse(callback: (object: ISceneObject) => void): void;
 }
 
 export function createPluginSceneAPI(scene: IScene): PluginSceneAPI {
   return {
-    add(object: THREE.Object3D) {
-      scene.add(new SceneObject(object));
+    add(object: ISceneObject) {
+      scene.add(object);
     },
-    remove(object: THREE.Object3D) {
-      scene.remove(new SceneObject(object));
+    remove(object: ISceneObject) {
+      scene.remove(object);
     },
     getObjectByName(name: string) {
-      const obj = scene.getObjectByName(name);
-      return (obj as any)?.object3D;
+      return scene.getObjectByName(name);
     },
-    traverse(callback: (object: THREE.Object3D) => void) {
-      scene.traverse((child) => callback((child as any).object3D));
+    traverse(callback: (object: ISceneObject) => void) {
+      scene.traverse(callback);
     },
   };
 }

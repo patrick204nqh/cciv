@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { ScenePlugin, PluginContext } from '../types';
+import type { ISceneObject } from '../../scene/types';
 import { registerTool, destroyTool } from '../sidebar';
 
 export const sceneGraphPlugin: ScenePlugin = (() => {
@@ -8,6 +9,10 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
   let propsEl: HTMLElement | null = null;
   let nodeMap = new Map<string, THREE.Object3D>();
   let selectedRow: HTMLElement | null = null;
+
+  function vendorOf(obj: ISceneObject): THREE.Object3D {
+    return (obj as any).object3D;
+  }
 
   function getLabel(obj: THREE.Object3D): string {
     return obj.name || obj.type;
@@ -18,9 +23,10 @@ export const sceneGraphPlugin: ScenePlugin = (() => {
     ctx.selectedObject = obj;
 
     ctx.scene.traverse(child => {
-      if ((child as any).isTransformControls) {
-        (child as any).attach(obj);
-        (child as any).visible = true;
+      const vendor = vendorOf(child);
+      if ((vendor as any).isTransformControls) {
+        (vendor as any).attach(obj);
+        vendor.visible = true;
       }
     });
 

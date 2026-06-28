@@ -26,7 +26,6 @@ export class RenderingModule {
     return {
       get domElement() { return r.domElement; },
       get info() { return r.info; },
-      get raw() { return r; },
       dispose: () => r.dispose(),
     };
   }
@@ -34,10 +33,10 @@ export class RenderingModule {
   get camera(): ICamera {
     const c = this._camera;
     return {
-      get raw() { return c; },
       get aspect() { return c.aspect; },
       updateProjectionMatrix: () => c.updateProjectionMatrix(),
-    };
+      _vendorCam: c,
+    } as any;
   }
 
   constructor(opts?: RenderingModuleOptions) {

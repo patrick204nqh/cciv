@@ -3,7 +3,10 @@ import type { IMaterial } from '../scene/types';
 import { createWaterNormalMap, createWaterDiffuseMap } from '../environment/water-textures';
 
 function wrap(m: THREE.Material): IMaterial {
-  return { raw: m };
+  return {
+    _vendor: m,
+    dispose: () => m.dispose(),
+  };
 }
 
 export function createWaterMaterial(color?: string, opacity?: number): IMaterial {
@@ -32,36 +35,5 @@ export function createRingMaterial(): IMaterial {
     side: THREE.BackSide,
     transparent: true,
     opacity: 0.25,
-  }));
-}
-
-export function createWakeMaterial(): IMaterial {
-  return wrap(new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.65,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-  }));
-}
-
-export function createSprayMaterial(): IMaterial {
-  return wrap(new THREE.PointsMaterial({
-    color: 0xffffff,
-    size: 0.4,
-    transparent: true,
-    opacity: 0.6,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    map: (() => {
-      const c = document.createElement('canvas');
-      c.width = c.height = 8;
-      const g = c.getContext('2d')!;
-      g.beginPath();
-      g.arc(4, 4, 2.5, 0, Math.PI * 2);
-      g.fillStyle = '#fff';
-      g.fill();
-      return new THREE.CanvasTexture(c);
-    })(),
   }));
 }

@@ -1,16 +1,43 @@
 import * as THREE from 'three';
-import type { IScene, ISceneObject, SceneHandle, FogSpec } from './types';
+import type { IScene, ISceneObject, SceneHandle, FogSpec, IMaterial } from './types';
 import { SceneObject } from './object';
 
 export class SceneAdapter implements IScene {
+  private idCache = new Map<string, ISceneObject>();
+  private vendorCache = new Map<THREE.Object3D, string>();
+
   constructor(private scene: THREE.Scene) {}
 
+  private wrap(obj: THREE.Object3D): ISceneObject {
+    const id = obj.uuid;
+    const existing = this.idCache.get(id);
+    if (existing) return existing;
+    const wrapper = new SceneObject(obj);
+    this.idCache.set(id, wrapper);
+    this.vendorCache.set(obj, id);
+    return wrapper;
+  }
+
   add(child: ISceneObject): void {
-    this.scene.add((child as any).object3D);
+    const vendor = this.vendorCache.get((child as any).object3D)
+      ?? (child as any).object3D;
+    this.scene.add(vendor);
+    this.idCache.set(child.id, child);
+    this.vendorCache.set(vendor, child.id);
   }
 
   remove(child: ISceneObject): void {
-    this.scene.remove((child as any).object3D);
+    const vendor = this.vendorCache.get((child as any).object3D)
+      ?? (child as any).object3D;
+    this.scene.remove(vendor);
+    this.idCache.delete(child.id);
+    this.vendorCache.delete(vendor);
+  }
+
+  createMesh(geometry: THREE.BufferGeometry, material: IMaterial): ISceneObject {
+    const vendorMat = (material as any)._vendor;
+    const mesh = new THREE.Mesh(geometry, vendorMat);
+    return this.wrap(mesh);
   }
 
   get fog(): FogSpec | null {
@@ -46,10 +73,10 @@ export class SceneAdapter implements IScene {
 
   getObjectByName(name: string): ISceneObject | undefined {
     const obj = this.scene.getObjectByName(name);
-    return obj ? new SceneObject(obj) : undefined;
+    return obj ? this.wrap(obj) : undefined;
   }
 
   traverse(fn: (obj: ISceneObject) => void): void {
-    this.scene.traverse((child) => fn(new SceneObject(child)));
+    this.scene.traverse((child) => fn(this.wrap(child)));
   }
 }

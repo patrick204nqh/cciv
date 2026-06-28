@@ -1,10 +1,16 @@
 import * as THREE from 'three';
 import { TransformControls } from '../../three/addons';
 import type { ScenePlugin, PluginContext } from '../types';
+import type { ISceneObject } from '../../scene/types';
+
+function vendorOf(obj: ISceneObject): THREE.Object3D {
+  return (obj as any).object3D;
+}
 
 export const gizmosPlugin: ScenePlugin = (() => {
   let ctx: PluginContext;
   let controls: TransformControls;
+  let vendorCam: THREE.Camera;
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
@@ -13,11 +19,12 @@ export const gizmosPlugin: ScenePlugin = (() => {
     const rect = ctx.renderer!.domElement.getBoundingClientRect();
     pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(pointer, ctx.camera!.raw);
+    raycaster.setFromCamera(pointer, vendorCam);
 
     const meshes: THREE.Object3D[] = [];
     ctx.scene.traverse(child => {
-      if (child instanceof THREE.Mesh) meshes.push(child);
+      const vendor = vendorOf(child);
+      if (vendor instanceof THREE.Mesh) meshes.push(vendor);
     });
 
     const hits = raycaster.intersectObjects(meshes, false);
@@ -40,7 +47,8 @@ export const gizmosPlugin: ScenePlugin = (() => {
 
     init(k: PluginContext) {
       ctx = k;
-      controls = new TransformControls(ctx.camera!.raw, ctx.renderer!.domElement);
+      vendorCam = (k.camera as any)._vendorCam;
+      controls = new TransformControls(vendorCam, ctx.renderer!.domElement);
       controls.setMode('translate');
       controls.setSize(0.8);
       controls.visible = false;

@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import type { SceneEntity, SceneHandle } from '../types';
 import type { IScene } from '../../scene/types';
-import { SceneObject } from '../../scene/object';
 import type { Disposer } from '../../util/disposer';
 import type { StateStore } from '../../state/store';
 import { createSkyMaterial, createRingMaterial } from '../../rendering/materials';
@@ -25,20 +24,20 @@ export function createSkyEntity(store?: StateStore): SceneEntity {
       }
       skyGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       const skyMat = createSkyMaterial();
-      const sky = new THREE.Mesh(skyGeo, skyMat.raw);
-      scene.add(new SceneObject(sky));
+      const sky = s.createMesh(skyGeo, skyMat);
+      scene.add(sky);
       disposer?.add(skyGeo);
-      disposer?.add(skyMat.raw);
-      disposer?.add(sky);
+      disposer?.add(() => skyMat.dispose());
+      disposer?.add(() => sky.dispose());
 
       const ringGeo = new THREE.CylinderGeometry(860, 860, 140, 32, 1, true);
       const ringMat = createRingMaterial();
-      const ring = new THREE.Mesh(ringGeo, ringMat.raw);
+      const ring = s.createMesh(ringGeo, ringMat);
       ring.position.y = -65;
-      scene.add(new SceneObject(ring));
+      scene.add(ring);
       disposer?.add(ringGeo);
-      disposer?.add(ringMat.raw);
-      disposer?.add(ring);
+      disposer?.add(() => ringMat.dispose());
+      disposer?.add(() => ring.dispose());
 
       if (store && disposer) {
         const applySky = (cfg: any) => {

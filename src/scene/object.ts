@@ -30,6 +30,7 @@ function quatSnapshot(q: THREE.Quaternion): QuatLike {
 }
 
 export class SceneObject implements ISceneObject {
+  readonly id: string;
   readonly object3D: THREE.Object3D;
 
   private _pos: Vec3Property;
@@ -37,6 +38,7 @@ export class SceneObject implements ISceneObject {
   private _scl: Vec3Property;
 
   constructor(obj: THREE.Object3D) {
+    this.id = obj.uuid;
     this.object3D = obj;
     this._pos = new Vec3Property(obj.position);
     this._rot = new EulerProperty(obj.rotation);
