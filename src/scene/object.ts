@@ -43,6 +43,10 @@ export class SceneObject implements ISceneObject {
     this._scl = new Vec3Property(obj.scale);
   }
 
+  get userData(): Record<string, any> {
+    return this.object3D.userData;
+  }
+
   get position(): Vec3Like { return this._pos; }
   set position(v: Vec3Like) { this.object3D.position.set(v.x, v.y, v.z); }
 
@@ -146,6 +150,10 @@ export class SceneObject implements ISceneObject {
       }
     });
     return this;
+  }
+
+  updateWorldMatrix(updateParents: boolean, updateChildren: boolean): void {
+    this.object3D.updateWorldMatrix(updateParents, updateChildren);
   }
 
   clone(): ISceneObject {

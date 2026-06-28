@@ -28,15 +28,15 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
 
     onAttach(scene: SceneHandle, disposer?: Disposer) {
       scene.add(model.root);
-      disposer?.add(model.root.object3D);
+      disposer?.add((model.root as any).object3D);
 
       const hullData = extractHullData(model);
       if (!hullData) return;
 
-      model.root.object3D.updateWorldMatrix(true, true);
+      model.root.updateWorldMatrix(true, true);
 
       let hullMatrix: THREE.Matrix4 | null = null;
-      model.root.object3D.traverse((child) => {
+      (model.root as any).object3D.traverse((child: THREE.Object3D) => {
         if (child instanceof THREE.Mesh && child.name === 'hull') {
           hullMatrix = child.matrixWorld.clone();
         }
@@ -135,7 +135,7 @@ function extractHullData(model: ModelEntity): { positions: Float32Array; indices
   let positions: Float32Array | null = null;
   let indices: Uint16Array | Uint32Array | null = null;
 
-  model.root.object3D.traverse((child) => {
+  (model.root as any).object3D.traverse((child: THREE.Object3D) => {
     if (child instanceof THREE.Mesh && child.name === 'hull') {
       const geo = child.geometry;
       const pos = geo.attributes.position;

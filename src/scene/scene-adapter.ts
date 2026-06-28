@@ -6,11 +6,11 @@ export class SceneAdapter implements IScene {
   constructor(private scene: THREE.Scene) {}
 
   add(child: ISceneObject): void {
-    this.scene.add(child.object3D);
+    this.scene.add((child as any).object3D);
   }
 
   remove(child: ISceneObject): void {
-    this.scene.remove(child.object3D);
+    this.scene.remove((child as any).object3D);
   }
 
   get fog(): FogSpec | null {

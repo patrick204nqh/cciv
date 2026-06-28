@@ -50,6 +50,8 @@ function createMockSceneObject(overrides?: Partial<ISceneObject>): ISceneObject 
     traverse: vi.fn(),
     traverseAncestors: vi.fn(),
     traverseMeshes: vi.fn(),
+    updateWorldMatrix: vi.fn(),
+    userData: {},
     clone: vi.fn(),
     dispose: vi.fn(),
     ...overrides,

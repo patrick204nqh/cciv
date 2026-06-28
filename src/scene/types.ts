@@ -39,8 +39,7 @@ export interface IMaterial {
 }
 
 export interface ISceneObject {
-  readonly object3D: import('three').Object3D;
-
+  readonly userData: Record<string, any>;
   position: Vec3Like;
   rotation: EulerLike;
   scale: Vec3Like;
@@ -64,6 +63,7 @@ export interface ISceneObject {
   traverseAncestors(fn: (ancestor: ISceneObject) => void): this;
   traverseMeshes(fn: (obj: ISceneObject) => void): this;
 
+  updateWorldMatrix(updateParents: boolean, updateChildren: boolean): void;
   clone(): ISceneObject;
   dispose(): void;
 }
