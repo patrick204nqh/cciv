@@ -42,6 +42,12 @@
 
 **EntityManager** (singleton, `src/entity/manager.ts`) — owns the entity list, provides `attach/detach/update`. Does NOT own the RAF loop (contradicts ADR-002). Update is driven by `simulationPlugin` which calls `entityManager.update(dt)` inside the Kernel's render loop, only in 'play' mode.
 
+**EntityRegistry** (`src/entity/entity-registry.ts`) — singleton registry of `EntityFactory` adapters. `register(factory)` adds a factory; `createAll(config, modelLoader, store?)` runs all registered factories and merges results. Used by WorldLoader to produce `SceneEntity[]` from a `WorldConfig`.
+
+**BehaviorRegistry** (`src/entity/behavior-registry.ts`) — singleton registry of `BehaviorFactory` adapters keyed by string. `register(name, factory)` adds a factory; `create(id, def, deps)` dispatches to the factory for the instance's `behavior` field. Instance dispatch in `register-factories.ts` iterates `config.instances`, looks up `def.behavior` in the registry, and delegates. No hardcoded behavior strings in dispatch code.
+
+**BehaviorFactory** — interface: `create(id: string, def: InstanceDef, deps: { modelLoader, store }): Promise<SceneEntity[]>`. Registered per behavior name. The vessel behavior factory (in `src/entity/vessel/ship.ts`) creates the vessel + spray + wake group. A static placement factory is unnecessary — static instances are handled at runtime by the instance-manager entity. Adding a new interactive object type: one file, one `behaviorRegistry.register()` call.
+
 ## Scene
 
 **SceneEntity** — interface with lifecycle hooks: `onAttach(scene, disposer?)`, `onBeforeUpdate?(dt)`, `onUpdate(dt)`, `onDetach()`. Each entity owns its update logic. EntityManager provides a Disposer on attach; entities should use it rather than creating自己的. (ADR-002)
@@ -50,7 +56,7 @@
 
 **ISceneObject.id** — stable domain identity string on every scene object wrapper. Set once at construction (delegates to the wrapped `THREE.Object3D.uuid`). Used by the scene gate's identity cache to guarantee wrapper referential identity across calls.
 
-**SceneAdapter identity cache** — internal Map in `SceneAdapter` that maps `ISceneObject.id` → `ISceneObject` wrapper. Prevents ephemeral wrapper creation: `getObjectByName()`, `traverse()`, and `children` accessors consult the cache before constructing a new `SceneObject`. Evicted only on `dispose()`. The single `(obj as any).object3D` cast happens inside `SceneAdapter.add()` and is the gate's private implementation detail — never at a plugin or application seam.
+**SceneAdapter identity cache** — two Maps in `SceneAdapter`: `idCache` (id → wrapper) and `vendorCache` (Object3D → id). `getObjectByName()` and `traverse()` consult the cache before constructing a new `SceneObject`, guaranteeing wrapper referential identity. Evicted on `remove()`. The single `(obj as any).object3D` cast happens inside `SceneAdapter.add()` and is the gate's private implementation detail — never at a plugin or application seam. Note: `SceneObject.children` and `parent` accessors still create ephemeral wrappers (not yet cached).
 
 **EntityManager** (singleton) — owns the entity list, lifecycle control. RAF loop is in Kernel. (ADR-002 — note: RAF loop was delegated to Kernel for edit/play mode switching; ADR-002's "owns the RAF loop" is stale.)
 
@@ -62,21 +68,17 @@
   - `environment` — sky, waves, ocean, lighting, fog state
   - `instances` — model placement with per-instance `behavior` field
 
-**Behavior** — optional field on a WorldConfig instance. `'vessel'` enables wave-response physics, event emission, spray, and wake. Default (undefined) is static placement.
+**Behavior** — string field on `InstanceDef` in a WorldConfig. Used as a dispatch key by `BehaviorRegistry` at world-load time. Built-in values: `'vessel'` (wave-response physics + spray + wake). Any other string triggers the registered `BehaviorFactory` or a warning. Default `undefined` means static placement handled by instance-manager at runtime. Fully extensible — no hardcoded dispatch logic.
 
-**WorldLoader** — loads a WorldConfig, orchestrates entity creation via EntityRegistry. Returns `SceneEntity[]` ready for EntityManager.attach(). Pure orchestration — delegates construction to registered factory adapters.
+**WorldLoader** (`src/loaders/world-loader.ts`) — loads a WorldConfig, orchestrates entity creation via `EntityRegistry.createAll()`. Returns `WorldLoadResult`. Pure orchestration — delegates all construction to registered factory adapters. Imports `src/entity/register-factories.ts` for side-effect auto-registration.
 
-**EntityFactory** — interface with a single seam: `match(config: WorldConfig): SceneEntity[]`. Each factory decides what entities to produce from the full config.
-
-**EntityRegistry** — singleton registry of EntityFactory adapters. Factories auto-register at import time via `EntityRegistry.register(factory)`. WorldLoader calls `registry.getAll()` and runs each factory's `match(config)`. Adding a new entity type is one file, no wiring changes.
-
-**Deprecated** (does not exist): `src/entity/entity-factory.ts` — aspirational file name from an earlier sketch. Entity creation was always inline in WorldLoader.
+**EntityFactory** — interface in `src/entity/entity-registry.ts`: `match(config, modelLoader, store?): Promise<FactoryResult>`. Each factory inspects the config and produces entities. Environment entities (ocean, sky, lighting) `match` on config presence; instance entities (vessel) `match` on behavior field. Each entity module registers its own factory at module level — no central wiring file.
 
 **Kernel** — bootstrap orchestrator. Thin orchestrator that delegates to specialized modules: RenderingModule (Three.js), PluginManager (plugin lifecycle), StateStore (app state), LocationTracker (dirty tracking). `setMode(m)` propagates to EntityManager (`setPaused`) and plugins (`onModeSwitch`).
 
 **RenderingModule** (`src/rendering/module.ts`) — owns the Three.js scene, renderer, camera, and OrbitControls. Manages window resize events and the RAF render loop. Accepts an `onBeforeRender` callback for pre-render updates (plugin rendering, entity updates).
 
-**PluginManager** (`src/plugins/plugin-manager.ts`) — owns the PluginRegistry, manages plugin lifecycle (init, onModeSwitch, render). Isolates plugin crashes during mode switching. Provides `render(dt, mode)` to execute all active plugins' render callbacks.
+**PluginManager** (`src/plugins/plugin-manager.ts`) — owns plugin lifecycle (register, init, onModeSwitch, render). Registry inlined — no separate PluginRegistry module. Isolates plugin crashes during mode switching.
 
 **PluginStateAPI** (`src/plugins/plugin-state-api.ts`) — adapter providing plugins a stable interface to application state (get, set, select, watch, subscribe). Decouples plugins from direct StateStore implementation.
 
@@ -86,11 +88,11 @@
 
 ## Gate interfaces (deepened)
 
-**IMaterial** — material abstraction. No `.raw` escape hatch. Provides `dispose()` and domain-typed properties (color, roughness, metalness). Created via `createWaterMaterial()`, `createSkyMaterial()`, etc. in `src/rendering/materials.ts`.
+**IMaterial** — material abstraction. No `.raw` escape hatch. Provides `dispose()`. Created via `createSkyMaterial()`, `createRingMaterial()`, `createWaterMaterial()` in `src/rendering/materials.ts`. Internally stores `_vendor` for the gate's `createMesh` to access (cast inside the gate only).
 
-**IRenderer** — renderer abstraction. No `.raw`. Methods: `render(scene: IScene, camera: ICamera): void`, `setSize(w: number, h: number): void`, `domElement: HTMLElement`, `dispose(): void`.
+**IRenderer** — renderer abstraction. No `.raw`. Provides `domElement: HTMLElement`, `info`, `dispose()`.
 
-**ICamera** — camera abstraction. No `.raw`. Methods: `aspect: number`, `updateProjectionMatrix(): void`. Raycasting handled via `IScene.raycast(pointer: Vec2Like, camera: ICamera): ISceneObject[]` — not via camera escape hatch.
+**ICamera** — camera abstraction. No `.raw`. Provides `aspect: number`, `updateProjectionMatrix()`. The `RenderingModule` getter attaches a `_vendorCam` property (not on the interface) as a plugin-level escape hatch for TransformControls interop in the gizmos plugin.
 
 **IScene.createMesh** — factory method on the scene gate: `createMesh(geometry: BufferGeometry, material: IMaterial): ISceneObject`. Entity code passes inline geometry and an IMaterial; the gate creates the vendor Mesh internally. No vendor types cross the seam.
 
@@ -142,7 +144,8 @@ Three ways to create a model, defined in `src/models/<id>/config.ts`:
 - **GlbLoader** — wraps Three.js GLTFLoader, returns `THREE.Group`
 - **ModelLoader** — resolves model refs via catalog, loads GLBs, applies overrides, caches `ModelEntity` instances
 - **Catalog** — reads `public/models/manifest.json`, provides `getEntry(ref)`
-- **WorldLoader** — see World section below
+- **WorldLoader** — see World section above
+- **WorldLoadResult / WorldLoadError** — types defined in `src/loaders/types.ts` alongside the loaders that produce them (moved from the deleted `src/worlds/` directory)
 
 ## Commands
 
