@@ -2,10 +2,8 @@ import * as THREE from 'three';
 import type { SceneEntity, SceneHandle } from '../types';
 import type { IMaterial } from '../../scene/types';
 import { SceneObject } from '../../scene/object';
-import { waveSurface } from '../../environment/wave-surface';
 import { buildOceanGrid } from '../../environment/ocean-grid';
-import { displaceOceanGrid } from '../../environment/ocean-displacement';
-import { createWaterMaterial } from '../../rendering/materials';
+import { createTSLOceanMaterial } from '../../environment/tsl-ocean';
 import type { Disposer } from '../../util/disposer';
 import type { StateStore } from '../../state/store';
 import { EntityStateBinding } from '../../state/binding';
@@ -15,27 +13,22 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
   const size = 1800;
 
   let ocean: THREE.Mesh;
-  let basePos: Float32Array;
-  let mat: IMaterial;
 
   return {
     id: 'ocean',
 
     onAttach(scene: SceneHandle, disposer?: Disposer) {
       const { geo } = buildOceanGrid(size, seg);
-      const pos = geo.attributes.position.array as Float32Array;
-      basePos = new Float32Array(pos.length);
-      basePos.set(pos);
 
-      mat = createWaterMaterial();
+      const mat = createTSLOceanMaterial();
 
-      ocean = new THREE.Mesh(geo, mat.raw);
+      ocean = new THREE.Mesh(geo, mat);
       ocean.position.y = -0.35;
       ocean.receiveShadow = true;
       scene.add(new SceneObject(ocean));
 
       disposer?.add(geo);
-      disposer?.add(mat.raw);
+      disposer?.add(mat);
       disposer?.add(ocean);
 
       if (store && disposer) {
@@ -43,7 +36,7 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
           store,
           'environment.ocean',
           (cfg: any) => {
-            mat.color = cfg.color;
+            mat.color.set(cfg.color);
             mat.opacity = cfg.opacity;
           }
         );
@@ -51,9 +44,7 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
       }
     },
 
-    onUpdate(_dt: number) {
-      displaceOceanGrid(ocean.geometry as THREE.BufferGeometry, basePos, waveSurface);
-    },
+    onUpdate() {},
 
     onDetach() {},
   };

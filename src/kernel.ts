@@ -6,6 +6,7 @@ import { createPluginStateAPI } from './plugins/plugin-state-api';
 import { createPluginSceneAPI } from './plugins/plugin-scene-api';
 import { createDefaultState } from './state/defaults';
 import { entityManager } from './entity/manager';
+import { FollowCamera } from './controls/follow-camera';
 import type { PluginContext, ScenePlugin } from './plugins/types';
 import type { Object3D } from 'three';
 
@@ -15,6 +16,7 @@ export class Kernel {
   readonly rendering: RenderingModule
   readonly store: StateStore
   readonly plugins: PluginManager
+  readonly followCamera: FollowCamera
   private _mode: 'edit' | 'play' = 'edit'
   selectedObject: Object3D | null = null
   private locationTracker: LocationTracker
@@ -29,6 +31,8 @@ export class Kernel {
     if (prev === m) return
     this._mode = m
     entityManager.setPaused(m === 'edit')
+    if (m === 'play') this.followCamera.enable()
+    else this.followCamera.disable()
     this.plugins.onModeSwitch(prev, m)
   }
 
@@ -41,9 +45,12 @@ export class Kernel {
     this.store = new StateStore(createDefaultState())
     this.plugins = new PluginManager()
     this.locationTracker = new LocationTracker(this.store)
+    this.followCamera = new FollowCamera()
+    this.followCamera.init(this.rendering.controls)
   }
 
   private onBeforeRender(dt: number): void {
+    this.followCamera.update()
     this.plugins.render(dt, this.mode)
   }
 

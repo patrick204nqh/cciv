@@ -7,6 +7,7 @@ import { waveSurface } from '../../environment/wave-surface';
 import type { Disposer } from '../../util/disposer';
 import { PhysicsBody, BuoyancySolver, physicsWorld } from '../../physics';
 import { ShipControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/ship-controls';
+import { activeVessel } from '../../controls/active-vessel';
 
 export const SHIP_MASS = 5000;
 export const SHIP_LINEAR_DAMPING = 0.92;
@@ -67,8 +68,10 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
 
       buoyancy = new BuoyancySolver(worldPos, { density: BUOYANCY_DENSITY });
 
-      controls = new ShipControls();
+      controls = new ShipControls(id);
       controls.start();
+
+      activeVessel.register(id);
 
       if (disposer) {
         disposer.add(() => {
@@ -78,6 +81,7 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
           buoyancy = null;
           controls?.dispose();
           controls = null;
+          activeVessel.unregister(id);
         });
       }
     },

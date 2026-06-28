@@ -9,6 +9,7 @@ type EventMap = {
   'entity:attached': string;
   'entity:detached': string;
   'entity:position-changed': EntityPositionEvent;
+  'vessel:active-changed': string;
 };
 
 type Listener<T> = (data: T) => void;
