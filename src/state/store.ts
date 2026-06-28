@@ -1,93 +1,96 @@
+import { createStore } from 'zustand/vanilla';
 import type { AppState } from './types';
 
 type Listener = (value: unknown, path: string) => void;
 
+function getByPath(obj: any, path: string): unknown {
+  const parts = path.split('.');
+  let cur = obj;
+  for (const part of parts) {
+    if (cur && typeof cur === 'object' && part in cur) {
+      cur = cur[part];
+    } else {
+      return undefined;
+    }
+  }
+  return cur;
+}
+
+function setByPath(obj: any, path: string, value: unknown): void {
+  const parts = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+
 export class StateStore {
-  private state: AppState;
-  private listeners = new Map<string, Set<Listener>>();
-  private watchers: Set<() => void> = new Set();
+  private store: ReturnType<typeof createStore<AppState>>;
+  private pathListeners = new Map<string, Set<Listener>>();
 
   constructor(initial: AppState) {
-    this.state = structuredClone(initial);
+    this.store = createStore(() => structuredClone(initial));
   }
 
   get(): AppState;
   get<K extends keyof AppState>(path: K): AppState[K];
   get(path?: string): unknown {
-    if (!path) return this.state;
-    const parts = path.split('.');
-    let cur: unknown = this.state;
-    for (const part of parts) {
-      if (cur && typeof cur === 'object' && part in (cur as Record<string, unknown>)) {
-        cur = (cur as Record<string, unknown>)[part];
-      } else {
-        return undefined;
-      }
-    }
-    return cur;
+    const state = this.store.getState();
+    if (!path) return state;
+    return getByPath(state, path);
   }
 
   set(path: string, value: unknown): void {
-    const parts = path.split('.');
-    let cur: unknown = this.state;
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (cur && typeof cur === 'object') {
-        cur = (cur as Record<string, unknown>)[parts[i]];
-      }
-    }
-    if (cur && typeof cur === 'object') {
-      (cur as Record<string, unknown>)[parts[parts.length - 1]] = value;
-    }
+    this.store.setState(state => {
+      const next = structuredClone(state);
+      setByPath(next, path, value);
+      return next;
+    });
     this.notify(path, value);
-    this.fireWatchers();
-
   }
 
-  /** Typed read accessor. Returns the result of the selector function. */
   select<T>(selector: (state: AppState) => T): T {
-    return selector(this.state);
+    return selector(this.store.getState());
   }
 
-  /** Typed subscription — fires whenever any state changes. */
   watch<T>(selector: (state: AppState) => T, fn: (value: T) => void): () => void {
-    const wrapper = () => fn(selector(this.state));
-    this.watchers.add(wrapper);
-    return () => { this.watchers.delete(wrapper); };
+    let prev = selector(this.store.getState());
+    const unsub = this.store.subscribe(state => {
+      const next = selector(state);
+      if (next !== prev) {
+        prev = next;
+        fn(next);
+      }
+    });
+    return unsub;
   }
 
   subscribe(path: string, fn: Listener): () => void {
-    if (!this.listeners.has(path)) {
-      this.listeners.set(path, new Set());
+    if (!this.pathListeners.has(path)) {
+      this.pathListeners.set(path, new Set());
     }
-    this.listeners.get(path)!.add(fn);
-    return () => { this.listeners.get(path)?.delete(fn); };
+    this.pathListeners.get(path)!.add(fn);
+    return () => { this.pathListeners.get(path)?.delete(fn); };
   }
 
   snapshot(): AppState {
-    return structuredClone(this.state);
+    return structuredClone(this.store.getState());
   }
 
   restore(snapshot: AppState): void {
-    const oldKeys = Object.keys(this.state);
-    this.state = snapshot;
-    for (const key of oldKeys) {
-      const v = (this.state as Record<string, unknown>)[key];
+    this.store.setState(snapshot, true);
+    const keys = Object.keys(snapshot);
+    for (const key of keys) {
+      const v = (snapshot as Record<string, unknown>)[key];
       this.notify(key, v);
     }
-    this.fireWatchers();
-  }
-
-  private fireWatchers(): void {
-    for (const fn of this.watchers) fn();
   }
 
   private notify(path: string, value: unknown): void {
-    for (const [key, fns] of this.listeners) {
-      // If the listener key is for the root (empty string), notify for any path
-      if (key === '') {
-        const v = this.get(key); // Get the entire state for root listener
-        for (const fn of fns) fn(v, path);
-      } else if (path === key || path.startsWith(key + '.') || key.startsWith(path + '.')) {
+    for (const [key, fns] of this.pathListeners) {
+      const match = key === '' || path === key || path.startsWith(key + '.') || key.startsWith(path + '.');
+      if (match) {
         const v = key === path ? value : this.get(key);
         for (const fn of fns) fn(v, path);
       }

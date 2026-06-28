@@ -17,7 +17,9 @@
     "@gltf-transform/functions": "^4.4.0",
     "cannon-es": "^0.20.0",
     "lil-gui": "^0.21.0",
-    "three": "^0.185.0"
+    "mitt": "^3.0.1",
+    "three": "^0.185.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@types/three": "^0.174.0",

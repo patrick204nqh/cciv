@@ -1,3 +1,5 @@
+import mitt from 'mitt';
+
 export interface EntityPositionEvent {
   entityId: string;
   x: number; y: number; z: number;
@@ -12,24 +14,15 @@ type EventMap = {
   'vessel:active-changed': string;
 };
 
-type Listener<T> = (data: T) => void;
+const emitter = mitt<EventMap>();
 
-class EventBus {
-  private listeners = new Map<string, Set<Listener<any>>>();
-
-  on<K extends keyof EventMap>(event: K, fn: Listener<EventMap[K]>): () => void {
-    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
-    this.listeners.get(event)!.add(fn);
-    return () => this.listeners.get(event)?.delete(fn);
-  }
-
-  /** Returns true if at least one listener was called. */
+export const bus = {
+  on<K extends keyof EventMap>(event: K, fn: (data: EventMap[K]) => void): () => void {
+    emitter.on(event, fn as any);
+    return () => emitter.off(event, fn as any);
+  },
   emit<K extends keyof EventMap>(event: K, data: EventMap[K]): boolean {
-    const fns = this.listeners.get(event);
-    if (!fns || fns.size === 0) return false;
-    for (const fn of fns) fn(data);
+    emitter.emit(event, data);
     return true;
-  }
-}
-
-export const bus = new EventBus();
+  },
+};
