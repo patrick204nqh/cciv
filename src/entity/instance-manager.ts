@@ -4,6 +4,7 @@ import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
 import type { ModelLoader } from '../loaders/types';
 import type { InstanceDef } from '../state/types';
+import { EntityStateBinding } from '../state/binding';
 
 export function createInstanceManager(
   modelLoader: ModelLoader,
@@ -11,7 +12,6 @@ export function createInstanceManager(
   store: StateStore,
 ): SceneEntity {
   const instances = new Map<string, { root: THREE.Group; ref: string }>();
-  let unsub: (() => void) | null = null;
 
   function sync(next: Record<string, InstanceDef>) {
     const nextIds = new Set(
@@ -55,14 +55,18 @@ export function createInstanceManager(
     onAttach(_scene: THREE.Scene, disposer?: Disposer) {
       const initial = store.get('instances') as Record<string, InstanceDef>;
       sync(initial);
-      unsub = store.subscribe('instances', (v) => {
-        sync(v as Record<string, InstanceDef>);
-      });
-      disposer?.add(unsub);
+      
+      if (disposer) {
+        const binding = new EntityStateBinding(
+          store,
+          'instances',
+          (v) => sync(v as Record<string, InstanceDef>)
+        );
+        binding.attach(disposer);
+      }
     },
 
     onDetach() {
-      unsub?.();
       for (const [, entry] of instances) {
         scene.remove(entry.root);
       }

@@ -12,6 +12,7 @@ import { modeTogglePlugin } from './plugins/mode-toggle';
 import { sceneGraphPlugin } from './plugins/scene-graph';
 import { performanceHudPlugin } from './plugins/performance-hud';
 import { shipHudPlugin } from './plugins/ship-hud';
+import * as THREE from 'three';
 
 async function main() {
   const kernel = new Kernel();
@@ -40,7 +41,7 @@ async function main() {
   const worldLoader = new WorldLoader();
 
   const worldConfig = LOCATION_PRESETS[CCIV_WORLD.locations[0]];
-  const { entities } = await worldLoader.load(worldConfig, modelLoader);
+  const { entities } = await worldLoader.load(worldConfig, modelLoader, store);
   for (const entity of entities) {
     entityManager.attach(entity, scene);
   }
@@ -55,6 +56,26 @@ async function main() {
   entityManager.attach(createInstanceManager(modelLoader, scene, store), scene);
 
   await kernel.init();
+
+  const setFog = (cfg: { type: string; color: string; density: number }) => {
+    if (cfg.type === 'exp2') {
+      scene.fog = new THREE.FogExp2(new THREE.Color(cfg.color), cfg.density);
+    } else {
+      scene.fog = new THREE.Fog(new THREE.Color(cfg.color), 0, 2000);
+    }
+  };
+  const initialFog = store.get('environment.fog') as any;
+  setFog(initialFog);
+  store.subscribe('environment.fog', (v) => setFog(v as any));
+
+  const setBackground = (cfg: { gradientTop: string; gradientBottom: string }) => {
+    const c = new THREE.Color(cfg.gradientBottom).lerp(new THREE.Color(cfg.gradientTop), 0.5);
+    scene.background = c;
+  };
+  const initialSky = store.get('environment.sky') as any;
+  setBackground(initialSky);
+  store.subscribe('environment.sky', (v) => setBackground(v as any));
+
   kernel.startLoop();
 }
 

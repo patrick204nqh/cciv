@@ -2,10 +2,9 @@ import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
+import { EntityStateBinding } from '../state/binding';
 
 export function createSkyEntity(store?: StateStore): SceneEntity {
-  let unsubs: (() => void)[] = [];
-
   return {
     id: 'sky',
 
@@ -37,28 +36,30 @@ export function createSkyEntity(store?: StateStore): SceneEntity {
       disposer?.add(ringMat);
       disposer?.add(ring);
 
-      if (store) {
-        unsubs.push(store.subscribe('environment.sky', (v) => {
-          const cfg = v as any;
-          const cArr = skyGeo.attributes.color.array as Float32Array;
-          const p = skyGeo.attributes.position;
-          for (let i = 0; i < p.count; i++) {
-            const y = p.getY(i);
-            const t = (y + 900) / 1800;
-            const top = new THREE.Color(cfg.gradientTop);
-            const bottom = new THREE.Color(cfg.gradientBottom);
-            const c = bottom.clone().lerp(top, t);
-            cArr[i * 3] = c.r;
-            cArr[i * 3 + 1] = c.g;
-            cArr[i * 3 + 2] = c.b;
+      if (store && disposer) {
+        const binding = new EntityStateBinding(
+          store,
+          'environment.sky',
+          (cfg: any) => {
+            const cArr = skyGeo.attributes.color.array as Float32Array;
+            const p = skyGeo.attributes.position;
+            for (let i = 0; i < p.count; i++) {
+              const y = p.getY(i);
+              const t = (y + 900) / 1800;
+              const top = new THREE.Color(cfg.gradientTop);
+              const bottom = new THREE.Color(cfg.gradientBottom);
+              const c = bottom.clone().lerp(top, t);
+              cArr[i * 3] = c.r;
+              cArr[i * 3 + 1] = c.g;
+              cArr[i * 3 + 2] = c.b;
+            }
+            skyGeo.attributes.color.needsUpdate = true;
           }
-          skyGeo.attributes.color.needsUpdate = true;
-        }));
+        );
+        binding.attach(disposer);
       }
     },
 
-    onDetach() {
-      unsubs.forEach(fn => fn());
-    },
+    onDetach() {},
   };
 }

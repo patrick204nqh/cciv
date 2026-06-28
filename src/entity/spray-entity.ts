@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { SceneEntity } from './types';
-import { bus } from '../event-bus';
 import type { Disposer } from '../util/disposer';
+import { PositionTracker } from '../util/position-tracker';
 
 const MAX_PARTICLES = 300;
 const BOW_OFFSET = new THREE.Vector3(0, 4, 56);
@@ -42,7 +42,6 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
   let mat: THREE.PointsMaterial;
   let vesselPos = new THREE.Vector3();
   let vesselQuat = new THREE.Quaternion();
-  let unsub: (() => void) | null = null;
 
   function emit() {
     const bow = new THREE.Vector3().copy(BOW_OFFSET).applyQuaternion(vesselQuat).add(vesselPos);
@@ -90,14 +89,14 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
       disposer?.add(points);
       disposer?.add(() => sprite.dispose());
 
-      const targetId = vesselId ?? 'ship';
-      unsub = bus.on('entity:position-changed', (ev) => {
-        if (ev.entityId === targetId) {
-          vesselPos.set(ev.x, ev.y, ev.z);
-          vesselQuat.set(ev.qx, ev.qy, ev.qz, ev.qw);
-        }
-      });
-      disposer?.add(unsub);
+      if (disposer) {
+        const targetId = vesselId ?? 'ship';
+        const tracker = new PositionTracker(targetId);
+        tracker.track((pos, quat) => {
+          vesselPos.copy(pos);
+          vesselQuat.copy(quat);
+        }, disposer);
+      }
     },
 
     onUpdate(dt: number) {

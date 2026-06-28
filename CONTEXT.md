@@ -4,9 +4,13 @@
 
 **Disposer** (`src/util/disposer.ts`) — collects `THREE.BufferGeometry`, `Material`, `Object3D` instances, unsubscribe functions, and arbitrary cleanup callbacks. Calling `dispose()` runs them all in order. Owned by EntityManager per attached entity — entities receive a Disposer from EntityManager via `onAttach(scene, disp)` rather than creating their own.
 
+**PositionTracker** (`src/util/position-tracker.ts`) — encapsulates event bus position tracking pattern. Eliminates boilerplate: entities declare what they track (by entityId), tracker handles event subscription, filtering, and Vector3/Quaternion reconstruction. Used by spray and wake entities.
+
 ## State
 
 **StateStore** (`src/state/store.ts`) — central state management with dotted-path subscriptions. Provides `get(path)`, `set(path, value)`, `subscribe(path, fn)`, `select(selector)`, `watch(selector, fn)`. Pure state primitive — no domain logic.
+
+**EntityStateBinding** (`src/state/binding.ts`) — encapsulates the subscribe-dispose pattern for entities. Eliminates boilerplate: entities declare what state they need, binding handles subscription mechanics. Used by ocean, lighting, sky, and instance-manager entities.
 
 **LocationTracker** (`src/state/location-tracker.ts`) — observes StateStore changes at `environment.*` and `instances.*` paths, marks the active location as dirty. Decouples dirty-tracking logic from the state store. Started by Kernel during init.
 

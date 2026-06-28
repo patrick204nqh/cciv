@@ -2,10 +2,9 @@ import * as THREE from 'three';
 import type { SceneEntity } from './types';
 import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
+import { EntityStateBinding } from '../state/binding';
 
 export function createLightingEntity(store?: StateStore): SceneEntity {
-  let unsubs: (() => void)[] = [];
-
   return {
     id: 'lighting',
 
@@ -44,42 +43,42 @@ export function createLightingEntity(store?: StateStore): SceneEntity {
       scene.add(deckGlow);
       disposer?.add(deckGlow);
 
-      if (store) {
-        const unsub = store.subscribe('environment.lighting', (v) => {
-          const cfg = v as any;
-          sun.visible = cfg.sun.enabled;
-          sun.intensity = cfg.sun.intensity;
-          sun.color.set(cfg.sun.color);
-          const a = cfg.sun.azimuth, e = cfg.sun.elevation;
-          sun.position.set(90 * Math.cos(e) * Math.sin(a), 130 * Math.sin(e), -55 * Math.cos(e) * Math.cos(a));
+      if (store && disposer) {
+        const binding = new EntityStateBinding(
+          store,
+          'environment.lighting',
+          (cfg: any) => {
+            sun.visible = cfg.sun.enabled;
+            sun.intensity = cfg.sun.intensity;
+            sun.color.set(cfg.sun.color);
+            const a = cfg.sun.azimuth, e = cfg.sun.elevation;
+            sun.position.set(90 * Math.cos(e) * Math.sin(a), 130 * Math.sin(e), -55 * Math.cos(e) * Math.cos(a));
 
-          hemi.visible = cfg.hemisphere.enabled;
-          hemi.intensity = cfg.hemisphere.intensity;
-          hemi.color.set(cfg.hemisphere.skyColor);
-          hemi.groundColor.set(cfg.hemisphere.groundColor);
+            hemi.visible = cfg.hemisphere.enabled;
+            hemi.intensity = cfg.hemisphere.intensity;
+            hemi.color.set(cfg.hemisphere.skyColor);
+            hemi.groundColor.set(cfg.hemisphere.groundColor);
 
-          fill.visible = cfg.fill.enabled;
-          fill.intensity = cfg.fill.intensity;
-          fill.color.set(cfg.fill.color);
+            fill.visible = cfg.fill.enabled;
+            fill.intensity = cfg.fill.intensity;
+            fill.color.set(cfg.fill.color);
 
-          if (cfg.pointLights[0]) {
-            stern.visible = cfg.pointLights[0].enabled;
-            stern.intensity = cfg.pointLights[0].intensity;
-            stern.color.set(cfg.pointLights[0].color);
+            if (cfg.pointLights[0]) {
+              stern.visible = cfg.pointLights[0].enabled;
+              stern.intensity = cfg.pointLights[0].intensity;
+              stern.color.set(cfg.pointLights[0].color);
+            }
+            if (cfg.pointLights[1]) {
+              deckGlow.visible = cfg.pointLights[1].enabled;
+              deckGlow.intensity = cfg.pointLights[1].intensity;
+              deckGlow.color.set(cfg.pointLights[1].color);
+            }
           }
-          if (cfg.pointLights[1]) {
-            deckGlow.visible = cfg.pointLights[1].enabled;
-            deckGlow.intensity = cfg.pointLights[1].intensity;
-            deckGlow.color.set(cfg.pointLights[1].color);
-          }
-        });
-        unsubs = [unsub];
-        disposer?.add(unsub);
+        );
+        binding.attach(disposer);
       }
     },
 
-    onDetach() {
-      unsubs.forEach(fn => fn());
-    },
+    onDetach() {},
   };
 }

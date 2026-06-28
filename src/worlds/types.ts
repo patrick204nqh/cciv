@@ -9,7 +9,6 @@ export interface WorldLoadResult {
   entities: SceneEntity[];
   errors: WorldLoadError[];
   metadata: {
-    worldId?: string;
     loadedAt: number;
   };
 }

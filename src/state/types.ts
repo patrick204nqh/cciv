@@ -1,5 +1,5 @@
 export interface EnvironmentState {
-  sky: {
+  sky?: {
     gradientTop: string
     gradientBottom: string
     horizonOffset: number
@@ -10,13 +10,13 @@ export interface EnvironmentState {
     frequency: number
     steepness: number
   }[]
-  ocean: {
+  ocean?: {
     color: string
     opacity: number
     gridSize: number
     extent: number
   }
-  lighting: {
+  lighting?: {
     sun: { enabled: boolean; intensity: number; color: string; azimuth: number; elevation: number }
     hemisphere: { enabled: boolean; skyColor: string; groundColor: string; intensity: number }
     fill: { enabled: boolean; intensity: number; color: string }

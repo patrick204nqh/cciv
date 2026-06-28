@@ -1,6 +1,7 @@
 import type { SceneEntity } from '../entity/types';
 import type { ModelLoader } from '../loaders/types';
 import type { WorldConfig } from '../state/types';
+import type { StateStore } from '../state/store';
 import { createVesselEntity } from '../entity/ship-entity';
 import { createOceanEntity } from '../entity/ocean-entity';
 import { createSkyEntity } from '../entity/sky-entity';
@@ -14,19 +15,19 @@ export interface EntityFactoryResult {
 }
 
 export class EntityFactory {
-  async createEnvironmentEntities(config: WorldConfig): Promise<SceneEntity[]> {
+  async createEnvironmentEntities(config: WorldConfig, store?: StateStore): Promise<SceneEntity[]> {
     const entities: SceneEntity[] = [];
 
     if (config.environment.ocean) {
-      entities.push(createOceanEntity());
+      entities.push(createOceanEntity(store));
     }
 
     if (config.environment.sky) {
-      entities.push(createSkyEntity());
+      entities.push(createSkyEntity(store));
     }
 
     if (config.environment.lighting) {
-      entities.push(createLightingEntity());
+      entities.push(createLightingEntity(store));
     }
 
     return entities;

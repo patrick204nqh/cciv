@@ -6,6 +6,7 @@ import { displaceOceanGrid } from '../environment/ocean-displacement';
 import { createWaterNormalMap, createWaterDiffuseMap } from '../environment/water-textures';
 import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
+import { EntityStateBinding } from '../state/binding';
 
 export function createOceanEntity(store?: StateStore): SceneEntity {
   const seg = 80;
@@ -14,7 +15,6 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
   let ocean: THREE.Mesh;
   let basePos: Float32Array;
   let mat: THREE.MeshStandardMaterial;
-  let unsubs: (() => void)[] = [];
 
   return {
     id: 'ocean',
@@ -49,14 +49,16 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
       disposer?.add(mat);
       disposer?.add(ocean);
 
-      if (store) {
-        const unsub = store.subscribe('environment.ocean', (v) => {
-          const cfg = v as any;
-          mat.color.set(cfg.color);
-          mat.opacity = cfg.opacity;
-        });
-        unsubs = [unsub];
-        disposer?.add(unsub);
+      if (store && disposer) {
+        const binding = new EntityStateBinding(
+          store,
+          'environment.ocean',
+          (cfg: any) => {
+            mat.color.set(cfg.color);
+            mat.opacity = cfg.opacity;
+          }
+        );
+        binding.attach(disposer);
       }
     },
 
@@ -64,8 +66,6 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
       displaceOceanGrid(ocean.geometry as THREE.BufferGeometry, basePos, waveSurface);
     },
 
-    onDetach() {
-      unsubs.forEach(fn => fn());
-    },
+    onDetach() {},
   };
 }
