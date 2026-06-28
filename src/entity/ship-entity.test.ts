@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createShipEntity } from './ship-entity';
 import type { ModelEntity } from '../model/types';
+import type { SceneHandle } from './types';
+import type { ISceneObject } from '../scene/types';
 
 vi.mock('../environment/wave-surface', () => ({
   waveSurface: {
@@ -8,19 +10,47 @@ vi.mock('../environment/wave-surface', () => ({
   },
 }));
 
+function mockSceneObject(overrides?: Partial<ISceneObject>): ISceneObject {
+  const pos = { x: 0, y: 0, z: 0 };
+  const rot = { x: 0, y: 0, z: 0 };
+  const scl = { x: 1, y: 1, z: 1 };
+  return {
+    object3D: { rotation: rot, removeFromParent: vi.fn() } as any,
+    position: pos,
+    rotation: rot,
+    scale: scl,
+    visible: true,
+    worldPosition: { x: 0, y: 0, z: 0 },
+    worldQuaternion: { x: 0, y: 0, z: 0, w: 1 },
+    forward: { x: 0, y: 0, z: -1 },
+    right: { x: 1, y: 0, z: 0 },
+    up: { x: 0, y: 1, z: 0 },
+    parent: null,
+    children: [],
+    addChild: vi.fn(),
+    removeChild: vi.fn(),
+    detach: vi.fn(),
+    findChild: vi.fn(),
+    traverse: vi.fn(),
+    traverseAncestors: vi.fn(),
+    traverseMeshes: vi.fn(),
+    clone: vi.fn(),
+    dispose: vi.fn(),
+    ...overrides,
+  };
+}
+
 describe('createShipEntity', () => {
   let model: ModelEntity;
 
   beforeEach(() => {
     model = {
       id: 'ship',
-      root: {
-        name: 'ship', position: { y: 0 }, rotation: { x: 0, z: 0 },
-        getWorldPosition: vi.fn((v: any) => { v.x = 0; v.y = 0; v.z = 0; }),
-        getWorldQuaternion: vi.fn((q: any) => { q.x = 0; q.y = 0; q.z = 0; q.w = 1; }),
-      } as any,
+      root: mockSceneObject(),
       metadata: { id: 'ship', source: 'extracted' },
+      clone: vi.fn() as any,
       dispose: vi.fn(),
+      applyMaterials: vi.fn(),
     };
   });
 
@@ -30,7 +60,7 @@ describe('createShipEntity', () => {
   });
 
   it('adds model root to scene on attach', () => {
-    const scene = { add: vi.fn() } as any;
+    const scene: SceneHandle = { add: vi.fn(), remove: vi.fn() };
     const entity = createShipEntity(model);
     entity.onAttach(scene);
     expect(scene.add).toHaveBeenCalledWith(model.root);
@@ -39,7 +69,7 @@ describe('createShipEntity', () => {
   it('calls waveSurface.sample on update', async () => {
     const { waveSurface } = await import('../environment/wave-surface');
     const entity = createShipEntity(model);
-    entity.onUpdate(0.016);
+    entity.onUpdate!(0.016);
     expect(waveSurface.sample).toHaveBeenCalled();
   });
 

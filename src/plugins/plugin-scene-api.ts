@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { IScene } from '../scene/types';
 
 export interface PluginSceneAPI {
   add(object: THREE.Object3D): void;
@@ -7,19 +8,20 @@ export interface PluginSceneAPI {
   traverse(callback: (object: THREE.Object3D) => void): void;
 }
 
-export function createPluginSceneAPI(scene: THREE.Scene): PluginSceneAPI {
+export function createPluginSceneAPI(scene: IScene): PluginSceneAPI {
   return {
     add(object: THREE.Object3D) {
-      scene.add(object);
+      scene.add({ object3D: object } as any);
     },
     remove(object: THREE.Object3D) {
-      scene.remove(object);
+      scene.remove({ object3D: object } as any);
     },
     getObjectByName(name: string) {
-      return scene.getObjectByName(name);
+      const obj = scene.getObjectByName(name);
+      return obj?.object3D;
     },
     traverse(callback: (object: THREE.Object3D) => void) {
-      scene.traverse(callback);
+      scene.traverse((child) => callback(child.object3D));
     },
   };
 }

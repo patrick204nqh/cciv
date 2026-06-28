@@ -1,4 +1,5 @@
 import type { MaterialOverride } from '../state/types';
+import type { ISceneObject } from '../scene/types';
 
 export interface MaterialSpec {
   textureKey?: string;
@@ -14,7 +15,7 @@ export type ModelSource = 'extracted' | 'procedural' | 'composite';
 
 export interface ModelEntity {
   readonly id: string;
-  readonly root: import('three').Group;
+  readonly root: ISceneObject;
   readonly metadata: {
     id: string;
     source: ModelSource;
@@ -24,10 +25,6 @@ export interface ModelEntity {
   };
   dispose(): void;
   clone(): ModelEntity;
-  setPosition(x: number, y: number, z: number): void;
-  setRotation(x: number, y: number, z: number): void;
-  setScale(s: number): void;
-  setVisible(v: boolean): void;
   applyMaterials(materials: Record<string, MaterialOverride>): void;
 }
 

@@ -1,16 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EntityManager } from './manager';
 import type { SceneEntity } from './types';
-import * as THREE from 'three';
+import type { IScene } from '../scene/types';
 
 describe('EntityManager', () => {
   let manager: EntityManager;
-  let mockScene: any;
+  let mockScene: IScene;
   let entity: SceneEntity;
 
   beforeEach(() => {
     manager = new EntityManager();
-    mockScene = { add: vi.fn() };
+    mockScene = {
+      add: vi.fn(),
+      remove: vi.fn(),
+      fog: null,
+      background: null,
+      getObjectByName: vi.fn(),
+      traverse: vi.fn(),
+    };
     entity = {
       id: 'test',
       onAttach: vi.fn(),
@@ -19,7 +26,7 @@ describe('EntityManager', () => {
     };
   });
 
-  it('attaches an entity and provides a Disposer', () => {
+  it('attaches an entity and provides a SceneHandle + Disposer', () => {
     manager.attach(entity, mockScene);
     expect(entity.onAttach).toHaveBeenCalled();
     expect(entity.onAttach).toHaveBeenCalledWith(mockScene, expect.anything());

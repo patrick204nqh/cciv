@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import type { SceneEntity, SceneHandle } from './types';
+import type { IMaterial } from '../scene/types';
+import { SceneObject } from '../scene/object';
 import { waveSurface } from '../environment/wave-surface';
 import { buildOceanGrid } from '../environment/ocean-grid';
 import { displaceOceanGrid } from '../environment/ocean-displacement';
@@ -14,7 +16,7 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
 
   let ocean: THREE.Mesh;
   let basePos: Float32Array;
-  let mat: THREE.MeshStandardMaterial;
+  let mat: IMaterial;
 
   return {
     id: 'ocean',
@@ -30,10 +32,10 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
       ocean = new THREE.Mesh(geo, mat);
       ocean.position.y = -0.35;
       ocean.receiveShadow = true;
-      scene.add(ocean);
+      scene.add(new SceneObject(ocean));
 
       disposer?.add(geo);
-      disposer?.add(mat);
+      disposer?.add(mat.raw);
       disposer?.add(ocean);
 
       if (store && disposer) {
@@ -41,7 +43,7 @@ export function createOceanEntity(store?: StateStore): SceneEntity {
           store,
           'environment.ocean',
           (cfg: any) => {
-            mat.color.set(cfg.color);
+            mat.color = cfg.color;
             mat.opacity = cfg.opacity;
           }
         );

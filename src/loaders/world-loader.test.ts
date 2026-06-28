@@ -29,17 +29,36 @@ describe('WorldLoader', () => {
   let mockModelEntity: ModelEntity;
 
   beforeEach(() => {
+    const pos = { x: 0, y: 0, z: 0 };
     mockModelEntity = {
       id: 'ship',
       root: {
-        name: 'ship',
-        position: { set: vi.fn() },
-        scale: { setScalar: vi.fn() },
-        rotation: { set: vi.fn() },
-        quaternion: { set: vi.fn() },
+        object3D: {} as any,
+        position: pos,
+        rotation: { x: 0, y: 0, z: 0 },
+        scale: { x: 1, y: 1, z: 1 },
+        visible: true,
+        worldPosition: { x: 0, y: 0, z: 0 },
+        worldQuaternion: { x: 0, y: 0, z: 0, w: 1 },
+        forward: { x: 0, y: 0, z: -1 },
+        right: { x: 1, y: 0, z: 0 },
+        up: { x: 0, y: 1, z: 0 },
+        parent: null,
+        children: [],
+        addChild: vi.fn(),
+        removeChild: vi.fn(),
+        detach: vi.fn(),
+        findChild: vi.fn(),
+        traverse: vi.fn(),
+        traverseAncestors: vi.fn(),
+        traverseMeshes: vi.fn(),
+        clone: vi.fn(),
+        dispose: vi.fn(),
       } as any,
       metadata: { id: 'ship', source: 'procedural' },
+      clone: vi.fn() as any,
       dispose: vi.fn(),
+      applyMaterials: vi.fn(),
     };
     mockModelLoader = {
       load: vi.fn().mockResolvedValue(mockModelEntity),

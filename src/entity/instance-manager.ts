@@ -1,5 +1,5 @@
-import * as THREE from 'three';
 import type { SceneEntity, SceneHandle } from './types';
+import type { IScene } from '../scene/types';
 import type { Disposer } from '../util/disposer';
 import type { StateStore } from '../state/store';
 import type { ModelLoader } from '../loaders/types';
@@ -9,7 +9,7 @@ import { EntityStateBinding } from '../state/binding';
 
 export function createInstanceManager(
   modelLoader: ModelLoader,
-  scene: THREE.Scene,
+  scene: IScene,
   store: StateStore,
 ): SceneEntity {
   const instances = new Map<string, { entity: ModelEntity }>();
@@ -32,22 +32,24 @@ export function createInstanceManager(
       if (existing) {
         const e = existing.entity;
         const tf = def.transform;
-        e.setPosition(tf.position[0], tf.position[1], tf.position[2]);
-        e.setRotation(tf.rotation[0], tf.rotation[1], tf.rotation[2]);
-        e.setScale(tf.scale);
-        e.setVisible(def.visible);
+        const r = e.root;
+        r.position = { x: tf.position[0], y: tf.position[1], z: tf.position[2] };
+        r.rotation = { x: tf.rotation[0], y: tf.rotation[1], z: tf.rotation[2] };
+        r.scale = { x: tf.scale, y: tf.scale, z: tf.scale };
+        r.visible = def.visible;
         if (def.materials) e.applyMaterials(def.materials);
       } else {
         const model = modelLoader.getCached(def.ref);
         if (!model) continue;
         const e = model.clone();
         const tf = def.transform;
-        e.setPosition(tf.position[0], tf.position[1], tf.position[2]);
-        e.setRotation(tf.rotation[0], tf.rotation[1], tf.rotation[2]);
-        e.setScale(tf.scale);
-        e.setVisible(def.visible);
+        const r = e.root;
+        r.position = { x: tf.position[0], y: tf.position[1], z: tf.position[2] };
+        r.rotation = { x: tf.rotation[0], y: tf.rotation[1], z: tf.rotation[2] };
+        r.scale = { x: tf.scale, y: tf.scale, z: tf.scale };
+        r.visible = def.visible;
         if (def.materials) e.applyMaterials(def.materials);
-        scene.add(e.root);
+        scene.add(r);
         instances.set(id, { entity: e });
       }
     }
@@ -72,7 +74,7 @@ export function createInstanceManager(
 
     onDetach() {
       for (const [, entry] of instances) {
-        scene.remove(entry.root);
+        scene.remove(entry.entity.root);
       }
       instances.clear();
     },

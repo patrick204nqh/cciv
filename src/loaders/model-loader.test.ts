@@ -38,7 +38,7 @@ describe('ModelLoaderImpl', () => {
   it('loads a model by ref', async () => {
     const entity = await loader.load('ship');
     expect(entity.id).toBe('ship');
-    expect(entity.root).toBe(mockGlbResult.scene);
+    expect(entity.root.object3D).toBe(mockGlbResult.scene);
   });
 
   it('throws for unknown ref', async () => {

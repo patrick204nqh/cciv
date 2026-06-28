@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { ModelLoader, ModelCatalogEntry } from './types';
 import { ModelLoadError } from './types';
 import type { ModelEntity } from '../model/types';
+import { SceneObject } from '../scene/object';
 import { GlbLoader, type GlbLoaderResult } from './glb-loader';
 import { ModelCatalogReader } from './catalog';
 import { modelRegistry } from '../model/registry';
@@ -39,11 +40,13 @@ export class ModelLoaderImpl implements ModelLoader {
 
   private async loadFromEntry(ref: string, entry: ModelCatalogEntry): Promise<ModelEntity> {
     const result = await this.glbLoader.load(entry.glb);
-    const root = result.scene;
-    root.name = ref;
+    const rawRoot = result.scene;
+    rawRoot.name = ref;
 
     const disp = new Disposer();
-    disp.add(root);
+    disp.add(rawRoot);
+
+    const root = new SceneObject(rawRoot);
 
     if (entry.materialOverrides) {
       traverseMeshes(root, (_mesh, mat) => {
@@ -60,11 +63,11 @@ export class ModelLoaderImpl implements ModelLoader {
     if (entry.transform) {
       const tf = entry.transform;
       if (tf.scale != null) {
-        if (typeof tf.scale === 'number') root.scale.setScalar(tf.scale);
-        else root.scale.set(tf.scale[0], tf.scale[1], tf.scale[2]);
+        if (typeof tf.scale === 'number') rawRoot.scale.setScalar(tf.scale);
+        else rawRoot.scale.set(tf.scale[0], tf.scale[1], tf.scale[2]);
       }
-      if (tf.rotation) root.rotation.set(tf.rotation[0], tf.rotation[1], tf.rotation[2]);
-      if (tf.position) root.position.set(tf.position[0], tf.position[1], tf.position[2]);
+      if (tf.rotation) rawRoot.rotation.set(tf.rotation[0], tf.rotation[1], tf.rotation[2]);
+      if (tf.position) rawRoot.position.set(tf.position[0], tf.position[1], tf.position[2]);
     }
 
     disp.add(() => modelRegistry.unregister(ref));
@@ -79,15 +82,17 @@ export class ModelLoaderImpl implements ModelLoader {
         polyCount: entry.polyCount,
       },
       clone() {
-        const clonedRoot = root.clone();
-        clonedRoot.name = root.name;
-        const cloned = { ...entity, root: clonedRoot };
-        return cloned;
+        const cloned = new SceneObject(rawRoot.clone());
+        const result: ModelEntity = {
+          id: ref,
+          root: cloned,
+          metadata: entity.metadata,
+          clone: entity.clone,
+          dispose: entity.dispose,
+          applyMaterials: entity.applyMaterials,
+        };
+        return result;
       },
-      setPosition(x: number, y: number, z: number) { root.position.set(x, y, z); },
-      setRotation(x: number, y: number, z: number) { root.rotation.set(x, y, z); },
-      setScale(s: number) { root.scale.setScalar(s); },
-      setVisible(v: boolean) { root.visible = v; },
       applyMaterials(materials) {
         traverseMeshes(root, (mesh, mat) => {
           const override = materials[mesh.name];

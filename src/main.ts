@@ -12,8 +12,6 @@ import { modeTogglePlugin } from './plugins/mode-toggle';
 import { sceneGraphPlugin } from './plugins/scene-graph';
 import { performanceHudPlugin } from './plugins/performance-hud';
 import { shipHudPlugin } from './plugins/ship-hud';
-import * as THREE from 'three';
-
 async function main() {
   const kernel = new Kernel();
   kernel.registerPlugin(inspectorPlugin);
@@ -58,19 +56,21 @@ async function main() {
   await kernel.init();
 
   const setFog = (cfg: { type: string; color: string; density: number }) => {
-    if (cfg.type === 'exp2') {
-      scene.fog = new THREE.FogExp2(new THREE.Color(cfg.color), cfg.density);
-    } else {
-      scene.fog = new THREE.Fog(new THREE.Color(cfg.color), 0, 2000);
-    }
+    scene.fog = { type: cfg.type as 'exp2' | 'linear', color: cfg.color, density: cfg.density };
   };
   const initialFog = store.get('environment.fog') as any;
   setFog(initialFog);
   store.subscribe('environment.fog', (v) => setFog(v as any));
 
+  function lerpHex(a: string, b: string, t: number): string {
+    const ar = parseInt(a.slice(1), 16), br = parseInt(b.slice(1), 16);
+    const r = Math.round(((ar >> 16) & 0xff) * (1 - t) + ((br >> 16) & 0xff) * t);
+    const g = Math.round(((ar >> 8) & 0xff) * (1 - t) + ((br >> 8) & 0xff) * t);
+    const bl = Math.round((ar & 0xff) * (1 - t) + (br & 0xff) * t);
+    return `#${(r << 16 | g << 8 | bl).toString(16).padStart(6, '0')}`;
+  }
   const setBackground = (cfg: { gradientTop: string; gradientBottom: string }) => {
-    const c = new THREE.Color(cfg.gradientBottom).lerp(new THREE.Color(cfg.gradientTop), 0.5);
-    scene.background = c;
+    scene.background = lerpHex(cfg.gradientBottom, cfg.gradientTop, 0.5);
   };
   const initialSky = store.get('environment.sky') as any;
   setBackground(initialSky);

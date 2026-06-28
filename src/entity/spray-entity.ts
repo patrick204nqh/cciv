@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import type { SceneEntity, SceneHandle } from './types';
+import type { IMaterial } from '../scene/types';
+import { SceneObject } from '../scene/object';
+import { MaterialAdapter } from '../scene/material-adapter';
 import type { Disposer } from '../util/disposer';
 import { PositionTracker } from '../util/position-tracker';
 
@@ -39,7 +42,7 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
   geo.setAttribute('alpha', new THREE.BufferAttribute(alphaArr, 1));
 
   let points: THREE.Points;
-  let mat: THREE.PointsMaterial;
+  let mat: IMaterial;
   let vesselPos = new THREE.Vector3();
   let vesselQuat = new THREE.Quaternion();
 
@@ -71,7 +74,7 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
       }
 
       const sprite = createSpriteTexture();
-      mat = new THREE.PointsMaterial({
+      const rawMat = new THREE.PointsMaterial({
         map: sprite,
         size: 1.2,
         blending: THREE.AdditiveBlending,
@@ -80,12 +83,13 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
         opacity: 0.7,
         color: 0xc0e0ff,
       });
+      mat = new MaterialAdapter(rawMat);
 
-      points = new THREE.Points(geo, mat);
+      points = new THREE.Points(geo, rawMat);
       points.frustumCulled = false;
-      scene.add(points);
+      scene.add(new SceneObject(points));
       disposer?.add(geo);
-      disposer?.add(mat);
+      disposer?.add(rawMat);
       disposer?.add(points);
       disposer?.add(() => sprite.dispose());
 

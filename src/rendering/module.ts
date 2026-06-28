@@ -1,31 +1,55 @@
 import * as THREE from 'three';
+import type { IScene } from '../scene/types';
+import { SceneAdapter } from '../scene/scene-adapter';
 import { OrbitControls } from '../three/addons';
 import { createOrbitControls } from '../controls/orbitControls';
+import type { IRenderer, ICamera } from './types';
 
 export interface RenderingModuleOptions {
   container?: HTMLElement;
   renderer?: THREE.WebGLRenderer;
   camera?: THREE.PerspectiveCamera;
-  onBeforeRender?: (dt: number) => void; // Callback for pre-render updates
+  onBeforeRender?: (dt: number) => void;
 }
 
 export class RenderingModule {
-  readonly scene: THREE.Scene;
-  readonly renderer: THREE.WebGLRenderer;
-  readonly camera: THREE.PerspectiveCamera;
+  readonly _renderer: THREE.WebGLRenderer;
+  readonly _camera: THREE.PerspectiveCamera;
   readonly controls: OrbitControls;
+  readonly sceneHandle: IScene;
+  private _scene: THREE.Scene;
   private container: HTMLElement;
   private onBeforeRender?: (dt: number) => void;
+
+  get renderer(): IRenderer {
+    const r = this._renderer;
+    return {
+      get domElement() { return r.domElement; },
+      get info() { return r.info; },
+      get raw() { return r; },
+      dispose: () => r.dispose(),
+    };
+  }
+
+  get camera(): ICamera {
+    const c = this._camera;
+    return {
+      get raw() { return c; },
+      get aspect() { return c.aspect; },
+      updateProjectionMatrix: () => c.updateProjectionMatrix(),
+    };
+  }
 
   constructor(opts?: RenderingModuleOptions) {
     this.container = opts?.container ?? document.body;
     this.onBeforeRender = opts?.onBeforeRender;
 
-    this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x406888, 0.0018);
-    this.scene.background = new THREE.Color(0x5080a0);
+    this._scene = new THREE.Scene();
+    this._scene.fog = new THREE.FogExp2(0x406888, 0.0018);
+    this._scene.background = new THREE.Color(0x5080a0);
+    this.sceneHandle = new SceneAdapter(this._scene);
 
-    this.renderer = opts?.renderer ?? (() => {
+    this._renderer = opts?.renderer ?? (() => {
       const r = new THREE.WebGLRenderer({ antialias: true });
       r.setPixelRatio(Math.min(devicePixelRatio, 2));
       r.setSize(innerWidth, innerHeight);
@@ -37,18 +61,18 @@ export class RenderingModule {
       return r;
     })();
 
-    this.camera = opts?.camera ?? new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000);
-    this.camera.position.set(140, 65, -90);
+    this._camera = opts?.camera ?? new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000);
+    this._camera.position.set(140, 65, -90);
 
-    this.controls = createOrbitControls(this.camera, this.renderer.domElement);
+    this.controls = createOrbitControls(this._camera, this._renderer.domElement);
 
     window.addEventListener('resize', this.onResize);
   }
 
   private onResize = () => {
-    this.camera.aspect = innerWidth / innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(innerWidth, innerHeight);
+    this._camera.aspect = innerWidth / innerHeight;
+    this._camera.updateProjectionMatrix();
+    this._renderer.setSize(innerWidth, innerHeight);
   };
 
   startLoop(): void {
@@ -59,18 +83,17 @@ export class RenderingModule {
       const dt = Math.min((now - prevTime) / 1000, 0.05);
       prevTime = now;
 
-      this.onBeforeRender?.(dt); // Call external callback before rendering
+      this.onBeforeRender?.(dt);
 
       this.controls.update();
-      this.renderer.render(this.scene, this.camera);
+      this._renderer.render(this._scene, this._camera);
     };
     loop();
   }
 
   dispose(): void {
     window.removeEventListener('resize', this.onResize);
-    this.renderer.dispose();
+    this._renderer.dispose();
     this.controls.dispose();
-    // Other disposals if necessary
   }
 }

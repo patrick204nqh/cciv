@@ -1,10 +1,7 @@
-import type { Object3D } from 'three';
+import type { SceneHandle } from '../scene/types';
 import type { Disposer } from '../util/disposer';
 
-export interface SceneHandle {
-  add(child: Object3D): void;
-  remove(child: Object3D): void;
-}
+export type { SceneHandle } from '../scene/types';
 
 export interface SceneEntity {
   readonly id: string;

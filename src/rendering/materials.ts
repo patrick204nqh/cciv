@@ -1,10 +1,12 @@
 import * as THREE from 'three';
+import type { IMaterial } from '../scene/types';
+import { MaterialAdapter } from '../scene/material-adapter';
 import { createWaterNormalMap, createWaterDiffuseMap } from '../environment/water-textures';
 
-export function createWaterMaterial(color?: string, opacity?: number): THREE.MeshStandardMaterial {
+export function createWaterMaterial(color?: string, opacity?: number): IMaterial {
   const normTex = createWaterNormalMap();
   const diffTex = createWaterDiffuseMap();
-  return new THREE.MeshStandardMaterial({
+  return new MaterialAdapter(new THREE.MeshStandardMaterial({
     map: diffTex,
     normalMap: normTex,
     normalScale: new THREE.Vector2(0.6, 0.6),
@@ -14,34 +16,34 @@ export function createWaterMaterial(color?: string, opacity?: number): THREE.Mes
     transparent: true,
     opacity: opacity ?? 0.82,
     envMapIntensity: 1.0,
-  });
+  }));
 }
 
-export function createSkyMaterial(): THREE.MeshBasicMaterial {
-  return new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide });
+export function createSkyMaterial(): IMaterial {
+  return new MaterialAdapter(new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide }));
 }
 
-export function createRingMaterial(): THREE.MeshBasicMaterial {
-  return new THREE.MeshBasicMaterial({
+export function createRingMaterial(): IMaterial {
+  return new MaterialAdapter(new THREE.MeshBasicMaterial({
     color: 0x6090b0,
     side: THREE.BackSide,
     transparent: true,
     opacity: 0.25,
-  });
+  }));
 }
 
-export function createWakeMaterial(): THREE.MeshBasicMaterial {
-  return new THREE.MeshBasicMaterial({
+export function createWakeMaterial(): IMaterial {
+  return new MaterialAdapter(new THREE.MeshBasicMaterial({
     color: 0xffffff,
     transparent: true,
     opacity: 0.65,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
-  });
+  }));
 }
 
-export function createSprayMaterial(): THREE.PointsMaterial {
-  return new THREE.PointsMaterial({
+export function createSprayMaterial(): IMaterial {
+  return new MaterialAdapter(new THREE.PointsMaterial({
     color: 0xffffff,
     size: 0.4,
     transparent: true,
@@ -58,5 +60,5 @@ export function createSprayMaterial(): THREE.PointsMaterial {
       g.fill();
       return new THREE.CanvasTexture(c);
     })(),
-  });
+  }));
 }

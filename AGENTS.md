@@ -5,6 +5,7 @@
 - **`src/`** — Vite + TypeScript Three.js project. Entry point: `src/main.ts`.
   - `src/models/<id>/` — owned models. Each has `config.ts` + `index.ts` + `data/` (extracted geometry).
     - `src/models/ship/` — CCIV ship: 7 mesh groups with extracted geometry + `config.ts`.
+  - `src/scene/` — Three.js wrapper layer: `ISceneObject` interface, `SceneObject` adapter class.
   - `src/entity/` — SceneEntity implementations (ocean, sky, lighting, spray, wake, ship).
   - `src/model/` — core Model abstraction (types, registry, factory).
   - `src/event-bus.ts` — typed event bus singleton.
@@ -55,6 +56,12 @@ npm run model:compile
 
 Add new sources by appending to `SOURCES` in `bin/dev:19-27`.
 
+## Reference Sources
+
+| Source | URL |
+|---|---|
+| **threejs-api** | https://threejs.org/docs/llms-full.txt (official Three.js API ref for LLMs) |
+
 ## Conventions
 
 - Skills are symlinked (not copied). Edit in the cache dir at `.cache/skills/<name>/` if you need to modify an upstream skill.
@@ -63,3 +70,4 @@ Add new sources by appending to `SOURCES` in `bin/dev:19-27`.
 - Texture pipeline: external reference → `.cache/references/` (gitignored, throwaway). Then `scripts/build-model.mjs` copies textures to `public/textures/<model>/` and generates `src/textures/sources.ts`.
 - New models: add entry to `scripts/models.json`, run `build-model.mjs`. The model becomes owned code in `src/models/<id>/` with clean naming — no reference prefixes leak in.
 - Entity lifecycle: implement `SceneEntity` (in `src/entity/types.ts`) and attach via `entityManager.attach()`. Entities communicate via the event bus (`src/event-bus.ts`).
+- All Three.js scene graph interaction goes through `ISceneObject` (`src/scene/types.ts`). Never pass `THREE.Object3D` directly across module boundaries. `SceneObject` adapter wraps raw Three.js objects. Use `.object3D` escape hatch only when Three.js interop is unavoidable (TransformControls, raycaster).

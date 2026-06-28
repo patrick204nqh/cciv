@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import type { SceneEntity, SceneHandle } from './types';
+import type { IMaterial } from '../scene/types';
+import { SceneObject } from '../scene/object';
+import { MaterialAdapter } from '../scene/material-adapter';
 import type { Disposer } from '../util/disposer';
 import { PositionTracker } from '../util/position-tracker';
 
@@ -41,7 +44,7 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
       ));
       geo.setIndex(idx);
 
-      const mat = new THREE.MeshBasicMaterial({
+      const rawMat = new THREE.MeshBasicMaterial({
         color: 0x8ab8d8,
         transparent: true,
         opacity: 0.1,
@@ -49,11 +52,12 @@ export function createWakeEntity(vesselId?: string): SceneEntity {
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       });
+      const mat: IMaterial = new MaterialAdapter(rawMat);
 
-      const mesh = new THREE.Mesh(geo, mat);
-      scene.add(mesh);
+      const mesh = new THREE.Mesh(geo, rawMat);
+      scene.add(new SceneObject(mesh));
       disposer?.add(geo);
-      disposer?.add(mat);
+      disposer?.add(rawMat);
       disposer?.add(mesh);
 
       let prevPos = new THREE.Vector3();

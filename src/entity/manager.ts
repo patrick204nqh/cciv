@@ -1,5 +1,5 @@
-import * as THREE from 'three';
 import type { SceneEntity } from './types';
+import type { IScene } from '../scene/types';
 import { Disposer } from '../util/disposer';
 import { bus } from '../event-bus';
 
@@ -16,7 +16,7 @@ export class EntityManager {
     this._paused = paused;
   }
 
-  attach(entity: SceneEntity, scene: THREE.Scene): void {
+  attach(entity: SceneEntity, scene: IScene): void {
     this.entities.add(entity);
     const disp = new Disposer();
     this.disposers.set(entity.id, disp);
