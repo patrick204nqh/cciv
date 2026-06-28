@@ -8,6 +8,8 @@ export interface PluginStateAPI {
   select<T>(selector: (state: AppState) => T): T;
   watch<T>(selector: (state: AppState) => T, fn: (value: T) => void): () => void;
   subscribe(path: string, fn: (value: unknown, path: string) => void): () => void;
+  snapshot(): AppState;
+  restore(state: AppState): void;
 }
 
 export function createPluginStateAPI(store: StateStore): PluginStateAPI {
@@ -26,6 +28,12 @@ export function createPluginStateAPI(store: StateStore): PluginStateAPI {
     },
     subscribe(path: string, fn: (value: unknown, path: string) => void) {
       return store.subscribe(path, fn);
+    },
+    snapshot() {
+      return store.snapshot();
+    },
+    restore(state: AppState) {
+      store.restore(state);
     },
   };
 }

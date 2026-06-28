@@ -1,6 +1,7 @@
 import { bus } from '../../event-bus';
 import { activeVessel } from '../../controls/active-vessel';
 import type { ScenePlugin } from '../types';
+import { useShipHudStore } from '../../ui/stores/ship-hud-store';
 
 const MS_TO_KN = 1.94384;
 
@@ -11,12 +12,7 @@ function quatToHeading(qx: number, qy: number, qz: number, qw: number): number {
 }
 
 export const shipHudPlugin: ScenePlugin = (() => {
-  let logEl: HTMLElement | null = null;
-  let windEl: HTMLElement | null = null;
-  let swellEl: HTMLElement | null = null;
-  let timeEl: HTMLElement | null = null;
-  let headingEl: HTMLElement | null = null;
-  let speedEl: HTMLElement | null = null;
+  let unsubPosition: (() => void) | null = null;
   let timeAccum = 0;
   let currentHeading = 0;
   let currentSpeed = 0;
@@ -28,21 +24,9 @@ export const shipHudPlugin: ScenePlugin = (() => {
     priority: 50,
 
     init() {
-      logEl = document.getElementById('sl')!;
-      windEl = document.getElementById('sl-wind')!;
-      swellEl = document.getElementById('sl-swell')!;
-      timeEl = document.getElementById('sl-time')!;
-      headingEl = document.getElementById('sl-heading')!;
-
-      const span = document.createElement('span');
-      span.innerHTML = `<span class="sl-l">SPD</span> <span id="sl-speed">— kn</span>`;
-      headingEl!.parentElement!.appendChild(span);
-      speedEl = document.getElementById('sl-speed')!;
-
-      bus.on('entity:position-changed', (ev) => {
+      unsubPosition = bus.on('entity:position-changed', (ev) => {
         if (ev.entityId === activeVessel.activeId) {
           currentHeading = quatToHeading(ev.qx, ev.qy, ev.qz, ev.qw);
-
           const vx = ev.vx ?? 0;
           const vy = ev.vy ?? 0;
           const vz = ev.vz ?? 0;
@@ -52,8 +36,7 @@ export const shipHudPlugin: ScenePlugin = (() => {
     },
 
     onModeSwitch(_from: 'edit' | 'play', to: 'edit' | 'play') {
-      if (!logEl) return;
-      logEl.classList.toggle('on', to === 'play');
+      useShipHudStore.getState().setVisible(to === 'play');
       if (to === 'play') {
         timeAccum = 0;
         currentHeading = 0;
@@ -62,27 +45,31 @@ export const shipHudPlugin: ScenePlugin = (() => {
     },
 
     render(dt: number) {
-      if (!logEl) return;
+      const store = useShipHudStore.getState();
+      if (!store.visible) return;
 
       const env = (window as any).__store?.get('environment') as any;
-
       const windSpeed = (env?.ocean?.windSpeed ?? 12).toFixed(1);
       const swellHeight = (env?.ocean?.swellHeight ?? 2.4).toFixed(1);
-      windEl.textContent = `${windSpeed} kn`;
-      swellEl.textContent = `${swellHeight} m`;
 
       timeAccum += dt;
       const totalMinutes = Math.floor(timeAccum * 1.5) % 1440;
       const h = Math.floor(totalMinutes / 60);
       const m = totalMinutes % 60;
-      timeEl.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} Z`;
+      const timeString = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-      headingEl.textContent = `${currentHeading.toFixed(1)}°`;
-      speedEl.textContent = `${currentSpeed.toFixed(1)} kn`;
+      store.update({
+        windSpeed: `${windSpeed} kn`,
+        swellHeight: `${swellHeight} m`,
+        timeString,
+        heading: `${currentHeading.toFixed(1)}°`,
+        speed: `${currentSpeed.toFixed(1)} kn`,
+      });
     },
 
     destroy() {
-      logEl?.classList.remove('on');
+      unsubPosition?.();
+      useShipHudStore.getState().setVisible(false);
     },
   };
 })();

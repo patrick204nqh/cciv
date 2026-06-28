@@ -81,10 +81,6 @@ canvas{display:block}
 .pk{color:var(--ink-muted);min-width:60px}
 .pv{color:var(--ink)}
 
-/* lil-gui overrides */
-.lil-gui{--background:transparent!important;--font-family:var(--font-mono)!important;--font-size:11px!important;--input-background:var(--bg)!important;--color:var(--ink)!important;--title-background:transparent!important;--title-text-color:var(--accent-dim)!important;--widget-color:var(--surface)!important;--focus-color:var(--accent)!important;--toggle-on:var(--accent-dim)!important;--toggle-off:var(--border)!important;--slider-knob-color:var(--accent)!important;--slider-input-color:var(--ink)!important;--slider-input-focus-color:var(--accent)!important;width:100%!important;max-width:100%!important}
-.lil-gui .controller{border-left:none!important}
-
 @media(max-width:640px){
   .w{display:none}
   #tz h1{font-size:14px;letter-spacing:3px}
@@ -95,7 +91,7 @@ canvas{display:block}
 }
 
 @media(prefers-reduced-motion:reduce){
-  #tb,#pn,#sl,#ch{transition:none!important}
+  #tb,#pn{transition:none!important}
 }
 </style>
 </head>
@@ -105,21 +101,6 @@ canvas{display:block}
   <h1>CCIV</h1>
   <div class="sub">THE VESSEL</div>
 </div>
-
-<div id="ch">DRAG · SCROLL TO ZOOM · RIGHT-DRAG TO PAN</div>
-
- <div id="sl" class="w">
-    <div class="wi sl-i">
-      <span><span class="sl-l">WIND</span> <span id="sl-wind">— kn</span></span>
-      <span><span class="sl-l">SWELL</span> <span id="sl-swell">— m</span></span>
-      <span><span class="sl-l">TIME</span> <span id="sl-time">— Z</span></span>
-      <span><span class="sl-l">HDG</span> <span id="sl-heading">—°</span></span>
-    </div>
-  </div>
-
-<div id="ph" class="w wi">— FPS · — DC · — tri</div>
-
-<div id="mb">EDIT</div>
 
 <div id="tb">
   <div class="tb-s"></div>

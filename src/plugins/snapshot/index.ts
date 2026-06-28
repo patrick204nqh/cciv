@@ -1,4 +1,5 @@
 import type { ScenePlugin, PluginContext } from '../types';
+import { useToastStore } from '../../ui/stores/toast-store';
 
 export const snapshotPlugin: ScenePlugin = (() => {
   let ctx: PluginContext;
@@ -23,6 +24,7 @@ export const snapshotPlugin: ScenePlugin = (() => {
     a.download = `cciv-snapshot-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    useToastStore.getState().show('Snapshot saved', 'success');
   }
 
   function load() {
@@ -36,8 +38,9 @@ export const snapshotPlugin: ScenePlugin = (() => {
       try {
         const state = JSON.parse(text);
         ctx.state.restore(state);
+        useToastStore.getState().show('Snapshot loaded', 'success');
       } catch {
-        console.warn('Invalid snapshot file');
+        useToastStore.getState().show('Invalid snapshot file', 'error');
       }
     };
     input.click();

@@ -1,23 +1,18 @@
 import type { ScenePlugin, PluginContext } from '../types';
 import { setSidebarCollapsed } from '../sidebar';
+import { useModeStore } from '../../ui/stores/mode-store';
 
 export const modeTogglePlugin: ScenePlugin = (() => {
   let ctx: PluginContext;
-  let badge: HTMLElement;
-  let controlsHint: HTMLElement;
   let onKey: (e: KeyboardEvent) => void;
-  let hintTimer: ReturnType<typeof setTimeout> | null = null;
 
-  function updateBadge() {
-    const isEdit = ctx.mode === 'edit';
-    badge.textContent = isEdit ? 'EDIT' : 'PLAY';
-    badge.className = isEdit ? 'e' : 'p';
+  function syncMode() {
+    useModeStore.getState().setMode(ctx.mode);
   }
 
-  function showHint() {
-    controlsHint.classList.remove('h');
-    if (hintTimer) clearTimeout(hintTimer);
-    hintTimer = setTimeout(() => controlsHint.classList.add('h'), 5000);
+  function toggle() {
+    ctx.setMode(ctx.mode === 'edit' ? 'play' : 'edit');
+    syncMode();
   }
 
   return {
@@ -28,24 +23,12 @@ export const modeTogglePlugin: ScenePlugin = (() => {
 
     init(k: PluginContext) {
       ctx = k;
-
-      badge = document.getElementById('mb')!;
-      controlsHint = document.getElementById('ch')!;
-
-      badge.onclick = () => {
-        ctx.setMode(ctx.mode === 'edit' ? 'play' : 'edit');
-        updateBadge();
-        showHint();
-      };
-      updateBadge();
-      showHint();
+      syncMode();
 
       onKey = (e: KeyboardEvent) => {
         if (e.key === 'Tab') {
           e.preventDefault();
-          ctx.setMode(ctx.mode === 'edit' ? 'play' : 'edit');
-          updateBadge();
-          showHint();
+          toggle();
         }
       };
       window.addEventListener('keydown', onKey);
@@ -57,7 +40,6 @@ export const modeTogglePlugin: ScenePlugin = (() => {
 
     destroy() {
       if (onKey) window.removeEventListener('keydown', onKey);
-      if (hintTimer) clearTimeout(hintTimer);
     },
   };
 })();
