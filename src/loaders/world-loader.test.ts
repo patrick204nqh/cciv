@@ -6,7 +6,7 @@ import type { ModelEntity } from '../model/types';
 function testEnv(gates?: { ocean?: boolean; sky?: boolean; lighting?: boolean }): EnvironmentState {
   const g = gates ?? {};
   return {
-    waves: [{ speed: 1, amplitude: 1, frequency: 0.1, steepness: 0.3 }],
+    waves: [{ direction: [1, 0], amplitude: 1, frequency: 0.1, steepness: 0.3, speed: 1, phase: 0 }],
     fog: { type: 'exp2', color: '#000000', density: 0 },
     ...(g.ocean ? { ocean: { color: '#000000', opacity: 0.8, gridSize: 80, extent: 1800 } } : {}),
     ...(g.sky ? { sky: { gradientTop: '#000000', gradientBottom: '#000000', horizonOffset: 0 } } : {}),

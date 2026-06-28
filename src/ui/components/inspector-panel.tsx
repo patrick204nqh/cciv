@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useSyncExternalStore } from 'react';
 import type { PluginContext } from '../../plugins/types';
 import { useInspectorStore } from '../stores/inspector-store';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion';
@@ -14,7 +14,10 @@ function formatValue(value: number): string {
 }
 
 function FieldRow({ path, ctx }: { path: string; ctx: PluginContext }) {
-  const value = (ctx.state.get as (p: string) => unknown)(path);
+  const value = useSyncExternalStore(
+    (cb) => ctx.state.subscribe(path, () => cb()),
+    () => (ctx.state.get as (p: string) => unknown)(path),
+  );
 
   if (typeof value === 'boolean') {
     return (

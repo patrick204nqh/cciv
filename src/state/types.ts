@@ -5,10 +5,12 @@ export interface EnvironmentState {
     horizonOffset: number
   }
   waves: {
-    speed: number
+    direction: [number, number]
     amplitude: number
     frequency: number
     steepness: number
+    speed: number
+    phase: number
   }[]
   ocean?: {
     color: string
