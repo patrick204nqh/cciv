@@ -1,4 +1,4 @@
-import type { Camera, WebGLRenderer } from 'three';
+import type { Camera, WebGLRenderer } from 'three/webgpu';
 
 export interface IRenderer {
   readonly domElement: HTMLElement;

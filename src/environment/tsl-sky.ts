@@ -1,10 +1,9 @@
-import * as THREE from 'three';
-import {
+import { MeshBasicNodeMaterial, BackSide, TSL } from 'three/webgpu';
+const {
   Fn, vec3, float, positionWorld, normalize, mix, smoothstep,
-} from 'three/tsl';
-import MeshBasicNodeMaterial from 'three/src/materials/nodes/MeshBasicNodeMaterial.js';
+} = TSL;
 
-export function createTSLSkyMaterial(): THREE.Material {
+export function createTSLSkyMaterial(): MeshBasicNodeMaterial {
   const colorNode = Fn(() => {
     const dir = normalize(positionWorld);
     const y = dir.y;
@@ -26,7 +25,7 @@ export function createTSLSkyMaterial(): THREE.Material {
 
   const material = new MeshBasicNodeMaterial();
   material.colorNode = colorNode;
-  material.side = THREE.BackSide;
+  material.side = BackSide;
   material.fog = false;
 
   return material;

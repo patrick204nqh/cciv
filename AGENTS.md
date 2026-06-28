@@ -1,5 +1,8 @@
 # CCIV Project
 
+Designed architecture: `DESIGN.md` — read before any change (invariant).
+Current architecture state: `ARCHITECTURE.md` — changes as codebase evolves.
+
 ## Structure
 
 - **`src/`** — Vite + TypeScript Three.js project. Entry point: `src/main.ts`.
@@ -71,3 +74,5 @@ Add new sources by appending to `SOURCES` in `bin/dev:19-27`.
 - New models: add entry to `scripts/models.json`, run `build-model.mjs`. The model becomes owned code in `src/models/<id>/` with clean naming — no reference prefixes leak in.
 - Entity lifecycle: implement `SceneEntity` (in `src/entity/types.ts`) and attach via `entityManager.attach()`. Entities communicate via the event bus (`src/event-bus.ts`).
 - All Three.js scene graph interaction goes through `ISceneObject` (`src/scene/types.ts`). Never pass `THREE.Object3D` directly across module boundaries. `SceneObject` adapter wraps raw Three.js objects. Use `.object3D` escape hatch only when Three.js interop is unavoidable (TransformControls, raycaster).
+- Skills provide specialized instructions and workflows for specific tasks.
+  Use the skill tool to load a skill when a task matches its description.

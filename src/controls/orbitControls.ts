@@ -1,7 +1,7 @@
 import { OrbitControls } from '../three/addons';
-import * as THREE from 'three';
+import { PerspectiveCamera } from 'three/webgpu';
 
-export function createOrbitControls(camera: THREE.PerspectiveCamera, domElement: HTMLCanvasElement): OrbitControls {
+export function createOrbitControls(camera: PerspectiveCamera, domElement: HTMLCanvasElement): OrbitControls {
   const controls = new OrbitControls(camera, domElement);
   controls.target.set(0, 10, 0);
   controls.enableDamping = true;

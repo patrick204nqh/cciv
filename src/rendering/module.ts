@@ -1,5 +1,4 @@
-import * as THREE from 'three';
-import { WebGPURenderer } from 'three/webgpu';
+import * as THREE from 'three/webgpu';
 import type { IScene } from '../scene/types';
 import { SceneAdapter } from '../scene/scene-adapter';
 import { OrbitControls } from '../three/addons';
@@ -51,7 +50,7 @@ export class RenderingModule {
     this.sceneHandle = new SceneAdapter(this._scene);
 
     this._renderer = opts?.renderer ?? (() => {
-      const r = new WebGPURenderer({ antialias: true, forceWebGL: true });
+      const r = new THREE.WebGPURenderer({ antialias: true, forceWebGL: true });
       r.setPixelRatio(Math.min(devicePixelRatio, 2));
       r.setSize(innerWidth, innerHeight);
       r.shadowMap.enabled = true;

@@ -1,8 +1,7 @@
-import * as THREE from 'three';
-import {
+import { MeshPhysicalNodeMaterial, TSL } from 'three/webgpu';
+const {
   Fn, vec3, float, sin, cos, time, positionLocal, normalize,
-} from 'three/tsl';
-import MeshPhysicalNodeMaterial from 'three/src/materials/nodes/MeshPhysicalNodeMaterial.js';
+} = TSL;
 
 const G = 9.8;
 const STEEPNESS = 0.45;
