@@ -4,6 +4,16 @@ import { SceneObject } from '../../scene/object';
 import type { Disposer } from '../../util/disposer';
 import type { StateStore } from '../../state/store';
 import { EntityStateBinding } from '../../state/binding';
+import { entityRegistry } from '../entity-registry';
+import type { ModelLoader } from '../../loaders/types';
+import type { WorldConfig } from '../../state/types';
+
+entityRegistry.register({
+  async match(config: WorldConfig, _modelLoader: ModelLoader, store?: StateStore) {
+    if (!config.environment.lighting) return { entities: [], errors: [] };
+    return { entities: [createLightingEntity(store)], errors: [] };
+  },
+});
 
 export function createLightingEntity(store?: StateStore): SceneEntity {
   return {

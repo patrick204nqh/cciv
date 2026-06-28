@@ -5,6 +5,16 @@ import type { Disposer } from '../../util/disposer';
 import type { StateStore } from '../../state/store';
 import { createSkyMaterial, createRingMaterial } from '../../rendering/materials';
 import { EntityStateBinding } from '../../state/binding';
+import { entityRegistry } from '../entity-registry';
+import type { ModelLoader } from '../../loaders/types';
+import type { WorldConfig } from '../../state/types';
+
+entityRegistry.register({
+  async match(config: WorldConfig, _modelLoader: ModelLoader, store?: StateStore) {
+    if (!config.environment.sky) return { entities: [], errors: [] };
+    return { entities: [createSkyEntity(store)], errors: [] };
+  },
+});
 
 export function createSkyEntity(store?: StateStore): SceneEntity {
   return {

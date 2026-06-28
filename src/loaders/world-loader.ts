@@ -1,4 +1,4 @@
-import type { WorldLoadResult, WorldLoadError } from '../worlds/types';
+import type { WorldLoadResult } from './types';
 import type { WorldConfig } from '../state/types';
 import type { ModelLoader } from './types';
 import type { StateStore } from '../state/store';
@@ -15,7 +15,7 @@ export class WorldLoader {
 
     return {
       entities: result.entities,
-      errors: result.errors as WorldLoadError[],
+      errors: result.errors,
       metadata: { loadedAt: Date.now() },
     };
   }

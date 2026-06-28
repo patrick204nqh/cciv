@@ -30,3 +30,16 @@ export interface ModelLoader {
   getCached(ref: string): ModelEntity | undefined;
   clearCache(): void;
 }
+
+export interface WorldLoadError {
+  ref: string;
+  error: Error;
+}
+
+export interface WorldLoadResult {
+  entities: import('../entity/types').SceneEntity[];
+  errors: WorldLoadError[];
+  metadata: {
+    loadedAt: number;
+  };
+}

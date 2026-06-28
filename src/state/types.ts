@@ -47,7 +47,7 @@ export interface LocationPreset {
   instances: InstanceState
 }
 
-/** Unified world config — replaces the deprecated WorldConfig from worlds/types.ts */
+/** Unified world config */
 export type WorldConfig = LocationPreset;
 
 /** Branded string for entity identifiers */

@@ -1,37 +1,22 @@
 import type { ModelLoader } from '../loaders/types';
 import type { StateStore } from '../state/store';
 import type { WorldConfig } from '../state/types';
-import type { SceneEntity } from './types';
 import type { FactoryResult } from './entity-registry';
 import type { BehaviorDeps } from './behavior-registry';
 import { entityRegistry } from './entity-registry';
 import { behaviorRegistry } from './behavior-registry';
-import { createOceanEntity } from './environment/ocean';
-import { createSkyEntity } from './environment/sky';
-import { createLightingEntity } from './environment/lighting';
-import { createVesselEntity } from './vessel/ship';
-import { createSprayEntity } from './vessel/spray';
-import { createWakeEntity } from './vessel/wake';
-import { createVesselGroup } from './vessel-group';
 
-// ── Environment factories (config-shape dispatch) ──
+// Side-effect imports — each module auto-registers at import time
+import './environment/ocean';
+import './environment/sky';
+import './environment/lighting';
+import './vessel/ship';
 
-entityRegistry.register({
-  async match(config: WorldConfig, _modelLoader: ModelLoader, store?: StateStore): Promise<FactoryResult> {
-    const entities: SceneEntity[] = [];
-    if (config.environment.ocean) entities.push(createOceanEntity(store));
-    if (config.environment.sky) entities.push(createSkyEntity(store));
-    if (config.environment.lighting) entities.push(createLightingEntity(store));
-    return { entities, errors: [] };
-  },
-});
-
-// ── Instance factories (behavior-keyed dispatch) ──
-
+// Instance dispatch — iterates config.instances, delegates to BehaviorRegistry
 entityRegistry.register({
   async match(config: WorldConfig, modelLoader: ModelLoader, store?: StateStore): Promise<FactoryResult> {
-    const entities: SceneEntity[] = [];
-    const errors: { ref: string; error: Error }[] = [];
+    const entities: import('./types').SceneEntity[] = [];
+    const errors: import('../loaders/types').WorldLoadError[] = [];
     const deps: BehaviorDeps = { modelLoader, store };
 
     for (const [id, def] of Object.entries(config.instances)) {
@@ -45,19 +30,5 @@ entityRegistry.register({
       }
     }
     return { entities, errors };
-  },
-});
-
-// ── Built-in behaviors ──
-
-behaviorRegistry.register('vessel', {
-  async create(id: string, def, deps: BehaviorDeps): Promise<SceneEntity[]> {
-    const model = await deps.modelLoader.load(def.ref);
-    return [createVesselGroup(
-      id,
-      createVesselEntity(model, id),
-      createSprayEntity(id),
-      createWakeEntity(id),
-    )];
   },
 });

@@ -8,6 +8,22 @@ import type { Disposer } from '../../util/disposer';
 import { PhysicsBody, BuoyancySolver, physicsWorld } from '../../physics';
 import { ShipControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/ship-controls';
 import { activeVessel } from '../../controls/active-vessel';
+import { behaviorRegistry } from '../behavior-registry';
+import { createSprayEntity } from './spray';
+import { createWakeEntity } from './wake';
+import { createVesselGroup } from '../vessel-group';
+
+behaviorRegistry.register('vessel', {
+  async create(id: string, def, deps) {
+    const model = await deps.modelLoader.load(def.ref);
+    return [createVesselGroup(
+      id,
+      createVesselEntity(model, id),
+      createSprayEntity(id),
+      createWakeEntity(id),
+    )];
+  },
+});
 
 export const SHIP_MASS = 5000;
 export const SHIP_LINEAR_DAMPING = 0.05;
