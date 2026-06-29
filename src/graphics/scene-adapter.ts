@@ -1,6 +1,25 @@
 import * as THREE from 'three';
 import type { IScene, ISceneObject, SceneHandle, FogSpec, IMaterial } from './types';
+import { GeometryHandle } from './types';
 import { SceneObject } from './object';
+
+const _registeredMaterials = new WeakMap<IMaterial, THREE.Material>();
+
+function createGeometryHandle(geo: THREE.BufferGeometry): GeometryHandle {
+  const handle = new GeometryHandle();
+  handleBuffer(handle, geo);
+  return handle;
+}
+
+const _geoMap = new WeakMap<GeometryHandle, THREE.BufferGeometry>();
+function handleBuffer(handle: GeometryHandle, geo: THREE.BufferGeometry): void {
+  _geoMap.set(handle, geo);
+}
+function resolveBuffer(handle: GeometryHandle): THREE.BufferGeometry {
+  const geo = _geoMap.get(handle);
+  if (!geo) throw new Error('Invalid geometry handle');
+  return geo;
+}
 
 export class SceneAdapter implements IScene {
   private idCache = new Map<string, ISceneObject>();
@@ -34,9 +53,15 @@ export class SceneAdapter implements IScene {
     this.vendorCache.delete(vendor);
   }
 
-  createMesh(geometry: THREE.BufferGeometry, material: IMaterial): ISceneObject {
-    const vendorMat = (material as any)._vendor;
-    const mesh = new THREE.Mesh(geometry, vendorMat);
+  registerMaterial(material: IMaterial, vendor: any): void {
+    _registeredMaterials.set(material, vendor);
+  }
+
+  createMesh(geometry: GeometryHandle, material: IMaterial): ISceneObject {
+    const vendorMat = _registeredMaterials.get(material);
+    if (!vendorMat) throw new Error('Material not registered with the scene gate');
+    const vendorGeo = resolveBuffer(geometry);
+    const mesh = new THREE.Mesh(vendorGeo, vendorMat);
     return this.wrap(mesh);
   }
 
@@ -61,37 +86,45 @@ export class SceneAdapter implements IScene {
     return this.wrap(new THREE.HemisphereLight(new THREE.Color(skyColor), new THREE.Color(groundColor), intensity));
   }
 
-  createPlaneGeometry(width: number, height: number, segW: number, segH: number): THREE.BufferGeometry {
+  createPlaneGeometry(width: number, height: number, segW: number, segH: number): GeometryHandle {
     const geo = new THREE.PlaneGeometry(width, height, segW, segH);
     geo.rotateX(-Math.PI / 2);
-    return geo;
+    return createGeometryHandle(geo);
   }
 
-  createSphereGeometry(radius: number, widthSeg: number, heightSeg: number): THREE.BufferGeometry {
-    return new THREE.SphereGeometry(radius, widthSeg, heightSeg);
+  createSphereGeometry(radius: number, widthSeg: number, heightSeg: number): GeometryHandle {
+    return createGeometryHandle(new THREE.SphereGeometry(radius, widthSeg, heightSeg));
   }
 
-  createPoints(geometry: THREE.BufferGeometry, material: IMaterial): ISceneObject {
-    const vendorMat = (material as any)._vendor;
-    const points = new THREE.Points(geometry, vendorMat);
+  createPoints(geometry: GeometryHandle, material: IMaterial): ISceneObject {
+    const vendorMat = _registeredMaterials.get(material);
+    if (!vendorMat) throw new Error('Material not registered with the scene gate');
+    const vendorGeo = resolveBuffer(geometry);
+    const points = new THREE.Points(vendorGeo, vendorMat);
     return this.wrap(points);
   }
 
-  createBufferGeometry(): THREE.BufferGeometry {
-    return new THREE.BufferGeometry();
+  createBufferGeometry(): GeometryHandle {
+    return createGeometryHandle(new THREE.BufferGeometry());
   }
 
-  setAttribute(geo: THREE.BufferGeometry, name: string, data: Float32Array, itemSize: number): void {
-    geo.setAttribute(name, new THREE.BufferAttribute(data, itemSize));
+  setAttribute(geo: GeometryHandle, name: string, data: Float32Array, itemSize: number): void {
+    resolveBuffer(geo).setAttribute(name, new THREE.BufferAttribute(data, itemSize));
   }
 
-  setIndex(geo: THREE.BufferGeometry, data: Uint16Array): void {
-    geo.setIndex(new THREE.BufferAttribute(data, 1));
+  setIndex(geo: GeometryHandle, data: Uint16Array): void {
+    resolveBuffer(geo).setIndex(new THREE.BufferAttribute(data, 1));
   }
 
-  markAttributeDirty(geo: THREE.BufferGeometry, name: string): void {
-    const attr = geo.attributes[name];
+  markAttributeDirty(geo: GeometryHandle, name: string): void {
+    const attr = resolveBuffer(geo).attributes[name];
     if (attr) attr.needsUpdate = true;
+  }
+
+  readAttribute(geo: GeometryHandle, name: string): Float32Array | null {
+    const attr = resolveBuffer(geo).attributes[name];
+    if (!attr) return null;
+    return attr.array instanceof Float32Array ? attr.array : new Float32Array(attr.array);
   }
 
   createCanvasTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
@@ -161,7 +194,17 @@ export function createPointMaterial(opts: {
     vertexColors: opts.vertexColors ?? false,
     map: opts.map ?? null,
   });
-  return { _vendor: mat, dispose: () => mat.dispose() } as any;
+  const handle: IMaterial = {
+    color: opts.color,
+    opacity: opts.opacity ?? 1,
+    transparent: opts.transparent ?? false,
+    side: THREE.FrontSide,
+    roughness: 1,
+    metalness: 0,
+    dispose: () => mat.dispose(),
+  };
+  _registeredMaterials.set(handle, mat);
+  return handle;
 }
 
 export function createBasicMaterial(opts: {
@@ -179,5 +222,15 @@ export function createBasicMaterial(opts: {
   };
   if (opts.color) opts_.color = new THREE.Color(opts.color);
   const mat = new THREE.MeshBasicMaterial(opts_ as any);
-  return { _vendor: mat, dispose: () => mat.dispose() } as any;
+  const handle: IMaterial = {
+    color: opts.color,
+    opacity: opts.opacity ?? 1,
+    transparent: opts.transparent ?? false,
+    side: opts.side ?? THREE.FrontSide,
+    roughness: 1,
+    metalness: 0,
+    dispose: () => mat.dispose(),
+  };
+  _registeredMaterials.set(handle, mat);
+  return handle;
 }

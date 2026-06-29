@@ -6,6 +6,10 @@ export interface IRenderer {
 
 export interface ICamera {
   readonly aspect: number;
+  position: Vec3Like;
+  readonly fov: number;
+  readonly near: number;
+  readonly far: number;
   updateProjectionMatrix(): void;
 }
 
@@ -38,10 +42,13 @@ export interface FogSpec {
   far?: number;
 }
 
-import type { BufferGeometry as ThreeBufferGeometry } from 'three';
+export class GeometryHandle {
+  declare private _opaque: never;
+}
 
-export const BACK_SIDE = 1; // THREE.BackSide
-export type GeometryHandle = ThreeBufferGeometry;
+export const FRONT_SIDE = 0;
+export const BACK_SIDE = 1;
+export const DOUBLE_SIDE = 2;
 
 export interface IScene extends SceneHandle {
   fog: FogSpec | null;
@@ -65,14 +72,24 @@ export interface IScene extends SceneHandle {
   setIndex(geo: GeometryHandle, data: Uint16Array): void;
   /** Flag a geometry attribute as needing a GPU upload. */
   markAttributeDirty(geo: GeometryHandle, name: string): void;
+  /** Read a named attribute's data as a Float32Array (copy). Returns null if absent. */
+  readAttribute(geo: GeometryHandle, name: string): Float32Array | null;
 
   /** Create a texture from a canvas element. */
   createCanvasTexture(canvas: HTMLCanvasElement): any;
+
+  /** Register an externally-created material so the gate can resolve it. */
+  registerMaterial(material: IMaterial, vendor: any): void;
 }
 
 export interface IMaterial {
+  color?: string;
+  roughness?: number;
+  metalness?: number;
+  opacity: number;
+  transparent: boolean;
+  side: number;
   dispose(): void;
-  _vendor?: any;
 }
 
 export interface ISceneObject {

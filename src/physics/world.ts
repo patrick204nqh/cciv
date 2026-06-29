@@ -4,11 +4,24 @@ import type { PhysicsWorldConfig } from './types';
 const DEFAULT_FIXED_DT = 1 / 60;
 
 export class PhysicsWorld {
-  readonly world: CANNON.World;
+  private world: CANNON.World;
   private _fixedDt: number;
 
   get fixedDt(): number {
     return this._fixedDt;
+  }
+
+  get gravity(): number {
+    return this.world.gravity.length();
+  }
+
+  get allBodies(): readonly CANNON.Body[] {
+    return this.world.bodies;
+  }
+
+  /** @internal Gate-internal access to the raw cannon-es world. */
+  get _world(): CANNON.World {
+    return this.world;
   }
 
   constructor(config?: PhysicsWorldConfig) {

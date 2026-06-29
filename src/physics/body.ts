@@ -14,7 +14,7 @@ function quatToEuler(qx: number, qy: number, qz: number, qw: number) {
 }
 
 export class PhysicsBody {
-  readonly body: CANNON.Body;
+  private body: CANNON.Body;
   private _scale: number;
 
   constructor(config: PhysicsBodyConfig) {
@@ -51,7 +51,29 @@ export class PhysicsBody {
       this.body.quaternion.set(config.quaternion[0], config.quaternion[1], config.quaternion[2], config.quaternion[3]);
     }
 
-    physicsWorld.world.addBody(this.body);
+    physicsWorld._world.addBody(this.body);
+  }
+
+  setPosition(x: number, y: number, z: number): void {
+    this.body.position.set(x, y, z);
+  }
+
+  setDamping(linear: number, angular: number): void {
+    this.body.linearDamping = linear;
+    this.body.angularDamping = angular;
+    this.body.updateMassProperties();
+  }
+
+  setVelocity(x: number, y: number, z: number): void {
+    this.body.velocity.set(x, y, z);
+  }
+
+  applyLocalForce(x: number, y: number, z: number): void {
+    this.body.applyLocalForce(new CANNON.Vec3(x, y, z));
+  }
+
+  setTorque(x: number, y: number, z: number): void {
+    this.body.torque.set(x, y, z);
   }
 
   sync(target: ISceneObject): void {
@@ -90,6 +112,6 @@ export class PhysicsBody {
   }
 
   dispose(): void {
-    physicsWorld.world.removeBody(this.body);
+    physicsWorld._world.removeBody(this.body);
   }
 }

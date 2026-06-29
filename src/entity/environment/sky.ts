@@ -19,10 +19,11 @@ export function createSkyEntity(
 
     onAttach(scene, disposer?: Disposer) {
       const skyGeo = scene.createSphereGeometry(900, 32, 24);
-      const pos = skyGeo.attributes.position;
-      const colors = new Float32Array(pos.count * 3);
-      for (let i = 0; i < pos.count; i++) {
-        const y = pos.getY(i);
+      const pos = scene.readAttribute(skyGeo, 'position');
+      if (!pos) return;
+      const colors = new Float32Array(pos.length);
+      for (let i = 0; i < pos.length / 3; i++) {
+        const y = pos[i * 3 + 1];
         const t = (y + 900) / 1800;
         colors[i * 3] = botRgb[0] + (topRgb[0] - botRgb[0]) * t;
         colors[i * 3 + 1] = botRgb[1] + (topRgb[1] - botRgb[1]) * t;

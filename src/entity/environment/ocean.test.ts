@@ -22,6 +22,7 @@ describe('createOceanEntity', () => {
       add: vi.fn(),
       createMesh: vi.fn(),
       createPlaneGeometry: vi.fn().mockReturnValue({ rotateX: vi.fn() }),
+      registerMaterial: vi.fn(),
     } as any;
     const entity = createOceanEntity(makeWaves());
     entity.onAttach(scene);

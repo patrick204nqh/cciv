@@ -26,7 +26,7 @@ export const physicsDebugPlugin: ScenePlugin = (() => {
     },
 
     render() {
-      renderer.sync(physicsWorld.world.bodies);
+      renderer.sync(physicsWorld.allBodies);
     },
 
     destroy() {

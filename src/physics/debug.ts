@@ -23,7 +23,7 @@ export class PhysicsDebugRenderer {
     this._root.visible = false;
   }
 
-  sync(bodies: CANNON.Body[]): void {
+  sync(bodies: readonly CANNON.Body[]): void {
     const existing = new Set(this.meshes.keys());
 
     for (const body of bodies) {

@@ -5,7 +5,7 @@ import type { IScene } from '../graphics/types';
 import { SceneAdapter } from '../graphics/scene-adapter';
 import { OrbitControls } from '../three/addons';
 import { createOrbitControls } from '../controls/orbitControls';
-import type { IRenderer, ICamera } from './types';
+import type { IRenderer, ICamera, Vec3Like } from './types';
 
 export interface RenderingModuleOptions {
   container?: HTMLElement;
@@ -36,6 +36,14 @@ export class RenderingModule {
     const c = this._camera;
     return {
       get aspect() { return c.aspect; },
+      get position() {
+        const p = c.position;
+        return { x: p.x, y: p.y, z: p.z };
+      },
+      set position(v: Vec3Like) { c.position.set(v.x, v.y, v.z); },
+      get fov() { return c.fov; },
+      get near() { return c.near; },
+      get far() { return c.far; },
       updateProjectionMatrix: () => c.updateProjectionMatrix(),
       _vendorCam: c,
     } as any;

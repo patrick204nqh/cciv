@@ -16,11 +16,17 @@ export function createOceanEntity(
     onAttach(scene, disposer?: Disposer) {
       const geo = scene.createPlaneGeometry(extent, extent, gridSize, gridSize);
 
-      const mat = createTSLOceanMaterial(waves);
+      const vendorMat = createTSLOceanMaterial(waves);
       const material: import('../../graphics/types').IMaterial = {
-        dispose: () => mat.dispose(),
-        _vendor: mat,
+        color: '#a0c8e0',
+        roughness: 0.3,
+        metalness: 0,
+        opacity: 1,
+        transparent: false,
+        side: 0,
+        dispose: () => vendorMat.dispose(),
       };
+      scene.registerMaterial(material, vendorMat);
       mesh = scene.createMesh(geo, material);
       scene.add(mesh);
 

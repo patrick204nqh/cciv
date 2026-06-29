@@ -1,10 +1,10 @@
-import * as CANNON from 'cannon-es';
 import type { SceneEntity } from '../types';
 import { bus } from '../../util/event-bus';
 import type { ModelEntity } from '../../model/types';
 import { waveSurface } from '../../environment/wave-surface';
 import type { Disposer } from '../../util/disposer';
-import { PhysicsBody, HydrodynamicsSolver, SailForceSolver, physicsWorld, createHullCollider } from '../../physics';
+import { VesselPhysics } from '../../physics';
+import type { VesselPhysicsConfig } from '../../physics';
 import { ShipControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/ship-controls';
 import { activeVessel } from '../../controls/active-vessel';
 import { behaviorRegistry } from '../behavior-registry';
@@ -44,13 +44,9 @@ export const HULL_ADDED_MASS = 1.5;
 export const SAIL_AREA = 120;
 export const MAX_SPEED = 18;
 
-const _localForce = new CANNON.Vec3();
-
 export function createVesselEntity(model: ModelEntity, vesselId?: string, store?: StateStore): SceneEntity {
   const id = vesselId ?? 'vessel';
-  let physicsBody: PhysicsBody | null = null;
-  let hydrodynamics: HydrodynamicsSolver | null = null;
-  let sailForce: SailForceSolver | null = null;
+  let physics: VesselPhysics | null = null;
   let controls: ShipControls | null = null;
 
   return {
@@ -81,27 +77,27 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
         bfPos[i + 2] = wz - bodyPos.z;
       }
 
-      const collider = createHullCollider(bfPos, hullResult.indices);
-      physicsBody = new PhysicsBody({
-        mass: SHIP_MASS,
-        shape: collider.asTrimesh(),
-      });
-
       const wp = model.root.worldPosition;
-      physicsBody.body.position.set(wp.x, wp.y, wp.z);
+      const config: VesselPhysicsConfig = {
+        hullPositions: bfPos,
+        hullIndices: hullResult.indices,
+        mass: SHIP_MASS,
+        maxSpeed: MAX_SPEED,
+        maxThrust: MAX_THRUST,
+        maxSteerTorque: MAX_STEER_TORQUE,
+        linearDamping: SHIP_LINEAR_DAMPING,
+        angularDamping: SHIP_ANGULAR_DAMPING,
+        hydrodynamics: {
+          density: BUOYANCY_DENSITY,
+          dragCoefficient: HULL_DRAG,
+          slammingCoefficient: HULL_SLAM,
+          addedMassFactor: HULL_ADDED_MASS,
+        },
+        sail: { area: SAIL_AREA, liftCoeff: 0.6, dragCoeff: 0.3 },
+      };
 
-      physicsBody.body.linearDamping = SHIP_LINEAR_DAMPING;
-      physicsBody.body.angularDamping = SHIP_ANGULAR_DAMPING;
-      physicsBody.body.updateMassProperties();
-
-      hydrodynamics = new HydrodynamicsSolver(bfPos, {
-        density: BUOYANCY_DENSITY,
-        dragCoefficient: HULL_DRAG,
-        slammingCoefficient: HULL_SLAM,
-        addedMassFactor: HULL_ADDED_MASS,
-      });
-
-      sailForce = new SailForceSolver({ area: SAIL_AREA, liftCoeff: 0.6, dragCoeff: 0.3 });
+      physics = new VesselPhysics(config);
+      physics.setPosition(wp.x, wp.y, wp.z);
 
       controls = new ShipControls(id);
       controls.start();
@@ -110,12 +106,8 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
 
       if (disposer) {
         disposer.add(() => {
-          physicsBody?.dispose();
-          physicsBody = null;
-          hydrodynamics?.dispose();
-          hydrodynamics = null;
-          sailForce?.dispose();
-          sailForce = null;
+          physics?.dispose();
+          physics = null;
           controls?.dispose();
           controls = null;
           activeVessel.unregister(id);
@@ -124,25 +116,12 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
     },
 
     onUpdate(dt: number) {
-      if (!physicsBody || !hydrodynamics || !controls) return;
-
-      const vx = physicsBody.body.velocity.x;
-      const vy = physicsBody.body.velocity.y;
-      const vz = physicsBody.body.velocity.z;
-      const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
-
-      if (speed > MAX_SPEED) {
-        const scale = MAX_SPEED / speed;
-        physicsBody.body.velocity.set(vx * scale, vy * scale, vz * scale);
-      }
+      if (!physics || !controls) return;
 
       const t = controls.throttle;
-      if (t !== 0) {
-        _localForce.set(0, 0, t * MAX_THRUST);
-        physicsBody.body.applyLocalForce(_localForce);
-      }
+      physics.setControls(t, controls.steer);
 
-      if (sailForce && t > 0 && store) {
+      if (t > 0 && store) {
         const locations = store.get('locations');
         const activeLoc = store.get('activeLocation');
         const env = locations[activeLoc]?.environment;
@@ -150,29 +129,24 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
         if (wind) {
           const wDirX = Math.sin(wind.direction);
           const wDirZ = -Math.cos(wind.direction);
-          sailForce.apply(physicsBody.body, wind.speed, wDirX, wDirZ, t);
+          physics.setWind(wind.speed, wDirX, wDirZ);
         }
       }
 
-      physicsBody.body.torque.set(0, controls.steer * MAX_STEER_TORQUE, 0);
+      physics.update(dt, waveSurface);
+      physics.sync(model.root);
 
-      const gravity = physicsWorld.world.gravity.length();
-      hydrodynamics.apply(physicsBody.body, waveSurface, gravity, dt);
-
-      physicsBody.sync(model.root);
-
-      const v = physicsBody.velocity;
-      const pos = model.root.worldPosition;
-      const quat = model.root.worldQuaternion;
+      const state = physics.readState();
       bus.emit('entity:position-changed', {
         entityId: id,
-        x: pos.x, y: pos.y, z: pos.z,
-        qx: quat.x, qy: quat.y, qz: quat.z, qw: quat.w,
-        vx: v.x, vy: v.y, vz: v.z,
+        x: state.position.x, y: state.position.y, z: state.position.z,
+        qx: state.quaternion.x, qy: state.quaternion.y, qz: state.quaternion.z, qw: state.quaternion.w,
+        vx: state.velocity.x, vy: state.velocity.y, vz: state.velocity.z,
       });
     },
 
     onDetach() {
+      physics?.dispose();
       model.dispose();
     },
   };
