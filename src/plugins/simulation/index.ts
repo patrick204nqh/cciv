@@ -1,6 +1,6 @@
 import type { ScenePlugin } from '../types';
 import { entityManager } from '../../entity/manager';
-import { worldClock } from '../../time';
+import { worldClock } from '../../util/world-clock';
 import { physicsWorld } from '../../physics';
 
 export const simulationPlugin: ScenePlugin = {

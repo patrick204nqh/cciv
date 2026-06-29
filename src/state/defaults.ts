@@ -1,4 +1,4 @@
-import type { AppState } from './types';
+import type { AppState, EnvironmentState } from './types';
 import { LOCATION_PRESETS } from './worlds';
 
 function addWeatherToLocation(env: EnvironmentState): EnvironmentState {

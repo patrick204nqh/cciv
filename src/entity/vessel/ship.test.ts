@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createShipEntity } from './ship';
 import type { ModelEntity } from '../../model/types';
-import type { ISceneObject } from '../../scene/types';
+import type { ISceneObject } from '../../graphics/types';
 
 vi.mock('../../environment/wave-surface', () => ({
   waveSurface: {
@@ -81,7 +81,6 @@ describe('createShipEntity', () => {
       metadata: { id: 'ship', source: 'extracted' },
       clone: vi.fn() as any,
       dispose: vi.fn(),
-      applyMaterials: vi.fn(),
     };
   });
 

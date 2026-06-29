@@ -1,4 +1,4 @@
-import type { IScene, ISceneObject } from '../scene/types';
+import type { IScene, ISceneObject } from '../graphics/types';
 
 export interface PluginSceneAPI {
   add(object: ISceneObject): void;

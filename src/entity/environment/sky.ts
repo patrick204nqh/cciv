@@ -1,7 +1,7 @@
 import type { SceneEntity } from '../types';
-import { BACK_SIDE } from '../../scene/types';
+import { BACK_SIDE } from '../../graphics/types';
 import type { Disposer } from '../../util/disposer';
-import { createBasicMaterial } from '../../scene/scene-adapter';
+import { createBasicMaterial } from '../../graphics/scene-adapter';
 
 function hexToRgb(hex: string): [number, number, number] {
   const v = parseInt(hex.replace('#', ''), 16);

@@ -1,5 +1,5 @@
 import * as CANNON from 'cannon-es';
-import type { Vec3Like, QuatLike } from '../scene/types';
+import type { Vec3Like, QuatLike } from '../graphics/types';
 import type { BuoyancyConfig } from './types';
 import type { WaveSurface } from '../environment/wave-surface';
 

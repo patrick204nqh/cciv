@@ -2,12 +2,19 @@
 import { existsSync, readdirSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import type { ModelCatalog } from '../../src/loaders/types';
+
+// Pipeline-local type for the catalog entry. The manifest JSON format is the shared contract.
+interface ModelCatalogEntry {
+  glb: string;
+  polyCount?: number;
+  license?: string;
+  transform?: { scale?: number | [number, number, number]; rotation?: [number, number, number]; position?: [number, number, number] };
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..', '..');
-const MODELS_DIR = join(ROOT, 'src', 'models');
+const MODELS_DIR = join(ROOT, 'src', 'model', 'definitions');
 const OUT_DIR = join(ROOT, 'public', 'models');
 
 async function publishManifest(): Promise<void> {
@@ -17,7 +24,7 @@ async function publishManifest(): Promise<void> {
     existsSync(join(MODELS_DIR, d, 'config.ts'))
   );
 
-  const catalog: ModelCatalog = {};
+  const catalog: Record<string, ModelCatalogEntry> = {};
 
   for (const modelId of modelDirs) {
     const glbPath = join(OUT_DIR, `${modelId}.glb`);
@@ -35,7 +42,6 @@ async function publishManifest(): Promise<void> {
       glb: `models/${modelId}.glb`,
       ...(config.metadata?.polyCount && { polyCount: config.metadata.polyCount }),
       ...(config.metadata?.license && { license: config.metadata.license }),
-      ...(config.materialOverrides && { materialOverrides: config.materialOverrides }),
       ...(config.transform && { transform: config.transform }),
     };
 

@@ -1,4 +1,4 @@
-import { bus } from '../../event-bus';
+import { bus } from '../../util/event-bus';
 import { activeVessel } from '../../controls/active-vessel';
 import type { ScenePlugin } from '../types';
 import { useShipHudStore } from '../../ui/stores/ship-hud-store';

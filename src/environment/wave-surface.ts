@@ -1,4 +1,4 @@
-import { worldClock } from '../time';
+import { worldClock } from '../util/world-clock';
 import { sampleOcean, sampleNormal } from './waves';
 import type { ComputedWave } from './wave-config';
 

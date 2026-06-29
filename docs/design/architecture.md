@@ -50,7 +50,7 @@ Design invariants: `docs/design/invariants.md` — read before any change (locke
 
 ## Architecture Decision Records
 
-All 12 ADRs in `docs/adr/`:
+All 13 ADRs in `docs/adr/`:
 
 | # | Title |
 |---|---|
@@ -66,3 +66,4 @@ All 12 ADRs in `docs/adr/`:
 | 010 | Simulation as Plugin via EntityManager |
 | 011 | Shared Selection via Kernel.selectedObject |
 | 012 | Vite Build Configuration — Chunk Splitting and GLB Hot-Reload |
+| 013 | Procedural Textures as Code |

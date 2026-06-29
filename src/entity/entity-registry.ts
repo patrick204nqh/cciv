@@ -1,6 +1,6 @@
 import type { SceneEntity } from './types';
 import type { WorldConfig } from '../state/types';
-import type { ModelLoader, WorldLoadError } from '../loaders/types';
+import type { ModelLoader, WorldLoadError } from '../model/types';
 import type { StateStore } from '../state/store';
 
 export interface EntityFactory {

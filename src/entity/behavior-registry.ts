@@ -1,5 +1,5 @@
 import type { SceneEntity } from './types';
-import type { ModelLoader } from '../loaders/types';
+import type { ModelLoader } from '../model/types';
 import type { StateStore } from '../state/store';
 import type { InstanceDef } from '../state/types';
 

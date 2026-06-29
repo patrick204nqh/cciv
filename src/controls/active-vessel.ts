@@ -1,4 +1,4 @@
-import { bus } from '../event-bus';
+import { bus } from '../util/event-bus';
 
 class ActiveVessel {
   private vesselIds = new Set<string>();

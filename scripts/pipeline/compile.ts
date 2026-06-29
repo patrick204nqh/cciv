@@ -1,27 +1,34 @@
 #!/usr/bin/env tsx
-// Compile: reads structured geometry data from src/models/<id>/data/ and bakes
-// Draco-compressed GLBs. If no data directory exists, the model is skipped
-// gracefully — the pipeline never depends on external caches.
+// Compile: reads structured geometry data from src/model/definitions/<id>/data/
+// and bakes Draco-compressed GLBs. If no data directory exists, the model is
+// skipped gracefully.
 //
 // Input format: flat files named <group>_<attr>.js exporting typed arrays.
 // One code path for every model — how the data got there is not our concern.
 
-import { readFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync } from 'fs';
 import { join, relative, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { Document, NodeIO } from '@gltf-transform/core';
-import manifest from '../../src/textures/manifest.json';
-import type { ModelConfig } from '../../src/model/types';
+
+// Pipeline-local type — matches the subset of ModelConfig the compiler needs.
+// The manifest.json format is the shared contract, not the TypeScript import.
+interface ModelConfig {
+  materialOverrides?: Record<string, {
+    color?: number; roughness?: number; metalness?: number; transparent?: boolean; alphaTest?: number;
+  }>;
+  transform?: { scale?: number | [number, number, number]; rotation?: [number, number, number]; position?: [number, number, number] };
+  metadata?: { license?: string; sourceUrl?: string; polyCount?: number };
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..', '..');
-const MODELS_DIR = join(ROOT, 'src', 'models');
+const MODELS_DIR = join(ROOT, 'src', 'model', 'definitions');
 const OUT_DIR = join(ROOT, 'public', 'models');
-const TEXTURES = manifest as Record<string, Record<string, string>>;
 
 async function compileModel(id: string, config: ModelConfig): Promise<void> {
-  const dataDir = join(MODELS_DIR, id, 'data');
+  const dataDir = join(ROOT, 'src', 'model', 'definitions', id, 'data');
   if (!existsSync(dataDir)) {
     return;
   }
@@ -67,29 +74,6 @@ async function compileModel(id: string, config: ModelConfig): Promise<void> {
     }
 
     const mat = doc.createMaterial(groupName).setDoubleSided(false);
-    const texKey = config.textureKeys?.[groupName];
-    const texPaths = texKey ? TEXTURES[texKey] : null;
-
-    if (texPaths) {
-      if (texPaths.diff && existsSync(join(ROOT, 'public', texPaths.diff))) {
-        const img = readFileSync(join(ROOT, 'public', texPaths.diff));
-        mat.setBaseColorTexture(doc.createTexture(`${groupName}_diff`).setImage(img).setMimeType('image/jpeg'));
-      }
-      if (texPaths.nor_gl && existsSync(join(ROOT, 'public', texPaths.nor_gl))) {
-        const img = readFileSync(join(ROOT, 'public', texPaths.nor_gl));
-        mat.setNormalTexture(doc.createTexture(`${groupName}_nor`).setImage(img).setMimeType('image/jpeg'));
-      }
-      if ((texPaths.rough || texPaths.metal) && existsSync(join(ROOT, 'public', texPaths.rough || texPaths.metal!))) {
-        const img = readFileSync(join(ROOT, 'public', texPaths.rough || texPaths.metal!));
-        mat.setMetallicRoughnessTexture(doc.createTexture(`${groupName}_orm`).setImage(img).setMimeType('image/jpeg'));
-      }
-      if (texPaths.alpha && existsSync(join(ROOT, 'public', texPaths.alpha))) {
-        const img = readFileSync(join(ROOT, 'public', texPaths.alpha));
-        doc.createTexture(`${groupName}_alpha`).setImage(img).setMimeType('image/jpeg');
-        mat.setAlphaMode('MASK').setAlphaCutoff(0.5);
-      }
-    }
-
     const override = config.materialOverrides?.[groupName];
     if (override) {
       if (override.color != null) {
@@ -135,7 +119,7 @@ async function main(): Promise<void> {
   let compiled = 0;
   for (const id of modelDirs) {
     const config: ModelConfig = (await import(join(MODELS_DIR, id, 'config.ts'))).default;
-    const hasData = existsSync(join(MODELS_DIR, id, 'data'));
+    const hasData = existsSync(join(ROOT, 'src', 'model', 'definitions', id, 'data'));
     if (!hasData) {
       console.log(`  ${id} (no data, using committed GLB)`);
       continue;

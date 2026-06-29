@@ -1,5 +1,5 @@
-import type { Vec3Like, QuatLike } from '../scene/types';
-import { bus } from '../event-bus';
+import type { Vec3Like, QuatLike } from '../graphics/types';
+import { bus } from '../util/event-bus';
 import type { Disposer } from '../util/disposer';
 
 export class PositionTracker {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ModelLoaderImpl } from './loader';
-import type { ModelCatalogEntry } from '../loaders/types';
+import type { ModelCatalogEntry } from '../model/types';
 
 describe('ModelLoaderImpl', () => {
   let loader: ModelLoaderImpl;
@@ -25,11 +25,11 @@ describe('ModelLoaderImpl', () => {
 
     const mockCatalog = {
       getEntry: vi.fn().mockImplementation((ref: string) => {
-        if (ref === 'ship') return { glb: '/models/ship.glb' } as ModelCatalogEntry;
+        if (ref === 'ship') return { glb: '/model/definitions/ship.glb' } as ModelCatalogEntry;
         return undefined;
       }),
       has: vi.fn().mockImplementation((ref: string) => ref === 'ship'),
-      getAll: vi.fn().mockReturnValue([{ id: 'ship', entry: { glb: '/models/ship.glb' } }]),
+      getAll: vi.fn().mockReturnValue([{ id: 'ship', entry: { glb: '/model/definitions/ship.glb' } }]),
     };
 
     loader = new ModelLoaderImpl(mockGlbLoader as any, mockCatalog as any);

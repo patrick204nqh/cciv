@@ -1,7 +1,7 @@
-import type { IScene } from '../scene/types';
+import type { IScene } from '../graphics/types';
 import type { Disposer } from '../util/disposer';
 
-export type { SceneHandle } from '../scene/types';
+export type { SceneHandle } from '../graphics/types';
 
 export interface SceneEntity {
   readonly id: string;

@@ -1,6 +1,9 @@
 import { Kernel } from './kernel';
 import { entityManager } from './entity/manager';
-import { GlbLoader, ModelLoaderImpl, ModelCatalogReader, WorldLoader } from './loaders';
+import { GlbLoader } from './model/glb-loader';
+import { ModelLoaderImpl } from './model/loader';
+import { ModelCatalogReader } from './model/catalog';
+import { WorldLoader } from './model/world-loader';
 import { createInstanceManager } from './entity/instances/manager';
 import { LOCATION_PRESETS, CCIV_WORLD } from './state/worlds';
 import { inspectorPlugin } from './plugins/inspector';

@@ -1,8 +1,7 @@
-import type { MaterialOverride } from '../state/types';
-import type { ISceneObject } from '../scene/types';
+import type { ISceneObject } from '../graphics/types';
+import type { SceneEntity } from '../entity/types';
 
 export interface MaterialSpec {
-  textureKey?: string;
   color?: number;
   roughness?: number;
   metalness?: number;
@@ -25,7 +24,6 @@ export interface ModelEntity {
   };
   dispose(): void;
   clone(): ModelEntity;
-  applyMaterials(materials: Record<string, MaterialOverride>): void;
 }
 
 export interface TransformSpec {
@@ -35,14 +33,57 @@ export interface TransformSpec {
 }
 
 // A model config says "how to compile my data into a GLB."
-// The data itself lives in .cache/models/<id>/ — how it got there is not our concern.
+// The data itself lives in .cache/processed/<id>/ — how it got there is not our concern.
 export interface ModelConfig {
-  textureKeys?: Record<string, string>;
   materialOverrides?: Record<string, Partial<MaterialSpec>>;
   transform?: TransformSpec;
   metadata?: {
     license?: string;
     sourceUrl?: string;
     polyCount?: number;
+  };
+}
+
+// Types previously in loaders/types.ts — merged here for a single model type surface.
+
+export interface ModelCatalogEntry {
+  glb: string;
+  polyCount?: number;
+  license?: string;
+  transform?: {
+    scale?: number | [number, number, number];
+    rotation?: [number, number, number];
+    position?: [number, number, number];
+  };
+}
+
+export interface ModelCatalog {
+  [id: string]: ModelCatalogEntry;
+}
+
+export class ModelLoadError extends Error {
+  constructor(message: string, public readonly ref: string) {
+    super(message);
+    this.name = 'ModelLoadError';
+  }
+}
+
+export interface ModelLoader {
+  load(ref: string): Promise<ModelEntity>;
+  preload(refs: string[]): Promise<void>;
+  getCached(ref: string): ModelEntity | undefined;
+  clearCache(): void;
+}
+
+export interface WorldLoadError {
+  ref: string;
+  error: Error;
+}
+
+export interface WorldLoadResult {
+  entities: SceneEntity[];
+  errors: WorldLoadError[];
+  metadata: {
+    loadedAt: number;
   };
 }

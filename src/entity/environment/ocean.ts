@@ -8,7 +8,7 @@ export function createOceanEntity(
   extent = 1800,
   gridSize = 80,
 ): SceneEntity {
-  let mesh: import('../../scene/types').ISceneObject | null = null;
+  let mesh: import('../../graphics/types').ISceneObject | null = null;
 
   return {
     id: 'ocean',
@@ -17,7 +17,7 @@ export function createOceanEntity(
       const geo = scene.createPlaneGeometry(extent, extent, gridSize, gridSize);
 
       const mat = createTSLOceanMaterial(waves);
-      const material: import('../../scene/types').IMaterial = {
+      const material: import('../../graphics/types').IMaterial = {
         dispose: () => mat.dispose(),
         _vendor: mat,
       };

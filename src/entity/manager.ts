@@ -1,7 +1,7 @@
 import type { SceneEntity } from './types';
-import type { IScene } from '../scene/types';
+import type { IScene } from '../graphics/types';
 import { Disposer } from '../util/disposer';
-import { bus } from '../event-bus';
+import { bus } from '../util/event-bus';
 
 export class EntityManager {
   private entities = new Set<SceneEntity>();

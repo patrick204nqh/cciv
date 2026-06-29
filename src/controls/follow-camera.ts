@@ -1,4 +1,4 @@
-import { bus } from '../event-bus';
+import { bus } from '../util/event-bus';
 import { activeVessel } from './active-vessel';
 import type { OrbitControls } from '../three/addons';
 

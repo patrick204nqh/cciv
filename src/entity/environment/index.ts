@@ -9,7 +9,7 @@ import { createMistEntity } from './mist';
 import { entityRegistry } from '../entity-registry';
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
-import type { ModelLoader } from '../../loaders/types';
+import type { ModelLoader } from '../../model/types';
 import type { EnvironmentState, WorldConfig } from '../../state/types';
 
 entityRegistry.register({

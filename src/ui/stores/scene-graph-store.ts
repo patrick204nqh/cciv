@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ISceneObject } from '../../scene/types';
+import type { ISceneObject } from '../../graphics/types';
 
 export interface TreeNode {
   id: string

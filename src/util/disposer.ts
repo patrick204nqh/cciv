@@ -1,4 +1,4 @@
-import type { ISceneObject } from '../scene/types';
+import type { ISceneObject } from '../graphics/types';
 
 export type Disposable = ISceneObject | (() => void);
 

@@ -8,7 +8,7 @@ const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..', '..');
 
 export function writeModelData(modelId: string, groups: Record<string, THREE.BufferGeometry>): void {
-  const destDir = join(ROOT, 'src', 'models', modelId, 'data');
+  const destDir = join(ROOT, 'src', 'model', 'definitions', modelId, 'data');
   mkdirSync(destDir, { recursive: true });
 
   for (const [groupName, geo] of Object.entries(groups)) {

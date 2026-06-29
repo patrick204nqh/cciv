@@ -5,9 +5,9 @@ import { computeWaves } from '../../environment/wave-config';
 import { computeEffectiveEnvironment } from '../../state/environment-utils';
 import type { ScenePlugin, PluginContext } from '../types';
 import type { EnvironmentState, WeatherType } from '../../state/types';
-import type { FogSpec } from '../../scene/types';
+import type { FogSpec } from '../../graphics/types';
 
-let _scene: import('../../scene/types').IScene | null = null;
+let _scene: import('../../graphics/types').IScene | null = null;
 
 interface TransitionState {
   fromFog: FogSpec;
@@ -35,7 +35,7 @@ function lerpColor(a: string, b: string, t: number): string {
   return `#${((rr << 16) | (rg << 8) | rb).toString(16).padStart(6, '0')}`;
 }
 
-export function initEnvController(scene: import('../../scene/types').IScene): void {
+export function initEnvController(scene: import('../../graphics/types').IScene): void {
   _scene = scene;
 }
 

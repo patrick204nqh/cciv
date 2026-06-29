@@ -1,4 +1,4 @@
-import type { ModelLoader } from '../loaders/types';
+import type { ModelLoader } from '../model/types';
 import type { StateStore } from '../state/store';
 import type { WorldConfig } from '../state/types';
 import type { FactoryResult } from './entity-registry';
@@ -14,7 +14,7 @@ import './vessel/ship';
 entityRegistry.register({
   async match(config: WorldConfig, modelLoader: ModelLoader, store?: StateStore): Promise<FactoryResult> {
     const entities: import('./types').SceneEntity[] = [];
-    const errors: import('../loaders/types').WorldLoadError[] = [];
+    const errors: import('../model/types').WorldLoadError[] = [];
     const deps: BehaviorDeps = { modelLoader, store };
 
     for (const [id, def] of Object.entries(config.instances)) {

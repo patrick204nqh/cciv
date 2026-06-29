@@ -18,7 +18,7 @@
 
 **Model** — a 3D object in the world. Has geometry, materials, textures, and a transform. Produced via one of three source types.
 
-**ModelConfig** — configuration data that describes a model, defined in `src/models/<id>/config.ts`. One of `ExtractedModelDef`, `ProceduralModelDef`, or `CompositeModelDef`.
+**ModelConfig** — configuration data that describes a model, defined in `src/model/definitions/<id>/config.ts`. One of `ExtractedModelDef`, `ProceduralModelDef`, or `CompositeModelDef`.
 
 **ModelEntity** — the runtime object wrapping a `THREE.Group`. Carries `metadata` (id, source, license, poly count) and lifecycle methods (`dispose()`).
 
@@ -38,7 +38,7 @@
 
 ## Time
 
-**WorldClock** (singleton, `src/time/world-clock.ts`) — monotonically increasing elapsed time accumulated from `dt`. Entities read `worldClock.elapsed` instead of managing local `t` counters. Provides `timeScale` and `paused`.
+**WorldClock** (singleton, `src/util/world-clock.ts`) — monotonically increasing elapsed time accumulated from `dt`. Entities read `worldClock.elapsed` instead of managing local `t` counters. Provides `timeScale` and `paused`.
 
 **EntityManager** (singleton, `src/entity/manager.ts`) — owns the entity list, provides `attach/detach/update`. Does NOT own the RAF loop (contradicts ADR-002). Update is driven by `simulationPlugin` which calls `entityManager.update(dt)` inside the Kernel's render loop, only in 'play' mode.
 
@@ -60,7 +60,7 @@
 
 **EntityManager** (singleton) — owns the entity list, lifecycle control. RAF loop is in Kernel. (ADR-002 — note: RAF loop was delegated to Kernel for edit/play mode switching; ADR-002's "owns the RAF loop" is stale.)
 
-**Event bus** (singleton, `src/event-bus.ts`) — decouples entities. Events: `entity:attached`, `entity:detached`, `entity:position-changed`.
+**Event bus** (singleton, `src/util/event-bus.ts`) — decouples entities. Events: `entity:attached`, `entity:detached`, `entity:position-changed`.
 
 ## World
 
@@ -70,13 +70,13 @@
 
 **Behavior** — string field on `InstanceDef` in a WorldConfig. Used as a dispatch key by `BehaviorRegistry` at world-load time. Built-in values: `'vessel'` (wave-response physics + spray + wake). Any other string triggers the registered `BehaviorFactory` or a warning. Default `undefined` means static placement handled by instance-manager at runtime. Fully extensible — no hardcoded dispatch logic.
 
-**WorldLoader** (`src/loaders/world-loader.ts`) — loads a WorldConfig, orchestrates entity creation via `EntityRegistry.createAll()`. Returns `WorldLoadResult`. Pure orchestration — delegates all construction to registered factory adapters. Imports `src/entity/register-factories.ts` for side-effect auto-registration.
+**WorldLoader** (`src/model/world-loader.ts`) — loads a WorldConfig, orchestrates entity creation via `EntityRegistry.createAll()`. Returns `WorldLoadResult`. Pure orchestration — delegates all construction to registered factory adapters. Imports `src/entity/register-factories.ts` for side-effect auto-registration.
 
 **EntityFactory** — interface in `src/entity/entity-registry.ts`: `match(config, modelLoader, store?): Promise<FactoryResult>`. Each factory inspects the config and produces entities. Environment entities (ocean, sky, lighting) `match` on config presence; instance entities (vessel) `match` on behavior field. Each entity module registers its own factory at module level — no central wiring file.
 
 **Kernel** — bootstrap orchestrator. Thin orchestrator that delegates to specialized modules: RenderingModule (Three.js), PluginManager (plugin lifecycle), StateStore (app state), LocationTracker (dirty tracking). `setMode(m)` propagates to EntityManager (`setPaused`) and plugins (`onModeSwitch`).
 
-**RenderingModule** (`src/rendering/module.ts`) — owns the Three.js scene, renderer, camera, and OrbitControls. Manages window resize events and the RAF render loop. Accepts an `onBeforeRender` callback for pre-render updates (plugin rendering, entity updates).
+**RenderingModule** (`src/graphics/module.ts`) — owns the Three.js scene, renderer, camera, and OrbitControls. Manages window resize events and the RAF render loop. Accepts an `onBeforeRender` callback for pre-render updates (plugin rendering, entity updates).
 
 **PluginManager** (`src/plugins/plugin-manager.ts`) — owns plugin lifecycle (register, init, onModeSwitch, render). Registry inlined — no separate PluginRegistry module. Isolates plugin crashes during mode switching.
 
@@ -88,7 +88,7 @@
 
 ## Gate interfaces (deepened)
 
-**IMaterial** — material abstraction. No `.raw` escape hatch. Provides `dispose()`. Created via `createSkyMaterial()`, `createRingMaterial()`, `createWaterMaterial()` in `src/rendering/materials.ts`. Internally stores `_vendor` for the gate's `createMesh` to access (cast inside the gate only).
+**IMaterial** — material abstraction. No `.raw` escape hatch. Provides `dispose()`. Created via `createSkyMaterial()`, `createRingMaterial()`, `createWaterMaterial()` in `src/graphics/materials.ts`. Internally stores `_vendor` for the gate's `createMesh` to access (cast inside the gate only).
 
 **IRenderer** — renderer abstraction. No `.raw`. Provides `domElement: HTMLElement`, `info`, `dispose()`.
 
@@ -110,7 +110,7 @@ The asset pipeline transforms model configs into compiled GLB artifacts. Two sta
 
 ### Pipeline Stages
 
-- **compile** (`scripts/pipeline/compile.ts`) — reads `src/models/<id>/config.ts` for each model. For extracted models, reads geometry from `.cache/references/<asset>/data/`. For procedural models, imports the generator function and runs it. Outputs `public/models/<id>.glb`.
+- **compile** (`scripts/pipeline/compile.ts`) — reads `src/model/definitions/<id>/config.ts` for each model. For extracted models, reads geometry from `.cache/references/<asset>/data/`. For procedural models, imports the generator function and runs it. Outputs `public/models/<id>.glb`.
 - **publish** (`scripts/pipeline/publish.ts`) — scans `public/models/` for GLBs, reads metadata from configs, writes `public/models/manifest.json`.
 
 Run via: `npm run setup`
@@ -123,7 +123,7 @@ External asset sources are downloaded via a standalone tool, not part of the pip
 
 ### Model Creation Paths
 
-Three ways to create a model, defined in `src/models/<id>/config.ts`:
+Three ways to create a model, defined in `src/model/definitions/<id>/config.ts`:
 
 1. **extracted** — references an external asset in `.cache/references/`
 2. **procedural** — references a generator function in `src/generators/`
@@ -139,13 +139,13 @@ Three ways to create a model, defined in `src/models/<id>/config.ts`:
 
 ### Runtime Loaders
 
-**Loaders** (`src/loaders/`) — runtime modules for loading compiled artifacts:
+**Loaders** (`src/model/`) — runtime modules for loading compiled artifacts:
 
 - **GlbLoader** — wraps Three.js GLTFLoader, returns `THREE.Group`
 - **ModelLoader** — resolves model refs via catalog, loads GLBs, applies overrides, caches `ModelEntity` instances
 - **Catalog** — reads `public/models/manifest.json`, provides `getEntry(ref)`
 - **WorldLoader** — see World section above
-- **WorldLoadResult / WorldLoadError** — types defined in `src/loaders/types.ts` alongside the loaders that produce them (moved from the deleted `src/worlds/` directory)
+- **WorldLoadResult / WorldLoadError** — types defined in `src/model/types.ts` alongside the loaders that produce them (moved from the deleted `src/worlds/` directory)
 
 ## Commands
 

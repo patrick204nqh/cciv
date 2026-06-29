@@ -3,8 +3,8 @@ import {
   MeshBasicMaterial, Material as TResinMaterial,
 } from 'three';
 import * as CANNON from 'cannon-es';
-import type { ISceneObject } from '../scene/types';
-import { SceneObject } from '../scene/object';
+import type { ISceneObject } from '../graphics/types';
+import { SceneObject } from '../graphics/object';
 
 export class PhysicsDebugRenderer {
   private meshes = new Map<CANNON.Body, Mesh>();

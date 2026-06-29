@@ -1,8 +1,8 @@
 import { Raycaster, Vector2 } from 'three';
 import { TransformControls } from '../../three/addons';
 import type { ScenePlugin, PluginContext } from '../types';
-import type { ISceneObject } from '../../scene/types';
-import { SceneObject } from '../../scene/object';
+import type { ISceneObject } from '../../graphics/types';
+import { SceneObject } from '../../graphics/object';
 import { useSelectionStore, type GizmoMode } from '../../ui/stores/selection-store';
 
 function vendorOf(obj: ISceneObject) {

@@ -1,9 +1,9 @@
-import type { ModelLoader, ModelCatalogEntry } from '../loaders/types';
-import { ModelLoadError } from '../loaders/types';
+import type { ModelLoader, ModelCatalogEntry } from './types';
+import { ModelLoadError } from './types';
 import type { ModelEntity } from './types';
-import { SceneObject } from '../scene/object';
-import { GlbLoader } from '../loaders/glb-loader';
-import { ModelCatalogReader } from '../loaders/catalog';
+import { SceneObject } from '../graphics/object';
+import { GlbLoader } from './glb-loader';
+import { ModelCatalogReader } from './catalog';
 import { modelRegistry } from './registry';
 import { traverseMeshes } from './utils';
 import { Disposer } from '../util/disposer';
@@ -25,19 +25,6 @@ function buildModelEntity(
     metadata,
     clone() {
       return buildModelEntity(rawRoot.clone(true), ref, metadata);
-    },
-    applyMaterials(materials) {
-      traverseMeshes(root, (mesh, mat) => {
-        const override = materials[mesh.name];
-        if (!override) return;
-        const cloned = mat.clone();
-        cloned.color.set(override.color);
-        cloned.roughness = override.roughness;
-        cloned.metalness = override.metalness;
-        cloned.visible = override.visible;
-        const vendorMesh = (mesh as any)._obj;
-        if (vendorMesh) vendorMesh.material = cloned;
-      });
     },
     dispose() {
       disp.dispose();
@@ -78,18 +65,6 @@ export class ModelLoaderImpl implements ModelLoader {
     const result = await this.glbLoader.load(entry.glb);
     const rawRoot = result.scene;
     rawRoot.name = ref;
-
-    if (entry.materialOverrides) {
-      traverseMeshes(new SceneObject(rawRoot), (_mesh, mat) => {
-        const override = entry.materialOverrides![_mesh.name];
-        if (!override) return;
-        if (override.color != null) mat.color.setHex(override.color);
-        if (override.roughness != null) mat.roughness = override.roughness;
-        if (override.metalness != null) mat.metalness = override.metalness;
-        if (override.transparent != null) mat.transparent = override.transparent;
-        if (override.alphaTest != null) mat.alphaTest = override.alphaTest;
-      });
-    }
 
     if (entry.transform) {
       const tf = entry.transform;

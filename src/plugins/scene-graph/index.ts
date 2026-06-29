@@ -1,5 +1,5 @@
 import type { ScenePlugin, PluginContext } from '../types';
-import type { ISceneObject } from '../../scene/types';
+import type { ISceneObject } from '../../graphics/types';
 import { registerTool, destroyTool } from '../sidebar';
 import { useSceneGraphStore, type TreeNode } from '../../ui/stores/scene-graph-store';
 import { SceneGraphPanel } from '../../ui/components/scene-graph';

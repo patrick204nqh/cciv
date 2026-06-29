@@ -1,4 +1,4 @@
-import { RenderingModule, RenderingModuleOptions } from './rendering/module';
+import { RenderingModule, RenderingModuleOptions } from './graphics/module';
 import { StateStore } from './state/store';
 import { LocationTracker } from './state/location-tracker';
 import { PluginManager } from './plugins/plugin-manager';
@@ -8,7 +8,7 @@ import { createDefaultState } from './state/defaults';
 import { entityManager } from './entity/manager';
 import { FollowCamera } from './controls/follow-camera';
 import type { PluginContext, ScenePlugin } from './plugins/types';
-import type { ISceneObject } from './scene/types';
+import type { ISceneObject } from './graphics/types';
 
 export interface KernelOptions extends RenderingModuleOptions {}
 

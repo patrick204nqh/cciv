@@ -1,7 +1,7 @@
-import type { GeometryHandle, IScene } from '../../scene/types';
+import type { GeometryHandle, IScene } from '../../graphics/types';
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
-import { createPointMaterial } from '../../scene/scene-adapter';
+import { createPointMaterial } from '../../graphics/scene-adapter';
 
 const COUNT = 200;
 const SPREAD = 600;
@@ -28,7 +28,7 @@ function createMistTexture(scene: IScene): any {
 }
 
 export function createMistEntity(): SceneEntity {
-  let points: import('../../scene/types').ISceneObject | null = null;
+  let points: import('../../graphics/types').ISceneObject | null = null;
   let geo: GeometryHandle | null = null;
   let _scene: IScene | null = null;
   let positions: Float32Array;

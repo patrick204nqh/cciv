@@ -1,7 +1,7 @@
 import type { PluginStateAPI } from './plugin-state-api';
 import type { PluginSceneAPI } from './plugin-scene-api';
-import type { IRenderer, ICamera } from '../rendering/types';
-import type { ISceneObject } from '../scene/types';
+import type { IRenderer, ICamera } from '../graphics/types';
+import type { ISceneObject } from '../graphics/types';
 
 export interface PluginContext {
   readonly scene: PluginSceneAPI

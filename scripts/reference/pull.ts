@@ -2,7 +2,7 @@
 // Clone an external reference into an owned model.
 //
 // 1. Downloads/caches raw assets in .cache/references/<asset>/ (throwaway)
-// 2. Copies geometry data to src/models/<id>/data/ (owned, commit this)
+// 2. Copies geometry data to src/model/definitions/<id>/data/ (owned, commit this)
 // 3. Copies textures to public/textures/<model>/ (gitignored, pulled on setup)
 //
 // After cloning, the model is self-contained — delete .cache/ and it still compiles.
@@ -28,9 +28,9 @@ async function cloneModel(modelId: string, assetId: string): Promise<void> {
     console.log(`  Using cached '${assetId}'`);
   }
 
-  // 1. Clone geometry data → src/models/<id>/data/
+  // 1. Clone geometry data → src/model/definitions/<id>/data/ (owned, commit this)
   const srcDataDir = join(refDir, 'data');
-  const dataDir = join(ROOT, 'src', 'models', modelId, 'data');
+  const dataDir = join(ROOT, 'src', 'model', 'definitions', modelId, 'data');
   mkdirSync(dataDir, { recursive: true });
 
   if (existsSync(srcDataDir)) {
@@ -41,7 +41,7 @@ async function cloneModel(modelId: string, assetId: string): Promise<void> {
       const localContent = content.replace(new RegExp(`${assetId}_`, 'g'), '');
       writeFileSync(join(dataDir, localName), localContent);
     }
-    console.log(`  ${files.length} data files \u2192 src/models/${modelId}/data/`);
+    console.log(`  ${files.length} data files \u2192 src/model/definitions/${modelId}/data/`);
   }
 
   // 2. Clone textures → public/textures/<model>/ (gitignored)

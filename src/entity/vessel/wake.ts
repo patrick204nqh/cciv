@@ -1,8 +1,8 @@
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
-import { bus } from '../../event-bus';
-import { createPointMaterial } from '../../scene/scene-adapter';
+import { bus } from '../../util/event-bus';
+import { createPointMaterial } from '../../graphics/scene-adapter';
 
 const SEGMENTS = 16;
 const TRAIL_LENGTH = 60;

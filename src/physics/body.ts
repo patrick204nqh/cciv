@@ -1,6 +1,6 @@
 import * as CANNON from 'cannon-es';
-import type { ISceneObject } from '../scene/types';
-import type { Vec3Like } from '../scene/types';
+import type { ISceneObject } from '../graphics/types';
+import type { Vec3Like } from '../graphics/types';
 import type { PhysicsBodyConfig } from './types';
 import { physicsWorld } from './world';
 

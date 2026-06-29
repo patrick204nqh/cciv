@@ -1,8 +1,9 @@
-import type { SceneEntity, GeometryHandle, IScene } from '../../scene/types';
+import type { SceneEntity } from '../types';
+import type { GeometryHandle, IScene } from '../../graphics/types';
 import type { Disposer } from '../../util/disposer';
 import { PositionTracker } from '../../util/position-tracker';
-import { bus } from '../../event-bus';
-import { createPointMaterial } from '../../scene/scene-adapter';
+import { bus } from '../../util/event-bus';
+import { createPointMaterial } from '../../graphics/scene-adapter';
 
 const MAX_PARTICLES = 300;
 const BOW_OFFSET = { x: 0, y: 4, z: 56 };

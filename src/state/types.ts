@@ -10,7 +10,7 @@ export interface WaveComponent {
 }
 
 export interface EnvironmentState {
-  weather: WeatherType
+  weather?: WeatherType
   sky?: {
     gradientTop: string
     gradientBottom: string
@@ -48,7 +48,6 @@ export interface InstanceDef {
   transform: { position: [number, number, number]; rotation: [number, number, number]; scale: number }
   visible: boolean
   behavior?: string
-  materials?: Record<string, MaterialOverride>
 }
 
 export type InstanceState = Record<string, InstanceDef>

@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-// Run a procedural generator and write structured data to .cache/models/<id>/.
+// Run a procedural generator and write structured data to src/model/definitions/<id>/data/.
 // Usage: tsx scripts/generate.ts <model-id> <generator-module> '<json-params>'
 // Example: tsx scripts/generate.ts buoy ../src/generators/buoy '{"height":3,"radius":0.8,"poleHeight":1.5}'
 
@@ -10,7 +10,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..');
-const MODELS_DIR = join(ROOT, 'src', 'models');
 
 async function main() {
   const args = process.argv.slice(2);
@@ -38,7 +37,7 @@ async function main() {
 
   geo.computeVertexNormals();
 
-  const destDir = join(MODELS_DIR, modelId, 'data');
+  const destDir = join(ROOT, 'src', 'model', 'definitions', modelId, 'data');
   mkdirSync(destDir, { recursive: true });
 
   const pos = Array.from(geo.attributes.position.array as Float32Array);

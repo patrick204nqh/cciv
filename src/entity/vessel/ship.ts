@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon-es';
 import type { SceneEntity } from '../types';
-import { bus } from '../../event-bus';
-import type { ModelEntity } from '../../model/types';
+import { bus } from '../../util/event-bus';
+import type { ModelEntity, ModelConfig } from '../../model/types';
 import { waveSurface } from '../../environment/wave-surface';
 import type { Disposer } from '../../util/disposer';
 import { PhysicsBody, HydrodynamicsSolver, SailForceSolver, physicsWorld, createHullCollider } from '../../physics';
@@ -13,6 +13,9 @@ import type { StateStore } from '../../state/store';
 import { createSprayEntity } from './spray';
 import { createWakeEntity } from './wake';
 import { createVesselGroup } from '../vessel-group';
+import type { IScene } from '../../graphics/types';
+import { generateGroupTextures, type GroupTextureConfig } from '../../model/definitions/ship/textures';
+import shipConfig from '../../model/definitions/ship/config';
 
 behaviorRegistry.register('vessel', {
   async create(id: string, def: InstanceDef, deps) {
@@ -53,9 +56,11 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
   return {
     id,
 
-    onAttach(scene, disposer?: Disposer) {
+    onAttach(scene: IScene, disposer?) {
       scene.add(model.root);
       disposer?.add(() => model.root.dispose());
+
+      applyProceduralTextures(model, scene);
 
       const hullResult = extractHullData(model);
       if (!hullResult) return;
@@ -179,6 +184,30 @@ interface HullExtractResult {
   positions: Float32Array;
   indices: Uint16Array | Uint32Array;
   matrix: Float32Array;
+}
+
+function applyProceduralTextures(model: ModelEntity, scene: IScene): void {
+  try {
+    const groupConfigs: Record<string, GroupTextureConfig> = (shipConfig as any).materialOverrides ?? {};
+    const w = 512;
+    const h = 512;
+
+    for (const [groupName, groupConfig] of Object.entries(groupConfigs)) {
+      const textures = generateGroupTextures(groupName, groupConfig, w, h);
+      if (textures.map && scene.createCanvasTexture) {
+        const tex = scene.createCanvasTexture(textures.map);
+        model.root.setMeshTexture(groupName, 'map', tex);
+        const repeatX = groupName === 'hull' ? 3 : groupName === 'deck' ? 2 : 1;
+        model.root.setMeshTextureRepeat(groupName, 'map', repeatX, 1);
+      }
+      if (textures.alphaMap && scene.createCanvasTexture) {
+        const tex = scene.createCanvasTexture(textures.alphaMap);
+        model.root.setMeshTexture(groupName, 'alphaMap', tex);
+      }
+    }
+  } catch {
+    // Canvas not available (headless/test environment) — skip procedural textures.
+  }
 }
 
 function extractHullData(model: ModelEntity): HullExtractResult | null {

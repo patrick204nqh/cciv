@@ -1,8 +1,8 @@
 import type { SceneEntity } from '../types';
-import type { IScene } from '../../scene/types';
+import type { IScene } from '../../graphics/types';
 import type { Disposer } from '../../util/disposer';
 import type { StateStore } from '../../state/store';
-import type { ModelLoader } from '../../loaders/types';
+import type { ModelLoader } from '../../model/types';
 import type { InstanceDef } from '../../state/types';
 import type { ModelEntity } from '../../model/types';
 import { EntityStateBinding } from '../../state/binding';
@@ -37,7 +37,6 @@ export function createInstanceManager(
         r.rotation = { x: tf.rotation[0], y: tf.rotation[1], z: tf.rotation[2] };
         r.scale = { x: tf.scale, y: tf.scale, z: tf.scale };
         r.visible = def.visible;
-        if (def.materials) e.applyMaterials(def.materials);
       } else {
         const model = modelLoader.getCached(def.ref);
         if (!model) continue;
@@ -48,7 +47,6 @@ export function createInstanceManager(
         r.rotation = { x: tf.rotation[0], y: tf.rotation[1], z: tf.rotation[2] };
         r.scale = { x: tf.scale, y: tf.scale, z: tf.scale };
         r.visible = def.visible;
-        if (def.materials) e.applyMaterials(def.materials);
         scene.add(r);
         instances.set(id, { entity: e });
       }

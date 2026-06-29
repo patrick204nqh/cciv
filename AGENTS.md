@@ -6,23 +6,28 @@ Architecture reference: `docs/design/architecture.md` — layer audit, file map,
 ## Structure
 
 - **`src/`** — Vite + TypeScript Three.js project. Entry point: `src/main.ts`.
-  - `src/models/<id>/` — owned models. Each has `config.ts` + `index.ts` + `data/` (extracted geometry).
-    - `src/models/ship/` — CCIV ship: 7 mesh groups with extracted geometry + `config.ts`.
-  - `src/scene/` — Three.js wrapper layer: `ISceneObject` interface, `SceneObject` adapter class.
+  - `src/model/` — core Model abstraction + definitions + loaders.
+    - `src/model/types.ts` — ModelEntity, ModelConfig, ModelCatalog, ModelLoader, WorldLoadResult.
+    - `src/model/definitions/<id>/config.ts` — owned model configs.
+    - `src/model/definitions/<id>/data/` — geometry as Float32Array JS literals (git tracked, source of truth).
+  - `src/graphics/` — Three.js gate layer: `ISceneObject`, `SceneObject`, `SceneAdapter`, `RenderingModule`.
   - `src/entity/` — SceneEntity implementations (ocean, sky, lighting, spray, wake, ship).
-  - `src/model/` — core Model abstraction (types, registry, factory).
-  - `src/event-bus.ts` — typed event bus singleton.
   - `src/environment/` — wave simulation utilities (`waves.ts`).
-  - `src/textures/` — generated texture manifest (`sources.ts`) + procedural fallbacks (`index.ts`).
-  - `src/controls/` — OrbitControls from three/addons.
+  - `src/physics/` — cannon-es gate layer.
+  - `src/controls/` — input handling (OrbitControls, ship controls).
+  - `src/state/` — Zustand-based state management.
+  - `src/plugins/` — cross-cutting UI/debug features.
+  - `src/ui/` — React overlay layer.
+  - `src/util/` — Disposer, PositionTracker, WorldClock, event-bus.
+  - `src/kernel.ts` — bootstrap orchestrator.
 - **`index.html`** — minimal HTML shell with inline CSS; loads `src/main.ts`.
 - **`scripts/`** — build tools.
   - `reference/pull.ts` — downloads external assets to `.cache/references/`.
   - `references.json` — list of external sources to pull.
-  - `pipeline/` — compile + publish stages for GLB artifacts.
+  - `pipeline/` — compile (reads `src/model/definitions/<id>/data/`) + publish (writes `public/models/manifest.json`).
   - `build/` — procedural model generators (palm-island, ice-floe).
-  - `generate.ts` — CLI runner for procedural model generation.
-- **`public/textures/<model>/`** — owned textures (committed), copied from reference during build-model.
+  - `generate.ts` — CLI runner for procedural model generation (writes to `src/model/definitions/<id>/data/`).
+- **`.cache/`** — gitignored, ephemeral: `references/` (raw downloads) only.
 
 ## Commands
 
@@ -67,10 +72,9 @@ Add new sources by appending to `SOURCES` in `bin/dev:19-27`.
 
 - Skills are symlinked (not copied). Edit in the cache dir at `.cache/skills/<name>/` if you need to modify an upstream skill.
 - Coordinate convention: Y-up, Z-bow(+), X-starboard(-).
-- Ship model extracted into-code: `src/models/ship/` contains hardcoded Float32Array/Uint16Array geometry for all 7 mesh groups (hull, deck, sails, aft, rigging, details, interior).
-- Texture pipeline: external reference → `.cache/references/` (gitignored, throwaway). Then `scripts/build-model.mjs` copies textures to `public/textures/<model>/` and generates `src/textures/sources.ts`.
-- Entity lifecycle: implement `SceneEntity` (in `src/entity/types.ts`) and attach via `entityManager.attach()`. Entities communicate via the event bus (`src/event-bus.ts`).
-- All Three.js scene graph interaction goes through `ISceneObject` (`src/scene/types.ts`). Never pass `THREE.Object3D` directly across module boundaries. `SceneObject` adapter wraps raw Three.js objects. Use `.object3D` escape hatch only when Three.js interop is unavoidable (TransformControls, raycaster).
+- Ship model config: `src/model/definitions/ship/config.ts` — material overrides baked into GLB at compile time.
+- Entity lifecycle: implement `SceneEntity` (in `src/entity/types.ts`) and attach via `entityManager.attach()`. Entities communicate via the event bus (`src/util/event-bus.ts`).
+- All Three.js scene graph interaction goes through `ISceneObject` (`src/graphics/types.ts`). Never pass `THREE.Object3D` directly across module boundaries. `SceneObject` adapter wraps raw Three.js objects. Use `.object3D` escape hatch only when Three.js interop is unavoidable (TransformControls, raycaster).
 - Skills provide specialized instructions and workflows for specific tasks.
   Use the skill tool to load a skill when a task matches its description.
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EntityManager } from './manager';
 import type { SceneEntity } from './types';
-import type { IScene } from '../scene/types';
+import type { IScene } from '../graphics/types';
 
 describe('EntityManager', () => {
   let manager: EntityManager;
