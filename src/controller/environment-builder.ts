@@ -17,8 +17,8 @@ export function buildEnvironment(env: EnvironmentState): EnvironmentBuildResult 
   const effective = computeEffectiveEnvironment(env);
   const waves = computeWaves(effective.waves);
   setWaveConfig(waves);
-  const bgColor = effective.sky?.gradientTop ?? '#406888';
-  const envColor = effective.lighting?.hemisphere?.skyColor ?? bgColor;
+  const bgColor = effective.sky?.gradientBottom ?? '#87ceeb';
+  const envColor = effective.sky?.gradientBottom ?? bgColor;
   return {
     entity: createEnvironmentEntity(env),
     fog: effective.fog,

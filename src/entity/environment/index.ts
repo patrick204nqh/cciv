@@ -12,7 +12,7 @@ import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import type { ModelLoader } from '../../model/types';
 import type { EnvironmentState, WorldConfig } from '../../state/types';
-import type { ISkyConfig, IScene } from '../../graphics/types';
+import type { ISkyConfig, IScene, WaveData } from '../../graphics/types';
 
 entityRegistry.register({
   async match(config: WorldConfig, _modelLoader: ModelLoader) {
@@ -41,8 +41,17 @@ export function createEnvironmentEntity(env: EnvironmentState): SceneEntity {
       subEntities = [];
 
       if (effective.ocean) {
+        const waveData: WaveData[] = waves.map(w => ({
+          direction: w.dir,
+          k: w.k,
+          omega: w.omega,
+          amp: w.amp,
+          Qi: w.Qi,
+          phase: w.phase,
+        }));
         const e = createOceanEntity(effective.ocean.extent, effective.ocean.gridSize, {
           color: effective.ocean.color,
+          waves: waveData,
         });
         e.onAttach(scene, disposer);
         subEntities.push(e);

@@ -9,7 +9,7 @@ export const CCIV_WORLD = {
 export const LOCATION_PRESETS: Record<string, LocationPreset> = {
   'north-sea': {
     environment: {
-      sky: { gradientTop: '#5588bb', gradientBottom: '#87ceeb', horizonOffset: 0 },
+      sky: { gradientTop: '#3a7ab8', gradientBottom: '#87ceeb', horizonOffset: 0 },
       wind: { speed: 12, direction: 0.8 },
       waves: [
         { direction: [0.7, 0.7], amplitude: 1.4, frequency: 0.157, steepness: 0.45, speed: 1, phase: 0 },
@@ -21,17 +21,17 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
         { direction: [-0.71, 0.71], amplitude: 0.4, frequency: 0.419, steepness: 0.45, speed: 1, phase: 1.8 },
         { direction: [0.77, -0.64], amplitude: 0.35, frequency: 0.628, steepness: 0.45, speed: 1, phase: 2.7 },
       ],
-      ocean: { color: '#2090d0', opacity: 0.82, gridSize: 80, extent: 1800 },
+      ocean: { color: '#3088b8', opacity: 0.82, gridSize: 80, extent: 1800 },
       lighting: {
-        sun: { enabled: true, intensity: 2.8, color: '#fff0d0', azimuth: 0.8, elevation: 1.2 },
-        hemisphere: { enabled: true, skyColor: '#90c0e0', groundColor: '#306080', intensity: 1.0 },
+        sun: { enabled: true, intensity: 2.8, color: '#fff4e0', azimuth: 0.8, elevation: 1.2 },
+        hemisphere: { enabled: true, skyColor: '#87ceeb', groundColor: '#306080', intensity: 1.0 },
         fill: { enabled: true, intensity: 0.55, color: '#6090d0' },
         pointLights: [
           { enabled: true, intensity: 0.6, color: '#ffcc66', position: [0, 18, -35], range: 80 },
           { enabled: true, intensity: 0.25, color: '#c89a50', position: [0, 10, 0], range: 50 },
         ],
       },
-      fog: { type: 'exp2', color: '#406888', density: 0.0018 },
+      fog: { type: 'exp2', color: '#6090a0', density: 0.0018 },
     },
     instances: {
       ship: {
@@ -59,7 +59,7 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
 
   'caribbean': {
     environment: {
-      sky: { gradientTop: '#ff8844', gradientBottom: '#44bbdd', horizonOffset: 0 },
+      sky: { gradientTop: '#1a6ea0', gradientBottom: '#88d4e8', horizonOffset: 0 },
       wind: { speed: 8, direction: 0.5 },
       waves: [
         { direction: [0.0, 1.0], amplitude: 0.8, frequency: 0.120, steepness: 0.35, speed: 0.8, phase: 0 },
@@ -71,17 +71,17 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
         { direction: [-0.97, 0.26], amplitude: 0.3, frequency: 0.350, steepness: 0.35, speed: 0.8, phase: 0.7 },
         { direction: [0.87, -0.5], amplitude: 0.25, frequency: 0.500, steepness: 0.35, speed: 0.8, phase: 1.5 },
       ],
-      ocean: { color: '#1080b0', opacity: 0.75, gridSize: 80, extent: 1800 },
+      ocean: { color: '#2090c8', opacity: 0.75, gridSize: 80, extent: 1800 },
       lighting: {
-        sun: { enabled: true, intensity: 3.2, color: '#ffe8c0', azimuth: 0.6, elevation: 1.4 },
-        hemisphere: { enabled: true, skyColor: '#80d0e0', groundColor: '#c08040', intensity: 1.2 },
-        fill: { enabled: true, intensity: 0.4, color: '#80b0e0' },
+        sun: { enabled: true, intensity: 3.2, color: '#fff4e0', azimuth: 0.6, elevation: 1.4 },
+        hemisphere: { enabled: true, skyColor: '#88d4e8', groundColor: '#c09858', intensity: 1.2 },
+        fill: { enabled: true, intensity: 0.3, color: '#60a8d0' },
         pointLights: [
-          { enabled: true, intensity: 0.5, color: '#ffdd88', position: [0, 18, -35], range: 80 },
-          { enabled: true, intensity: 0.2, color: '#ddaa66', position: [0, 10, 0], range: 50 },
+          { enabled: true, intensity: 0.5, color: '#ffe8a0', position: [0, 18, -35], range: 80 },
+          { enabled: true, intensity: 0.2, color: '#e0c080', position: [0, 10, 0], range: 50 },
         ],
       },
-      fog: { type: 'exp2', color: '#88bbcc', density: 0.0008 },
+      fog: { type: 'exp2', color: '#a0c8d8', density: 0.0006 },
     },
     instances: {
       ship: {
@@ -179,7 +179,7 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
       ocean: { color: '#c06040', opacity: 0.78, gridSize: 80, extent: 1800 },
       lighting: {
         sun: { enabled: true, intensity: 1.8, color: '#ff8844', azimuth: 2.5, elevation: 0.3 },
-        hemisphere: { enabled: true, skyColor: '#cc6699', groundColor: '#804030', intensity: 0.6 },
+        hemisphere: { enabled: true, skyColor: '#f0a070', groundColor: '#804030', intensity: 0.6 },
         fill: { enabled: true, intensity: 0.5, color: '#cc6644' },
         pointLights: [
           { enabled: true, intensity: 1.0, color: '#ffaa55', position: [0, 18, -35], range: 80 },

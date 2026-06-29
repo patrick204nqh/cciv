@@ -83,12 +83,18 @@ export interface MaterialSpec {
   side?: number;
 }
 
+export interface WaveData {
+  direction: [number, number];
+  k: number;
+  omega: number;
+  amp: number;
+  Qi: number;
+  phase: number;
+}
+
 export interface IWaterConfig {
-  color?: string;
-  flowDirection?: [number, number];
-  flowSpeed?: number;
-  reflectivity?: number;
-  scale?: number;
+  color: string;
+  waves: WaveData[];
 }
 
 export interface IWater {

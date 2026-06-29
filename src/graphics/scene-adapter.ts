@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { CanvasTexture, Color, Vector2, Vector3 } from 'three';
+import { Color } from 'three';
 import type { IScene, ISceneObject, SceneHandle, FogSpec, IMaterial, MaterialSpec, IWater, IWaterConfig, ISkyConfig } from './types';
 import { GeometryHandle } from './types';
 import { SceneObject } from './object';
-import { WaterMesh as Water2Mesh } from 'three/addons/objects/Water2Mesh.js';
 import { SkyMesh } from 'three/addons/objects/SkyMesh.js';
+import { createTSLWaterMesh } from './tsl-water';
 
 const _registeredMaterials = new WeakMap<IMaterial, THREE.Material>();
 
@@ -74,23 +74,16 @@ export class SceneAdapter implements IScene {
     return this.wrap(obj);
   }
 
-  createWater(geometry: GeometryHandle, config?: IWaterConfig): IWater {
+  createWater(geometry: GeometryHandle, config: IWaterConfig): IWater {
     const vendorGeo = resolveBuffer(geometry);
-    const normalMap0 = createWaterNormalMap(128, 42);
-    const normalMap1 = createWaterNormalMap(128, 97);
-    const w = new Water2Mesh(vendorGeo, {
-      color: new Color(config?.color ?? 0x2090d0),
-      scale: config?.scale ?? 4,
-      flowDirection: config?.flowDirection ? new Vector2(config.flowDirection[0], config.flowDirection[1]) : new Vector2(1, 0),
-      flowSpeed: config?.flowSpeed ?? 0.015,
-      reflectivity: config?.reflectivity ?? 0.05,
-      normalMap0,
-      normalMap1,
+    const { mesh, nodeMaterial } = createTSLWaterMesh(vendorGeo, {
+      color: config.color,
+      waves: config.waves,
     });
-    const obj = this.wrap(w);
+    const obj = this.wrap(mesh);
     return {
       get object() { return obj; },
-      dispose: () => { w.geometry.dispose(); (w.material as any)?.dispose(); },
+      dispose: () => { mesh.geometry.dispose(); nodeMaterial.dispose(); },
     };
   }
 
@@ -282,66 +275,6 @@ export class SceneAdapter implements IScene {
   traverse(fn: (obj: ISceneObject) => void): void {
     this.scene.traverse((child) => fn(this.wrap(child)));
   }
-}
-
-function createWaterNormalMap(size: number, seed: number): CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-  const imageData = ctx.createImageData(size, size);
-  const d = imageData.data;
-
-  const hash = (x: number, y: number, s: number) => {
-    let h = (x * 374761393 + y * 668265263 + s * 1274126177) | 0;
-    h = ((h ^ (h >> 13)) * 1274126177) | 0;
-    return (h ^ (h >> 16)) / 2147483647;
-  };
-
-  const fade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
-
-  const smoothNoise = (x: number, y: number, s: number) => {
-    const ix = Math.floor(x), iy = Math.floor(y);
-    const fx = fade(x - ix), fy = fade(y - iy);
-    const a = hash(ix, iy, s);
-    const b = hash(ix + 1, iy, s);
-    const c = hash(ix, iy + 1, s);
-    const d = hash(ix + 1, iy + 1, s);
-    return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
-  };
-
-  const fbm = (x: number, y: number, s: number, octaves: number) => {
-    let val = 0, amp = 1, freq = 1, max = 0;
-    for (let i = 0; i < octaves; i++) {
-      val += smoothNoise(x * freq, y * freq, s + i * 1000) * amp;
-      max += amp;
-      amp *= 0.5;
-      freq *= 2;
-    }
-    return val / max;
-  };
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const i = (y * size + x) * 4;
-      const u = x / size * 8, v = y / size * 8;
-      const h = fbm(u, v, seed, 4);
-      const dx = fbm(u + 0.01, v, seed, 4) - h;
-      const dy = fbm(u, v + 0.01, seed, 4) - h;
-      const nx = dx * 5, ny = dy * 5, nz = 1;
-      const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
-      d[i] = (nx / len * 0.5 + 0.5) * 255;
-      d[i + 1] = (ny / len * 0.5 + 0.5) * 255;
-      d[i + 2] = (nz / len * 0.5 + 0.5) * 255;
-      d[i + 3] = 255;
-    }
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-  const tex = new CanvasTexture(canvas);
-  tex.wrapS = tex.wrapT = 1000;
-  tex.repeat.set(4, 4);
-  return tex;
 }
 
 export function createPointMaterial(opts: {

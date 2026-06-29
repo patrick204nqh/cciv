@@ -78,9 +78,14 @@ export class WorldController {
 
     onProgress?.({ phase: 'detaching' })
     entityManager.setPaused(true)
-    entityManager.detachAll()
+    for (const e of entityManager.getEntities()) {
+      if (e.id === 'instance-manager') continue;
+      entityManager.detach(e);
+    }
 
     const allEntities: SceneEntity[] = []
+    this.store.set('instances', structuredClone(config.instances))
+
     onProgress?.({ phase: 'building-entities' })
     const envResult = buildEnvironment(config.environment)
     this.scene.fog = envResult.fog

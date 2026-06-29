@@ -1,11 +1,11 @@
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
-import type { IScene, IWater } from '../../graphics/types';
+import type { IScene, IWater, WaveData } from '../../graphics/types';
 
 export function createOceanEntity(
   extent: number,
   gridSize: number,
-  config?: { color?: string },
+  config: { color: string; waves: WaveData[] },
 ): SceneEntity {
   let water: IWater | null = null;
 
@@ -14,13 +14,7 @@ export function createOceanEntity(
 
     onAttach(scene: IScene, disposer?: Disposer) {
       const geo = scene.createPlaneGeometry(extent, extent, gridSize, gridSize);
-      water = scene.createWater(geo, {
-        color: config?.color ?? '#2090d0',
-        scale: 4,
-        flowSpeed: 0.015,
-        reflectivity: 0.05,
-        flowDirection: [0.7, 0.7],
-      });
+      water = scene.createWater(geo, config);
       scene.add(water.object);
 
       if (disposer) disposer.add(() => water?.dispose());
