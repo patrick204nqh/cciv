@@ -1,6 +1,7 @@
 import {
   WebGPURenderer, PerspectiveCamera, Scene, FogExp2, Color, PCFSoftShadowMap, ACESFilmicToneMapping,
 } from 'three/webgpu';
+import { wallClock } from './tsl-fft';
 import type { IScene } from '../graphics/types';
 import { SceneAdapter } from '../graphics/scene-adapter';
 import { OrbitControls } from '../three/addons';
@@ -106,6 +107,8 @@ export class RenderingModule {
       this.onBeforeRender?.(dt);
 
       (this.sceneHandle as any).onBeforeRender?.(this._camera.position);
+
+      wallClock.value = performance.now() / 1000;
 
       this.controls.update();
       this._renderer.render(this._scene, this._camera);

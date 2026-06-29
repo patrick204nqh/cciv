@@ -5,6 +5,13 @@ import type { OceanConfig } from '../../graphics/types';
 const testConfig: OceanConfig = {
   color: '#2090d0',
   waves: [],
+  foam: {
+    whitecapThreshold: 0.3,
+    whitecapFadeRate: 0.5,
+    surfaceFoamDensity: 0.15,
+    shorelineDepth: 10,
+    foamColor: '#f0f8ff',
+  },
   fft: {
     cascadeSize: [256, 128],
     windSpeed: 10,

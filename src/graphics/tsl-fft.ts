@@ -1,9 +1,11 @@
-import { vec4, uniformArray, Fn, Loop, sin, cos, time, vec3, float, positionLocal, normalize } from 'three/tsl';
+import { vec4, uniformArray, Fn, Loop, sin, cos, uniform, vec3, float, positionLocal, normalize } from 'three/tsl';
 import * as THREE from 'three';
 import type { FFTConfig, OceanConfig } from './types';
 
 const NUM_WAVES = 128;
 const G = 9.81;
+
+export const wallClock = uniform(0);
 
 export interface WaveField {
   dirArray: ReturnType<typeof uniformArray>;
@@ -122,7 +124,7 @@ export function createGerstnerPositionFn(waveField: WaveField): ReturnType<typeo
       const amp = a.x;
       const Qi = a.y;
       const ph = a.z;
-      const arg = k.mul(dir.x.mul(p.x).add(dir.y.mul(p.z))).sub(omega.mul(time)).add(ph);
+      const arg = k.mul(dir.x.mul(p.x).add(dir.y.mul(p.z))).sub(omega.mul(wallClock)).add(ph);
       const cosA = cos(arg);
       const sinA = sin(arg);
       disp.x.addAssign(Qi.mul(amp).mul(dir.x).mul(cosA));
@@ -148,7 +150,7 @@ export function createGerstnerNormalFn(waveField: WaveField): ReturnType<typeof 
       const omega = d.w;
       const amp = a.x;
       const ph = a.z;
-      const arg = k.mul(dir.x.mul(p.x).add(dir.y.mul(p.z))).sub(omega.mul(time)).add(ph);
+      const arg = k.mul(dir.x.mul(p.x).add(dir.y.mul(p.z))).sub(omega.mul(wallClock)).add(ph);
       const deriv = amp.mul(k).mul(cos(arg));
       dhdx.addAssign(deriv.mul(dir.x));
       dhdz.addAssign(deriv.mul(dir.y));
@@ -173,7 +175,7 @@ export function createGerstnerJacobianFn(waveField: WaveField) {
       const amp = a.x;
       const Qi = a.y;
       const ph = a.z;
-      const arg = k.mul(dir.x.mul(p.x).add(dir.y.mul(p.z))).sub(omegaV.mul(time)).add(ph);
+      const arg = k.mul(dir.x.mul(p.x).add(dir.y.mul(p.z))).sub(omegaV.mul(wallClock)).add(ph);
       const sinA = sin(arg);
       const kQiAmp = k.mul(Qi).mul(amp);
 

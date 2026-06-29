@@ -120,10 +120,19 @@ export interface ClipmapConfig {
   overlap: number;
 }
 
+export interface FoamConfig {
+  whitecapThreshold: number;
+  whitecapFadeRate: number;
+  surfaceFoamDensity: number;
+  shorelineDepth: number;
+  foamColor: string;
+}
+
 export interface OceanConfig {
   color: string;
   fft: FFTConfig;
   clipmap: ClipmapConfig;
+  foam: FoamConfig;
   waves: WaveData[];
 }
 

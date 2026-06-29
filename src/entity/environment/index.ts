@@ -36,6 +36,13 @@ export function createEnvironmentEntity(
     const oceanConfig: OceanConfig = {
       color: effective.ocean.color,
       waves: waveData,
+      foam: {
+        whitecapThreshold: 0.3,
+        whitecapFadeRate: 0.5,
+        surfaceFoamDensity: 0.15,
+        shorelineDepth: 10,
+        foamColor: '#f0f8ff',
+      },
       fft: {
         cascadeSize: [256, 128],
         windSpeed: effective.wind?.speed ?? 10,
