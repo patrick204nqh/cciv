@@ -83,6 +83,33 @@ export interface MaterialSpec {
   side?: number;
 }
 
+export interface IWaterConfig {
+  color?: string;
+  flowDirection?: [number, number];
+  flowSpeed?: number;
+  reflectivity?: number;
+  scale?: number;
+}
+
+export interface IWater {
+  readonly object: ISceneObject;
+  dispose(): void;
+}
+
+export interface ISkyConfig {
+  turbidity?: number;
+  rayleigh?: number;
+  mieCoefficient?: number;
+  mieDirectionalG?: number;
+  sunPosition: [number, number, number];
+  showSunDisc?: boolean;
+  cloudCoverage?: number;
+  cloudDensity?: number;
+  cloudSpeed?: number;
+  cloudScale?: number;
+  cloudElevation?: number;
+}
+
 export interface ILightFactory {
   createDirectionalLight(color: string, intensity: number): ISceneObject;
   createAmbientLight(color: string, intensity: number): ISceneObject;
@@ -99,6 +126,8 @@ export interface ISceneGraph extends SceneHandle {
   createPoints(geometry: GeometryHandle, material: IMaterial): ISceneObject;
   /** Wrap a vendor (Three.js) Object3D into an ISceneObject. Used by GLB loading. */
   wrapObject3D(obj: any): ISceneObject;
+  createWater(geometry: GeometryHandle, config?: IWaterConfig): IWater;
+  createSky(config?: ISkyConfig): ISceneObject;
 }
 
 export interface IScene extends ISceneGraph, IGeometryFactory, IMaterialFactory, ILightFactory {}

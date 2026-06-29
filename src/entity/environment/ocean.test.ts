@@ -1,36 +1,27 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createOceanEntity } from './ocean';
 
-vi.mock('../../environment/tsl-ocean', () => ({
-  createTSLOceanMaterial: vi.fn().mockReturnValue({ dispose: vi.fn() }),
-}));
-
-function makeWaves() {
-  return [
-    { dir: [0.7, 0.7], k: 0.157, omega: 1.24, amp: 1.4, Qi: 0.51, phase: 0, speed: 1 },
-  ] as any;
-}
-
 describe('createOceanEntity', () => {
   it('creates an entity with id "ocean"', () => {
-    const entity = createOceanEntity(makeWaves());
+    const entity = createOceanEntity(100, 10);
     expect(entity.id).toBe('ocean');
   });
 
-  it('attaches a mesh to the scene', () => {
+  it('creates water via scene gate', () => {
+    const waterObj = { dispose: vi.fn() };
     const scene = {
       add: vi.fn(),
-      createMesh: vi.fn(),
-      createPlaneGeometry: vi.fn().mockReturnValue({ rotateX: vi.fn() }),
-      registerMaterial: vi.fn(),
+      createPlaneGeometry: vi.fn().mockReturnValue({} as any),
+      createWater: vi.fn().mockReturnValue({ object: waterObj, dispose: vi.fn() }),
     } as any;
-    const entity = createOceanEntity(makeWaves());
+    const entity = createOceanEntity(100, 10, { color: '#2090d0' });
     entity.onAttach(scene);
-    expect(scene.add).toHaveBeenCalled();
+    expect(scene.createWater).toHaveBeenCalled();
+    expect(scene.add).toHaveBeenCalledWith(waterObj);
   });
 
   it('defines onUpdate and onDetach', () => {
-    const entity = createOceanEntity(makeWaves());
+    const entity = createOceanEntity(100, 10);
     expect(typeof entity.onUpdate).toBe('function');
     expect(typeof entity.onDetach).toBe('function');
   });
