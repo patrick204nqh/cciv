@@ -111,15 +111,13 @@ export class VesselPhysics {
       this.body.applyLocalForce(0, 0, this._throttle * this._maxThrust)
     }
 
-    const rawBody = (this.body as any).getVendorBody()
-
     if (this.sail && this._throttle > 0 && this._hasWind) {
-      this.sail.apply(rawBody, this._windSpeed, this._windDirX, this._windDirZ, this._throttle)
+      this.sail.apply(this.body, this._windSpeed, this._windDirX, this._windDirZ, this._throttle)
     }
 
     this.body.setTorque(0, this._steer * this._maxSteerTorque, 0)
 
-    this.hydro.apply(rawBody, waveSurface, this._world.gravity, dt)
+    this.hydro.apply(this.body, waveSurface, this._world.gravity, dt)
   }
 
   sync(target: ISceneObject): void {

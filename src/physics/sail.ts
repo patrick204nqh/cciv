@@ -1,4 +1,4 @@
-import * as CANNON from 'cannon-es';
+import type { IPhysicsBody } from './types';
 
 const AIR_DENSITY = 1.225;
 
@@ -12,7 +12,7 @@ export class SailForceSolver {
   constructor(private _config: SailConfig) {}
 
   apply(
-    body: CANNON.Body,
+    body: IPhysicsBody,
     windSpeed: number,
     windDirX: number,
     windDirZ: number,
@@ -44,15 +44,13 @@ export class SailForceSolver {
 
     const forceMag = 0.5 * AIR_DENSITY * this._config.area * this._config.liftCoeff * awSpeed * awSpeed * efficiency;
 
-    const nfwd = { x: fwd.x / Math.sqrt(fwd.x * fwd.x + fwd.z * fwd.z), z: fwd.z / Math.sqrt(fwd.x * fwd.x + fwd.z * fwd.z) };
-
-    body.applyLocalForce(new CANNON.Vec3(0, 0, forceMag * throttle));
+    body.applyLocalForce(0, 0, forceMag * throttle);
   }
 
   dispose(): void {}
 }
 
-function forward(q: CANNON.Quaternion): { x: number; y: number; z: number } {
+function forward(q: { x: number; y: number; z: number; w: number }): { x: number; y: number; z: number } {
   const x = 2 * (q.x * q.z + q.y * q.w);
   const y = 2 * (q.y * q.z - q.x * q.w);
   const z = 1 - 2 * (q.x * q.x + q.y * q.y);

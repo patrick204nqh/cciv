@@ -1,7 +1,7 @@
 import type { SceneEntity } from './types';
 import type { Disposer } from '../util/disposer';
 
-export function createVesselGroup(id: string, ...children: SceneEntity[]): SceneEntity {
+export function createCompositeEntity(id: string, ...children: SceneEntity[]): SceneEntity {
   let attached: SceneEntity[] = [];
 
   return {
@@ -42,3 +42,6 @@ export function createVesselGroup(id: string, ...children: SceneEntity[]): Scene
     },
   };
 }
+
+/** @deprecated Use createCompositeEntity instead. */
+export const createVesselGroup = createCompositeEntity;

@@ -1,3 +1,4 @@
+import type { ComputedWave } from '../../environment/wave-config';
 import { computeWaves } from '../../environment/wave-config';
 import { setWaveConfig } from '../../environment/wave-surface';
 import { computeEffectiveEnvironment } from '../../state/environment-utils';
@@ -7,85 +8,65 @@ import { createLightingEntity } from './lighting';
 import { createRainEntity } from './rain';
 import { createMistEntity } from './mist';
 import { createTerrainEntity } from './terrain';
-import { entityRegistry } from '../entity-registry';
+import { createCompositeEntity } from '../composite';
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
-import type { ModelLoader } from '../../model/types';
-import type { EnvironmentState, WorldConfig } from '../../state/types';
-import type { ISkyConfig, IScene, WaveData } from '../../graphics/types';
+import type { EnvironmentState } from '../../state/types';
+import type { ISkyConfig, WaveData } from '../../graphics/types';
 
-entityRegistry.register({
-  async match(config: WorldConfig, _modelLoader: ModelLoader) {
-    if (!config.environment.ocean) return { entities: [], errors: [] };
-    return { entities: [createEnvironmentEntity(config.environment)], errors: [] };
-  },
-});
+export function createEnvironmentEntity(
+  env: EnvironmentState | { effective: ReturnType<typeof computeEffectiveEnvironment>; waves: ComputedWave[] },
+): SceneEntity {
+  const { effective, waves } = 'effective' in env
+    ? env
+    : { effective: computeEffectiveEnvironment(env), waves: computeWaves(computeEffectiveEnvironment(env).waves) };
 
-entityRegistry.register({
-  async match(config: WorldConfig, _modelLoader: ModelLoader) {
-    if (!config.environment.terrain) return { entities: [], errors: [] };
-    return { entities: [createTerrainEntity(config.environment.terrain)], errors: [] };
-  },
-});
+  const waveData: WaveData[] = waves.map(w => ({
+    direction: w.dir,
+    k: w.k,
+    omega: w.omega,
+    amp: w.amp,
+    Qi: w.Qi,
+    phase: w.phase,
+  }));
 
-export function createEnvironmentEntity(env: EnvironmentState): SceneEntity {
-  const effective = computeEffectiveEnvironment(env);
-  const waves = computeWaves(effective.waves);
-  let subEntities: SceneEntity[] = [];
+  const subEntities: SceneEntity[] = [];
+
+  if (effective.ocean) {
+    subEntities.push(createOceanEntity(effective.ocean.extent, effective.ocean.gridSize, {
+      color: effective.ocean.color,
+      waves: waveData,
+    }));
+  }
+  if (effective.sky) {
+    subEntities.push(createSkyEntity(skyConfigFromEnv(effective)));
+  }
+  if (effective.lighting) {
+    subEntities.push(createLightingEntity(effective.lighting));
+  }
+  if (effective.weather === 'fog' || effective.weather === 'storm') {
+    subEntities.push(createMistEntity());
+  }
+  if (effective.weather === 'storm') {
+    subEntities.push(createRainEntity());
+  }
+
+  const composite = createCompositeEntity('environment', ...subEntities);
 
   return {
     id: 'environment',
 
     onAttach(scene, disposer?: Disposer) {
       setWaveConfig(waves);
-      subEntities = [];
-
-      if (effective.ocean) {
-        const waveData: WaveData[] = waves.map(w => ({
-          direction: w.dir,
-          k: w.k,
-          omega: w.omega,
-          amp: w.amp,
-          Qi: w.Qi,
-          phase: w.phase,
-        }));
-        const e = createOceanEntity(effective.ocean.extent, effective.ocean.gridSize, {
-          color: effective.ocean.color,
-          waves: waveData,
-        });
-        e.onAttach(scene, disposer);
-        subEntities.push(e);
-      }
-      if (effective.sky) {
-        const e = createSkyEntity(skyConfigFromEnv(effective));
-        e.onAttach(scene, disposer);
-        subEntities.push(e);
-      }
-      if (effective.lighting) {
-        const e = createLightingEntity(effective.lighting);
-        e.onAttach(scene, disposer);
-        subEntities.push(e);
-      }
-      if (effective.weather === 'fog' || effective.weather === 'storm') {
-        const e = createMistEntity();
-        e.onAttach(scene, disposer);
-        subEntities.push(e);
-      }
-      if (effective.weather === 'storm') {
-        const e = createRainEntity();
-        e.onAttach(scene, disposer);
-        subEntities.push(e);
-      }
+      composite.onAttach(scene, disposer);
     },
 
     onUpdate(dt: number) {
-      for (const e of subEntities) {
-        e.onUpdate?.(dt);
-      }
+      composite.onUpdate?.(dt);
     },
 
     onDetach() {
-      subEntities = [];
+      composite.onDetach();
     },
   };
 }

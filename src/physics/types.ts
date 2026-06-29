@@ -27,13 +27,19 @@ export interface IPhysicsWorld {
 export interface IPhysicsBody {
   readonly position: Vec3Like;
   readonly velocity: Vec3Like;
+  readonly angularVelocity: Vec3Like;
   readonly quaternion: Vec3Like & { w: number };
   setPosition(x: number, y: number, z: number): void;
   setVelocity(x: number, y: number, z: number): void;
   applyLocalForce(x: number, y: number, z: number): void;
+  applyForce(force: [number, number, number], worldPoint: [number, number, number]): void;
   setTorque(x: number, y: number, z: number): void;
   setDamping(linear: number, angular: number): void;
+  getMass(): number;
+  setMass(mass: number): void;
   syncTransform(target: ISceneObject): void;
+  /** Serialized shape data for debug rendering. Returns null if no geometry-backed shape. */
+  getShapeData(): { positions: Float32Array; indices: Uint16Array | Uint32Array } | null;
   dispose(): void;
 }
 

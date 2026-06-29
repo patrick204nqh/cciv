@@ -1,9 +1,5 @@
-import * as CANNON from 'cannon-es';
 import type { WaveSurface } from '../environment/wave-surface';
-import type { HydrodynamicsConfig } from './types';
-
-const _cannonVec = new CANNON.Vec3();
-const _cannonVec2 = new CANNON.Vec3();
+import type { HydrodynamicsConfig, IPhysicsBody } from './types';
 
 function applyQuaternion(vx: number, vy: number, vz: number, qx: number, qy: number, qz: number, qw: number) {
   return {
@@ -29,7 +25,7 @@ export class HydrodynamicsSolver {
     this._originalMass = 0;
   }
 
-  apply(body: CANNON.Body, waveSurface: WaveSurface, gravity: number, dt: number): void {
+  apply(body: IPhysicsBody, waveSurface: WaveSurface, gravity: number, dt: number): void {
     const pos = this._localPositions;
     const wv = this._worldVerts;
     const bq = body.quaternion;
@@ -37,7 +33,7 @@ export class HydrodynamicsSolver {
     const numPts = pos.length / 3;
 
     if (this._originalMass === 0) {
-      this._originalMass = body.mass;
+      this._originalMass = body.getMass();
     }
 
     for (let i = 0; i < pos.length; i += 3) {
@@ -64,17 +60,16 @@ export class HydrodynamicsSolver {
 
     if (totalDepth < 0.001) {
       for (let i = 0; i < numPts; i++) this._prevDepths[i] = 0;
-      const resetMass = this._originalMass > 0 ? this._originalMass : body.mass;
-      if (Math.abs(body.mass - resetMass) > 0.01) {
-        body.mass = resetMass;
-        body.updateMassProperties();
+      const resetMass = this._originalMass > 0 ? this._originalMass : body.getMass();
+      if (Math.abs(body.getMass() - resetMass) > 0.01) {
+        body.setMass(resetMass);
       }
       return;
     }
 
     const bVel = body.velocity;
     const bAVel = body.angularVelocity;
-    const totalBuoyancy = body.mass * gravity;
+    const totalBuoyancy = body.getMass() * gravity;
     const pointWeight = 1 / subCount;
 
     for (let i = 0; i < numPts; i++) {
@@ -88,8 +83,7 @@ export class HydrodynamicsSolver {
 
       const fraction = depth / totalDepth;
       const buoyancyForce = fraction * totalBuoyancy * this._config.density;
-      _cannonVec.set(0, buoyancyForce, 0);
-      body.applyForce(_cannonVec, new CANNON.Vec3(wx, wy, wz));
+      body.applyForce([0, buoyancyForce, 0], [wx, wy, wz]);
 
       const rx = wx - bp.x, ry = wy - bp.y, rz = wz - bp.z;
       const pvx = bVel.x + bAVel.y * rz - bAVel.z * ry;
@@ -100,20 +94,17 @@ export class HydrodynamicsSolver {
       if (vSq > 0.01) {
         const speed = Math.sqrt(vSq);
         const dragMag = 0.5 * WATER_DENSITY * this._config.dragCoefficient * depth * pointWeight * vSq;
-        _cannonVec.set(
-          -(pvx / speed) * dragMag,
-          -(pvy / speed) * dragMag,
-          -(pvz / speed) * dragMag,
+        body.applyForce(
+          [-(pvx / speed) * dragMag, -(pvy / speed) * dragMag, -(pvz / speed) * dragMag],
+          [wx, wy, wz],
         );
-        body.applyForce(_cannonVec, new CANNON.Vec3(wx, wy, wz));
       }
 
       const prevDepth = this._prevDepths[i];
       const depthRate = (depth - prevDepth) / Math.max(dt, 0.001);
       if (depthRate > 2.0 && prevDepth < 0.1) {
         const slamForce = this._config.slammingCoefficient * pointWeight * totalBuoyancy * depthRate * 0.1;
-        _cannonVec.set(0, slamForce, 0);
-        body.applyForce(_cannonVec, new CANNON.Vec3(wx, wy, wz));
+        body.applyForce([0, slamForce, 0], [wx, wy, wz]);
       }
 
       this._prevDepths[i] = depth;
@@ -122,9 +113,8 @@ export class HydrodynamicsSolver {
     const subVolumeFraction = totalDepth / (numPts * 5);
     const addedMass = subVolumeFraction * this._config.addedMassFactor * this._originalMass;
     const effectiveMass = this._originalMass + addedMass;
-    if (Math.abs(body.mass - effectiveMass) > 0.01) {
-      body.mass = effectiveMass;
-      body.updateMassProperties();
+    if (Math.abs(body.getMass() - effectiveMass) > 0.01) {
+      body.setMass(effectiveMass);
     }
   }
 

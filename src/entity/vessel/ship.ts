@@ -1,9 +1,7 @@
 import type { SceneEntity } from '../types';
-import { bus } from '../../util/event-bus';
-import type { ModelEntity } from '../../model/types';
 import { waveSurface } from '../../environment/wave-surface';
 import type { Disposer } from '../../util/disposer';
-import { VesselPhysics } from '../../physics';
+import { VesselDynamics } from '../../physics/vessel-dynamics';
 import type { VesselPhysicsConfig } from '../../physics';
 import { vesselControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/vessel-controls';
 import { behaviorRegistry } from '../behavior-registry';
@@ -11,7 +9,7 @@ import type { InstanceDef } from '../../state/types';
 import type { StateStore } from '../../state/store';
 import { createSprayEntity } from './spray';
 import { createWakeEntity } from './wake';
-import { createVesselGroup } from '../vessel-group';
+import { createCompositeEntity } from '../composite';
 import type { IScene } from '../../graphics/types';
 import { applyProceduralTextures } from './texture-applicator';
 
@@ -23,7 +21,7 @@ behaviorRegistry.register('vessel', {
     r.position = { x: tf.position[0], y: tf.position[1], z: tf.position[2] };
     r.rotation = { x: tf.rotation[0], y: tf.rotation[1], z: tf.rotation[2] };
     r.scale = { x: tf.scale, y: tf.scale, z: tf.scale };
-    return [createVesselGroup(
+    return [createCompositeEntity(
       id,
       createVesselEntity(model, id, deps.store),
       createSprayEntity(id),
@@ -42,9 +40,9 @@ export const HULL_ADDED_MASS = 1.5;
 export const SAIL_AREA = 120;
 export const MAX_SPEED = 18;
 
-export function createVesselEntity(model: ModelEntity, vesselId?: string, store?: StateStore): SceneEntity {
+export function createVesselEntity(model: import('../../model/types').ModelEntity, vesselId?: string, store?: StateStore): SceneEntity {
   const id = vesselId ?? 'vessel';
-  let physics: VesselPhysics | null = null;
+  let dynamics: VesselDynamics | null = null;
 
   return {
     id,
@@ -73,50 +71,29 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
         sail: { area: SAIL_AREA, liftCoeff: 0.6, dragCoeff: 0.3 },
       };
 
-      physics = VesselPhysics.fromModel(model.root, config);
+      dynamics = new VesselDynamics(model.root, config, id, store!);
       vesselControls.registerVessel(id);
 
       if (disposer) {
         disposer.add(() => {
-          physics?.dispose();
-          physics = null;
+          dynamics?.dispose();
+          dynamics = null;
           vesselControls.unregisterVessel(id);
         });
       }
     },
 
     onUpdate(dt: number) {
-      if (!physics) return;
+      if (!dynamics) return;
 
       const t = vesselControls.throttle(id);
-      physics.setControls(t, vesselControls.steer(id));
-
-      if (t > 0 && store) {
-        const locations = store.get('locations');
-        const activeLoc = store.get('activeLocation');
-        const env = locations[activeLoc]?.environment;
-        const wind = env?.wind;
-        if (wind) {
-          const wDirX = Math.sin(wind.direction);
-          const wDirZ = -Math.cos(wind.direction);
-          physics.setWind(wind.speed, wDirX, wDirZ);
-        }
-      }
-
-      physics.update(dt, waveSurface);
-      physics.sync(model.root);
-
-      const state = physics.readState();
-      bus.emit('entity:position-changed', {
-        entityId: id,
-        x: state.position.x, y: state.position.y, z: state.position.z,
-        qx: state.quaternion.x, qy: state.quaternion.y, qz: state.quaternion.z, qw: state.quaternion.w,
-        vx: state.velocity.x, vy: state.velocity.y, vz: state.velocity.z,
-      });
+      dynamics.setControls(t, vesselControls.steer(id));
+      dynamics.update(dt, waveSurface);
+      dynamics.sync(model.root);
     },
 
     onDetach() {
-      physics?.dispose();
+      dynamics?.dispose();
       model.dispose();
     },
   };

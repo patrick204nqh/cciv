@@ -39,14 +39,16 @@ export class PhysicsWorld implements IPhysicsWorld {
   }
 
   addBody(body: IPhysicsBody): void {
-    const raw = (body as any).getVendorBody();
-    if (raw) this.world.addBody(raw);
+    if (body instanceof PhysicsBody) {
+      this.world.addBody(body.body);
+    }
     if (!this._bodies.includes(body)) this._bodies.push(body);
   }
 
   removeBody(body: IPhysicsBody): void {
-    const raw = (body as any).getVendorBody();
-    if (raw) this.world.removeBody(raw);
+    if (body instanceof PhysicsBody) {
+      this.world.removeBody(body.body);
+    }
     const idx = this._bodies.indexOf(body);
     if (idx !== -1) this._bodies.splice(idx, 1);
   }

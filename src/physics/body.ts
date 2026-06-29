@@ -14,8 +14,9 @@ function quatToEuler(qx: number, qy: number, qz: number, qw: number) {
 }
 
 export class PhysicsBody implements IPhysicsBody {
-  private body: CANNON.Body;
+  readonly body: CANNON.Body;
   private _scale: number;
+  private _shapeData: { positions: Float32Array; indices: Uint16Array | Uint32Array } | null = null;
 
   get position(): Vec3Like {
     return { x: this.body.position.x, y: this.body.position.y, z: this.body.position.z };
@@ -23,6 +24,10 @@ export class PhysicsBody implements IPhysicsBody {
 
   get velocity(): Vec3Like {
     return { x: this.body.velocity.x, y: this.body.velocity.y, z: this.body.velocity.z };
+  }
+
+  get angularVelocity(): Vec3Like {
+    return { x: this.body.angularVelocity.x, y: this.body.angularVelocity.y, z: this.body.angularVelocity.z };
   }
 
   get quaternion(): Vec3Like & { w: number } {
@@ -43,6 +48,7 @@ export class PhysicsBody implements IPhysicsBody {
         for (let i = 0; i < posArr.length; i++) posArr[i] *= s;
       }
       this.body.addShape(new CANNON.Trimesh(posArr, idxArr));
+      this._shapeData = { positions, indices };
     }
 
     if (config.shape.type === 'convex') {
@@ -53,6 +59,7 @@ export class PhysicsBody implements IPhysicsBody {
         vertices: vertArr as any,
         faces: faceArr,
       }));
+      this._shapeData = { positions: vertices, indices: new Uint16Array(0) };
     }
 
     if (config.position) {
@@ -79,6 +86,13 @@ export class PhysicsBody implements IPhysicsBody {
     this.body.applyLocalForce(new CANNON.Vec3(x, y, z));
   }
 
+  applyForce(force: [number, number, number], worldPoint: [number, number, number]): void {
+    this.body.applyForce(
+      new CANNON.Vec3(force[0], force[1], force[2]),
+      new CANNON.Vec3(worldPoint[0], worldPoint[1], worldPoint[2]),
+    );
+  }
+
   setTorque(x: number, y: number, z: number): void {
     this.body.torque.set(x, y, z);
   }
@@ -87,6 +101,19 @@ export class PhysicsBody implements IPhysicsBody {
     this.body.linearDamping = linear;
     this.body.angularDamping = angular;
     this.body.updateMassProperties();
+  }
+
+  getMass(): number {
+    return this.body.mass;
+  }
+
+  setMass(mass: number): void {
+    this.body.mass = mass;
+    this.body.updateMassProperties();
+  }
+
+  getShapeData(): { positions: Float32Array; indices: Uint16Array | Uint32Array } | null {
+    return this._shapeData;
   }
 
   syncTransform(target: ISceneObject): void {
@@ -102,23 +129,11 @@ export class PhysicsBody implements IPhysicsBody {
     target.rotation.z = euler.z;
   }
 
-  /** @internal Gate-internal access to raw CANNON body. */
-  getVendorBody(): CANNON.Body {
-    return this.body;
-  }
-
   readFrom(target: ISceneObject): void {
     const wp = target.worldPosition;
     this.body.position.set(wp.x, wp.y, wp.z);
     const wq = target.worldQuaternion;
     this.body.quaternion.set(wq.x, wq.y, wq.z, wq.w);
-  }
-
-  applyForce(force: [number, number, number], worldPoint: [number, number, number]): void {
-    this.body.applyForce(
-      new CANNON.Vec3(force[0], force[1], force[2]),
-      new CANNON.Vec3(worldPoint[0], worldPoint[1], worldPoint[2]),
-    );
   }
 
   dispose(): void {
