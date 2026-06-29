@@ -1,18 +1,18 @@
-import { Mesh, Camera, Raycaster, Vector2 } from 'three';
+import { Raycaster, Vector2 } from 'three';
 import { TransformControls } from '../../three/addons';
 import type { ScenePlugin, PluginContext } from '../types';
 import type { ISceneObject } from '../../scene/types';
 import { SceneObject } from '../../scene/object';
 import { useSelectionStore, type GizmoMode } from '../../ui/stores/selection-store';
 
-function vendorOf(obj: ISceneObject): Object3D {
+function vendorOf(obj: ISceneObject) {
   return (obj as any)._obj;
 }
 
 export const gizmosPlugin: ScenePlugin = (() => {
   let ctx: PluginContext;
   let controls: TransformControls;
-  let vendorCam: Camera;
+  let vendorCam: any;
   const raycaster = new Raycaster();
   const pointer = new Vector2();
   let onKey: (e: KeyboardEvent) => void;
@@ -29,10 +29,10 @@ export const gizmosPlugin: ScenePlugin = (() => {
     pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(pointer, vendorCam);
 
-    const meshes: Object3D[] = [];
+    const meshes: any[] = [];
     ctx.scene.traverse(child => {
-      const vendor = vendorOf(child);
-      if (vendor instanceof Mesh) meshes.push(vendor);
+      if (child.type !== 'Mesh') return;
+      meshes.push(vendorOf(child));
     });
 
     const hits = raycaster.intersectObjects(meshes, false);

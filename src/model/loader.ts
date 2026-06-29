@@ -1,4 +1,3 @@
-import { Group, Color } from 'three';
 import type { ModelLoader, ModelCatalogEntry } from '../loaders/types';
 import { ModelLoadError } from '../loaders/types';
 import type { ModelEntity } from './types';
@@ -10,7 +9,7 @@ import { traverseMeshes } from './utils';
 import { Disposer } from '../util/disposer';
 
 function buildModelEntity(
-  rawRoot: Group,
+  rawRoot: any,
   ref: string,
   metadata: ModelEntity['metadata'],
   onDispose?: () => void,
@@ -32,7 +31,7 @@ function buildModelEntity(
         const override = materials[mesh.name];
         if (!override) return;
         const cloned = mat.clone();
-        cloned.color.set(new Color(override.color));
+        cloned.color.set(override.color);
         cloned.roughness = override.roughness;
         cloned.metalness = override.metalness;
         cloned.visible = override.visible;
