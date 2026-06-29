@@ -1,12 +1,13 @@
 import type { ModelLoader, ModelCatalogEntry } from './types';
 import { ModelLoadError } from './types';
-import type { ModelEntity } from './types';
+import type { ModelEntity, ModelDefinition } from './types';
 import { SceneObject } from '../graphics/object';
 import { GlbLoader } from './glb-loader';
 import { ModelCatalogReader } from './catalog';
 import { modelRegistry } from './registry';
-import { traverseMeshes } from './utils';
 import { Disposer } from '../util/disposer';
+import { buildModelFromDefinition } from './code-loader';
+import { modelDefinitions } from './definitions/registry';
 
 function buildModelEntity(
   rawRoot: any,
@@ -52,6 +53,14 @@ export class ModelLoaderImpl implements ModelLoader {
   async load(ref: string): Promise<ModelEntity> {
     const cached = this.cache.get(ref);
     if (cached) return cached;
+
+    const def = modelDefinitions[ref];
+    if (def) {
+      const entity = buildModelFromDefinition(ref, def);
+      modelRegistry.register(entity);
+      this.cache.set(ref, entity);
+      return entity;
+    }
 
     const entry = this.catalog.getEntry(ref);
     if (!entry) throw new ModelLoadError(`Model not found in catalog: ${ref}`, ref);

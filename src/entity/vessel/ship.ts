@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon-es';
 import type { SceneEntity } from '../types';
 import { bus } from '../../util/event-bus';
-import type { ModelEntity, ModelConfig } from '../../model/types';
+import type { ModelEntity } from '../../model/types';
 import { waveSurface } from '../../environment/wave-surface';
 import type { Disposer } from '../../util/disposer';
 import { PhysicsBody, HydrodynamicsSolver, SailForceSolver, physicsWorld, createHullCollider } from '../../physics';
@@ -14,8 +14,8 @@ import { createSprayEntity } from './spray';
 import { createWakeEntity } from './wake';
 import { createVesselGroup } from '../vessel-group';
 import type { IScene } from '../../graphics/types';
-import { generateGroupTextures, type GroupTextureConfig } from '../../model/definitions/ship/textures';
-import shipConfig from '../../model/definitions/ship/config';
+import { generateGroupTextures } from '../../model/definitions/ship/textures';
+import { textureConfig } from '../../model/definitions/ship/model';
 
 behaviorRegistry.register('vessel', {
   async create(id: string, def: InstanceDef, deps) {
@@ -188,11 +188,10 @@ interface HullExtractResult {
 
 function applyProceduralTextures(model: ModelEntity, scene: IScene): void {
   try {
-    const groupConfigs: Record<string, GroupTextureConfig> = (shipConfig as any).materialOverrides ?? {};
     const w = 512;
     const h = 512;
 
-    for (const [groupName, groupConfig] of Object.entries(groupConfigs)) {
+    for (const [groupName, groupConfig] of Object.entries(textureConfig)) {
       const textures = generateGroupTextures(groupName, groupConfig, w, h);
       if (textures.map && scene.createCanvasTexture) {
         const tex = scene.createCanvasTexture(textures.map);

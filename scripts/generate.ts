@@ -45,12 +45,12 @@ async function main() {
   const uv = geo.attributes.uv ? Array.from(geo.attributes.uv.array as Float32Array) : [];
   const idx = geo.index ? Array.from(geo.index.array) : [];
 
-  writeFileSync(join(destDir, `${modelId}_pos.js`), `export const ${modelId}_pos = new Float32Array([${pos.join(',')}]);\n`);
-  writeFileSync(join(destDir, `${modelId}_nml.js`), `export const ${modelId}_nml = new Float32Array([${nml.join(',')}]);\n`);
-  writeFileSync(join(destDir, `${modelId}_uv.js`),  `export const ${modelId}_uv = new Float32Array([${uv.join(',')}]);\n`);
-  writeFileSync(join(destDir, `${modelId}_idx.js`), `export const ${modelId}_idx = new Uint16Array([${idx.join(',')}]);\n`);
+  writeFileSync(join(destDir, `${modelId}_pos.json`), JSON.stringify(pos));
+  writeFileSync(join(destDir, `${modelId}_nml.json`), JSON.stringify(nml));
+  writeFileSync(join(destDir, `${modelId}_uv.json`), JSON.stringify(uv));
+  writeFileSync(join(destDir, `${modelId}_idx.json`), JSON.stringify(idx));
 
-  console.log(`  ${destDir}/${modelId}_pos.js (${pos.length / 3} vertices)`);
+  console.log(`  ${destDir}/${modelId}_pos.json (${pos.length / 3} vertices)`);
   console.log('Done.');
 }
 

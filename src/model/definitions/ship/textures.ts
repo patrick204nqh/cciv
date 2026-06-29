@@ -1,5 +1,3 @@
-import type { ModelConfig } from '../../types';
-
 export interface GroupTextureConfig {
   color: number;
   roughness?: number;
@@ -293,17 +291,6 @@ export function generateGroupTextures(groupName: string, config: GroupTextureCon
       result.map = canvas;
       break;
     }
-  }
-
-  return result;
-}
-
-export function generateShipTextures(config: ModelConfig): Record<string, GeneratedTextures> {
-  const overrides = config.materialOverrides ?? {} as Record<string, GroupTextureConfig>;
-  const result: Record<string, GeneratedTextures> = {};
-
-  for (const [groupName, groupConfig] of Object.entries(overrides)) {
-    result[groupName] = generateGroupTextures(groupName, groupConfig);
   }
 
   return result;

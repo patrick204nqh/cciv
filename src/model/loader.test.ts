@@ -14,6 +14,7 @@ describe('ModelLoaderImpl', () => {
       scale: { setScalar: vi.fn(), set: vi.fn() },
       rotation: { set: vi.fn() },
       removeFromParent: vi.fn(),
+      uuid: 'mock-uuid',
     };
     mockGlbResult = { scene: mockGroup, animations: [], meshes: [] };
 
@@ -25,19 +26,25 @@ describe('ModelLoaderImpl', () => {
 
     const mockCatalog = {
       getEntry: vi.fn().mockImplementation((ref: string) => {
-        if (ref === 'ship') return { glb: '/model/definitions/ship.glb' } as ModelCatalogEntry;
+        if (ref === 'glb-model') return { glb: '/model/definitions/glb-model.glb' } as ModelCatalogEntry;
         return undefined;
       }),
-      has: vi.fn().mockImplementation((ref: string) => ref === 'ship'),
-      getAll: vi.fn().mockReturnValue([{ id: 'ship', entry: { glb: '/model/definitions/ship.glb' } }]),
+      has: vi.fn().mockImplementation((ref: string) => ref === 'glb-model'),
+      getAll: vi.fn().mockReturnValue([{ id: 'glb-model', entry: { glb: '/model/definitions/glb-model.glb' } }]),
     };
 
     loader = new ModelLoaderImpl(mockGlbLoader as any, mockCatalog as any);
   });
 
-  it('loads a model by ref', async () => {
+  it('loads a code-defined model by ref', async () => {
     const entity = await loader.load('ship');
     expect(entity.id).toBe('ship');
+    expect(entity.metadata.source).toBe('procedural');
+  });
+
+  it('loads a GLB model by ref as fallback', async () => {
+    const entity = await loader.load('glb-model');
+    expect(entity.id).toBe('glb-model');
     expect(entity.root.id).toBe(mockGlbResult.scene.uuid);
   });
 

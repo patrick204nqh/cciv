@@ -23,10 +23,10 @@ export function writeModelData(modelId: string, groups: Record<string, THREE.Buf
     const uv = geo.attributes.uv ? Array.from(geo.attributes.uv.array as Float32Array) : [];
     const idx = geo.index ? Array.from(geo.index.array) : Array.from({ length: pos.length / 3 }, (_, i) => i);
 
-    writeFileSync(join(destDir, `${groupName}_pos.js`), `export const ${groupName}_pos = new Float32Array([${pos.join(',')}]);\n`);
-    writeFileSync(join(destDir, `${groupName}_nml.js`), `export const ${groupName}_nml = new Float32Array([${nml.join(',')}]);\n`);
-    writeFileSync(join(destDir, `${groupName}_uv.js`),  `export const ${groupName}_uv = new Float32Array([${uv.join(',')}]);\n`);
-    writeFileSync(join(destDir, `${groupName}_idx.js`), `export const ${groupName}_idx = new Uint16Array([${idx.join(',')}]);\n`);
+    writeFileSync(join(destDir, `${groupName}_pos.json`), JSON.stringify(pos));
+    writeFileSync(join(destDir, `${groupName}_nml.json`), JSON.stringify(nml));
+    writeFileSync(join(destDir, `${groupName}_uv.json`), JSON.stringify(uv));
+    writeFileSync(join(destDir, `${groupName}_idx.json`), JSON.stringify(idx));
 
     console.log(`  [${modelId}/${groupName}] ${pos.length / 3} verts, ${idx.length / 3} tris`);
   }

@@ -26,6 +26,27 @@ export interface ModelEntity {
   clone(): ModelEntity;
 }
 
+export interface DataGroup {
+  type: 'data';
+  positions: number[];
+  normals: number[];
+  uvs: number[];
+  indices: number[];
+  uvs2?: number[];
+  material?: Partial<MaterialSpec>;
+}
+
+export type GroupDefinition = DataGroup;
+
+export interface ModelDefinition {
+  groups: Record<string, GroupDefinition>;
+  transform?: TransformSpec;
+  metadata?: {
+    license?: string;
+    sourceUrl?: string;
+  };
+}
+
 export interface TransformSpec {
   scale?: number | [number, number, number];
   rotation?: [number, number, number];
