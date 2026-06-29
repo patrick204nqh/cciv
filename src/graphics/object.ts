@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { ISceneObject, Vec3Like, EulerLike, QuatLike, ReadonlyVec3Like } from './types';
-import { BufferGeometry, Material, Mesh, Object3D, Quaternion, Vector3, RepeatWrapping, Texture } from 'three';
+import { BufferGeometry, Material, Mesh, Object3D, Quaternion, Vector3 } from 'three';
 class Vec3Property implements Vec3Like {
   constructor(private target: THREE.Vector3) {}
   get x(): number { return this.target.x; }
@@ -184,37 +184,6 @@ export class SceneObject implements ISceneObject {
 
   getWorldMatrix(): Float32Array {
     return new Float32Array(this._obj.matrixWorld.elements);
-  }
-
-  setMeshTexture(meshName: string, textureType: string, texture: any): void {
-    this._obj.traverse((child) => {
-      const mesh = child as Mesh;
-      if (mesh.isMesh && mesh.name === meshName) {
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach(m => (m as any)[textureType] = texture);
-        } else {
-          (mesh.material as any)[textureType] = texture;
-        }
-        (mesh.material as any).needsUpdate = true;
-      }
-    });
-  }
-
-  setMeshTextureRepeat(meshName: string, textureType: string, repeatX: number, repeatY: number): void {
-    this._obj.traverse((child) => {
-      const mesh = child as Mesh;
-      if (mesh.isMesh && mesh.name === meshName) {
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        for (const mat of mats) {
-          const tex = (mat as any)[textureType] as Texture | undefined;
-          if (tex) {
-            tex.wrapS = tex.wrapT = RepeatWrapping;
-            tex.repeat.set(repeatX, repeatY);
-            tex.needsUpdate = true;
-          }
-        }
-      }
-    });
   }
 
   getGeometryData(): { positions: Float32Array; indices: Uint16Array | Uint32Array } | null {

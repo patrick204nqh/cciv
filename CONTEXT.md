@@ -12,7 +12,7 @@
 
 **EntityStateBinding** (`src/state/binding.ts`) — encapsulates the subscribe-dispose pattern for entities. Eliminates boilerplate: entities declare what state they need, binding handles subscription mechanics. Used by ocean, lighting, sky, and instance-manager entities.
 
-**LocationTracker** (`src/state/location-tracker.ts`) — observes StateStore changes at `environment.*` and `instances.*` paths, marks the active location as dirty. Decouples dirty-tracking logic from the state store. Started by Kernel during init.
+~~**LocationTracker** (`src/state/location-tracker.ts`) — deleted. Superseded by WorldController, which owns world-load dispatch centrally.~~
 
 ## Models
 
@@ -70,19 +70,23 @@
 
 **Behavior** — string field on `InstanceDef` in a WorldConfig. Used as a dispatch key by `BehaviorRegistry` at world-load time. Built-in values: `'vessel'` (wave-response physics + spray + wake). Any other string triggers the registered `BehaviorFactory` or a warning. Default `undefined` means static placement handled by instance-manager at runtime. Fully extensible — no hardcoded dispatch logic.
 
-**WorldLoader** (`src/model/world-loader.ts`) — loads a WorldConfig, orchestrates entity creation via `EntityRegistry.createAll()`. Returns `WorldLoadResult`. Pure orchestration — delegates all construction to registered factory adapters. Imports `src/entity/register-factories.ts` for side-effect auto-registration.
+**WorldLoader** (`src/model/world-loader.ts`) — loads a WorldConfig, orchestrates entity creation via `EntityRegistry.createAll()`. Returns `WorldLoadResult`. Pure orchestration — delegates all construction to registered factory adapters. Imports `src/entity/register-factories.ts` for side-effect auto-registration. Called exclusively by WorldController — no other caller.
+
+**WorldController** (`src/controller/world-controller.ts`) — single seam for loading/reloading a world. Orchestrates the full lifecycle: load models → detach current entities → build new entities → attach all. Internally delegates to specialized builders: `EnvironmentBuilder` (environment entities) and the existing `EntityRegistry`/`BehaviorRegistry` path (instance entities). Reads the target WorldConfig from the state store (or accepts an explicit override for testing). Provides progress callbacks (`loading-models` / `detaching` / `building-entities` / `attaching`) and returns a `CommitResult` with error collection. Fail-fast: if any model fails to load, the scene is left untouched. Uses diff-based dispatch: if only environment params changed, skips model loading and only rebuilds environment entities; if instances changed, full reload. Replaces the deleted LocationTracker — there is no separate dirty-tracking module; WorldController is the sole entry point for world composition change. Owned by Kernel.
+
+**EnvironmentBuilder** (`src/controller/environment-builder.ts`) — internal delegate of WorldController. Builds environment entities from an `EnvironmentState`: ocean (if `ocean` present), sky, lighting, fog, mist, rain. Consolidates entity-creation logic from `createEnvironmentEntity` and the imperative rebuild loop from `environment-controller` plugin. Pure construction — does not handle weather transitions (those remain in the plugin as a visual effect).
 
 **EntityFactory** — interface in `src/entity/entity-registry.ts`: `match(config, modelLoader, store?): Promise<FactoryResult>`. Each factory inspects the config and produces entities. Environment entities (ocean, sky, lighting) `match` on config presence; instance entities (vessel) `match` on behavior field. Each entity module registers its own factory at module level — no central wiring file.
 
-**Kernel** — bootstrap orchestrator. Thin orchestrator that delegates to specialized modules: RenderingModule (Three.js), PluginManager (plugin lifecycle), StateStore (app state), LocationTracker (dirty tracking). `setMode(m)` propagates to EntityManager (`setPaused`) and plugins (`onModeSwitch`).
+**Kernel** — bootstrap orchestrator. Thin orchestrator that delegates to specialized modules: RenderingModule (Three.js), PluginManager (plugin lifecycle), StateStore (app state), WorldController (world composition). `setMode(m)` propagates to EntityManager (`setPaused`) and plugins (`onModeSwitch`).
 
 **RenderingModule** (`src/graphics/module.ts`) — owns the Three.js scene, renderer, camera, and OrbitControls. Manages window resize events and the RAF render loop. Accepts an `onBeforeRender` callback for pre-render updates (plugin rendering, entity updates).
 
 **PluginManager** (`src/plugins/plugin-manager.ts`) — owns plugin lifecycle (register, init, onModeSwitch, render). Registry inlined — no separate PluginRegistry module. Isolates plugin crashes during mode switching.
 
-**PluginStateAPI** (`src/plugins/plugin-state-api.ts`) — adapter providing plugins a stable interface to application state (get, set, select, watch, subscribe). Decouples plugins from direct StateStore implementation.
+~~**PluginStateAPI** (`src/plugins/plugin-state-api.ts`) — deleted. Plugins access `StateStore` directly via `PluginContext.state`. First-party code only — no untrusted plugins.~~
 
-**PluginSceneAPI** (`src/plugins/plugin-scene-api.ts`) — adapter providing plugins a stable interface to the 3D scene (add, remove, getObjectByName, traverse). Accepts and returns `ISceneObject` (never vendor types). Delegates every call to `IScene` verbatim.
+~~**PluginSceneAPI** (`src/plugins/plugin-scene-api.ts`) — deleted. Plugins access `IScene` directly via `PluginContext.scene`. Same reasoning.~~
 
 **Plugin-level escape hatch** — when a plugin genuinely needs Three.js interop that the gate cannot reasonably wrap (TransformControls, raycaster internals), the vendor exposure is contained to that single plugin module rather than leaking through a gate interface. Used by gizmos plugin only. Exception to Rule 4, documented as deliberate carve-out.
 
@@ -103,6 +107,20 @@
 **`sampleOcean(x, z, t)`** (`src/environment/waves.ts`) — returns `{ height, dispX, dispZ }`. Gerstner wave simulation.
 
 **`sampleNormal(x, z, t)`** — returns `{ x, y, z }`. Wave surface normal.
+
+## Physics (gate)
+
+**IPhysicsWorld** (`src/physics/types.ts`) — gate interface for the physics engine. Provides `step(dt)`, `createBody(config): IPhysicsBody`, `addBody(body)`, `removeBody(body)`, `gravity`. Implemented by `PhysicsWorld`. No vendor types (cannon-es) on the interface.
+
+**IPhysicsBody** (`src/physics/types.ts`) — gate interface for a physics body. Provides `position`, `velocity`, `quaternion`, `setPosition()`, `applyForce()`, `applyLocalForce()`, `setTorque()`, `syncTransform(target: ISceneObject)` (quaternion→euler conversion lives here, not duplicated in VesselPhysics), `dispose()`. Implemented by `PhysicsBody`. No vendor types on the interface.
+
+**PhysicsWorld** (`src/physics/world.ts`) — implements `IPhysicsWorld`. Singleton. `createBody()` factory keeps CANNON shape construction (Trimesh, ConvexPolyhedron, Box) internal to the gate. No `_world` escape hatch exposed.
+
+**PhysicsBody** (`src/physics/body.ts`) — implements `IPhysicsBody`. Wraps a CANNON.Body. `syncTransform()` owns the quaternion→euler conversion used by vessel physics.
+
+**PhysicsDebugRenderer** (`src/physics/debug.ts`) — wireframe overlay for physics bodies. No direct Three.js imports: builds `Float32Array` vertex data (pure math), delegates BufferGeometry construction to internal gate helpers, creates meshes via the graphics gate (`IScene.createMesh()` + `IMaterial`).
+
+**VesselPhysics** (`src/physics/vessel-physics.ts`) — vessel-specific physics orchestration. Receives `IPhysicsBody` from the `PhysicsWorld.createBody()` factory. No direct `import * as CANNON`. Coordinates hydrodynamics + sail + throttle/steer on the body.
 
 ## Asset Pipeline (ADR-003)
 

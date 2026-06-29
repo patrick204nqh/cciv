@@ -19,6 +19,7 @@ Architecture reference: `docs/design/architecture.md` — layer audit, file map,
   - `src/plugins/` — cross-cutting UI/debug features.
   - `src/ui/` — React overlay layer.
   - `src/util/` — Disposer, PositionTracker, WorldClock, event-bus.
+  - `src/controller/` — orchestration seam for world-level operations (WorldController).
   - `src/kernel.ts` — bootstrap orchestrator.
 - **`index.html`** — minimal HTML shell with inline CSS; loads `src/main.ts`.
 - **`scripts/`** — build tools.

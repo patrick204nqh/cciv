@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { IScene, ISceneObject, SceneHandle, FogSpec, IMaterial } from './types';
+import type { IScene, ISceneObject, SceneHandle, FogSpec, IMaterial, MaterialSpec } from './types';
 import { GeometryHandle } from './types';
 import { SceneObject } from './object';
 
@@ -63,6 +63,10 @@ export class SceneAdapter implements IScene {
     return this.wrap(group);
   }
 
+  wrapObject3D(obj: any): ISceneObject {
+    return this.wrap(obj);
+  }
+
   createMesh(geometry: GeometryHandle, material: IMaterial): ISceneObject {
     const vendorMat = _registeredMaterials.get(material);
     if (!vendorMat) throw new Error('Material not registered with the scene gate');
@@ -118,7 +122,7 @@ export class SceneAdapter implements IScene {
     resolveBuffer(geo).setAttribute(name, new THREE.BufferAttribute(data, itemSize));
   }
 
-  setIndex(geo: GeometryHandle, data: Uint16Array): void {
+  setIndex(geo: GeometryHandle, data: Uint16Array | Uint32Array): void {
     resolveBuffer(geo).setIndex(new THREE.BufferAttribute(data, 1));
   }
 
@@ -133,14 +137,7 @@ export class SceneAdapter implements IScene {
     return attr.array instanceof Float32Array ? attr.array : new Float32Array(attr.array);
   }
 
-  createStandardMaterial(spec: {
-    color?: number | string;
-    roughness?: number;
-    metalness?: number;
-    transparent?: boolean;
-    alphaTest?: number;
-    side?: number;
-  }): IMaterial {
+  createStandardMaterial(spec: MaterialSpec): IMaterial {
     const mat = new THREE.MeshStandardMaterial();
     if (spec.color != null) {
       const c = typeof spec.color === 'number' ? spec.color : parseInt(spec.color.replace('#', ''), 16);
@@ -244,14 +241,7 @@ export function createPointMaterial(opts: {
   return handle;
 }
 
-export function createStandardMaterial(spec: {
-  color?: number | string;
-  roughness?: number;
-  metalness?: number;
-  transparent?: boolean;
-  alphaTest?: number;
-  side?: number;
-}): IMaterial {
+export function createStandardMaterial(spec: MaterialSpec): IMaterial {
   const mat = new THREE.MeshStandardMaterial();
   if (spec.color != null) {
     const c = typeof spec.color === 'number' ? spec.color : parseInt(spec.color.replace('#', ''), 16);

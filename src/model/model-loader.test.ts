@@ -38,8 +38,6 @@ function createMockScene(): IScene {
       dispose() {},
       getWorldMatrix() { return new Float32Array(16); },
       getGeometryData() { return null; },
-      setMeshTexture() {},
-      setMeshTextureRepeat() {},
       [Symbol.toStringTag]: 'ISceneObject',
     } as ISceneObject;
   }
@@ -72,6 +70,7 @@ function createMockScene(): IScene {
     setIndex() {},
     markAttributeDirty() {},
     readAttribute() { return null; },
+    wrapObject3D(obj: any) { const o = makeObj(obj.name ?? 'wrapped', false); o.id = obj.uuid; return o; },
     createCanvasTexture(c: HTMLCanvasElement) { return c; },
     registerMaterial() {},
     createStandardMaterial(spec: any) {

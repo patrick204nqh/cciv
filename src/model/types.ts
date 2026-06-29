@@ -1,4 +1,4 @@
-import type { ISceneObject, IMaterial } from '../graphics/types';
+import type { ISceneObject, IMaterial, MaterialSpec } from '../graphics/types';
 import type { SceneEntity } from '../entity/types';
 
 export type ModelSource = 'code-defined';
@@ -15,15 +15,6 @@ export interface ModelEntity {
   };
   dispose(): void;
   clone(): ModelEntity;
-}
-
-export interface MaterialSpec {
-  color?: number;
-  roughness?: number;
-  metalness?: number;
-  transparent?: boolean;
-  alphaTest?: number;
-  side?: 'front' | 'back' | 'double';
 }
 
 export interface DataGroup {

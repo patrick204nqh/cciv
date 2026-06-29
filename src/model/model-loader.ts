@@ -1,8 +1,7 @@
 import type { ModelLoader, ModelCatalogEntry } from './types';
 import { ModelLoadError } from './types';
 import type { ModelEntity, ModelDefinition } from './types';
-import type { IScene } from '../graphics/types';
-import { SceneObject } from '../graphics/object';
+import type { IScene, ISceneObject } from '../graphics/types';
 import { GlbLoader } from './glb-loader';
 import { ModelCatalogReader } from './catalog';
 import { modelRegistry } from './active-registry';
@@ -14,9 +13,10 @@ function buildModelEntity(
   rawRoot: any,
   ref: string,
   metadata: ModelEntity['metadata'],
+  wrap: (obj: any) => ISceneObject,
   onDispose?: () => void,
 ): ModelEntity {
-  const root = new SceneObject(rawRoot);
+  const root = wrap(rawRoot);
   const disp = new Disposer();
   disp.add(() => rawRoot.removeFromParent());
   if (onDispose) disp.add(onDispose);
@@ -26,7 +26,7 @@ function buildModelEntity(
     root,
     metadata,
     clone() {
-      return buildModelEntity(rawRoot.clone(true), ref, metadata);
+      return buildModelEntity(rawRoot.clone(true), ref, metadata, wrap, onDispose);
     },
     dispose() {
       disp.dispose();
@@ -101,7 +101,8 @@ export class ModelLoaderImpl implements ModelLoader {
       license: entry.license,
       polyCount: entry.polyCount,
     };
-    const entity = buildModelEntity(rawRoot, ref, metadata, () => modelRegistry.unregister(ref));
+    const wrap = (obj: any) => this.scene!.wrapObject3D(obj);
+    const entity = buildModelEntity(rawRoot, ref, metadata, wrap, () => modelRegistry.unregister(ref));
     modelRegistry.register(entity);
     return entity;
   }

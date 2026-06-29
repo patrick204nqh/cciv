@@ -50,48 +50,50 @@ export const FRONT_SIDE = 0;
 export const BACK_SIDE = 1;
 export const DOUBLE_SIDE = 2;
 
-export interface IScene extends SceneHandle {
+export interface IGeometryFactory {
+  createPlaneGeometry(width: number, height: number, segW: number, segH: number): GeometryHandle;
+  createSphereGeometry(radius: number, widthSeg: number, heightSeg: number): GeometryHandle;
+  createBufferGeometry(): GeometryHandle;
+  setAttribute(geo: GeometryHandle, name: string, data: Float32Array, itemSize: number): void;
+  setIndex(geo: GeometryHandle, data: Uint16Array | Uint32Array): void;
+  markAttributeDirty(geo: GeometryHandle, name: string): void;
+  readAttribute(geo: GeometryHandle, name: string): Float32Array | null;
+}
+
+export interface IMaterialFactory {
+  createCanvasTexture(canvas: HTMLCanvasElement): any;
+  registerMaterial(material: IMaterial, vendor: any): void;
+  createStandardMaterial(spec: MaterialSpec): IMaterial;
+}
+
+export interface MaterialSpec {
+  color?: number | string;
+  roughness?: number;
+  metalness?: number;
+  transparent?: boolean;
+  alphaTest?: number;
+  side?: number;
+}
+
+export interface ILightFactory {
+  createDirectionalLight(color: string, intensity: number): ISceneObject;
+  createAmbientLight(color: string, intensity: number): ISceneObject;
+  createHemisphereLight(skyColor: string, groundColor: string, intensity: number): ISceneObject;
+}
+
+export interface ISceneGraph extends SceneHandle {
   fog: FogSpec | null;
   background: string | null;
   getObjectByName(name: string): ISceneObject | undefined;
   traverse(fn: (obj: ISceneObject) => void): void;
   createGroup(name?: string): ISceneObject;
   createMesh(geometry: GeometryHandle, material: IMaterial): ISceneObject;
-
-  createDirectionalLight(color: string, intensity: number): ISceneObject;
-  createAmbientLight(color: string, intensity: number): ISceneObject;
-  createHemisphereLight(skyColor: string, groundColor: string, intensity: number): ISceneObject;
-  createPlaneGeometry(width: number, height: number, segW: number, segH: number): GeometryHandle;
-  createSphereGeometry(radius: number, widthSeg: number, heightSeg: number): GeometryHandle;
   createPoints(geometry: GeometryHandle, material: IMaterial): ISceneObject;
-
-  /** Create an empty geometry. Use setAttribute/setIndex to populate. */
-  createBufferGeometry(): GeometryHandle;
-  /** Set a Float32 attribute on a geometry (position, color, etc.). */
-  setAttribute(geo: GeometryHandle, name: string, data: Float32Array, itemSize: number): void;
-  /** Set the index buffer on a geometry. */
-  setIndex(geo: GeometryHandle, data: Uint16Array): void;
-  /** Flag a geometry attribute as needing a GPU upload. */
-  markAttributeDirty(geo: GeometryHandle, name: string): void;
-  /** Read a named attribute's data as a Float32Array (copy). Returns null if absent. */
-  readAttribute(geo: GeometryHandle, name: string): Float32Array | null;
-
-  /** Create a texture from a canvas element. */
-  createCanvasTexture(canvas: HTMLCanvasElement): any;
-
-  /** Register an externally-created material so the gate can resolve it. */
-  registerMaterial(material: IMaterial, vendor: any): void;
-
-  /** Create a MeshStandardMaterial from a spec. Returns IMaterial. */
-  createStandardMaterial(spec: {
-    color?: number | string;
-    roughness?: number;
-    metalness?: number;
-    transparent?: boolean;
-    alphaTest?: number;
-    side?: number;
-  }): IMaterial;
+  /** Wrap a vendor (Three.js) Object3D into an ISceneObject. Used by GLB loading. */
+  wrapObject3D(obj: any): ISceneObject;
 }
+
+export interface IScene extends ISceneGraph, IGeometryFactory, IMaterialFactory, ILightFactory {}
 
 export interface IMaterial {
   color?: string;
@@ -105,7 +107,7 @@ export interface IMaterial {
 
 export interface ISceneObject {
   readonly id: string;
-  readonly name: string;
+  name: string;
   readonly type: string;
   readonly userData: Record<string, any>;
   position: Vec3Like;
@@ -137,8 +139,4 @@ export interface ISceneObject {
 
   getWorldMatrix(): Float32Array;
   getGeometryData(): { positions: Float32Array; indices: Uint16Array | Uint32Array } | null;
-  /** Set a texture map (map, alphaMap, normalMap, roughnessMap, etc.) on a mesh by name. */
-  setMeshTexture(meshName: string, textureType: string, texture: any): void;
-  /** Set UV repeat on a mesh texture channel. */
-  setMeshTextureRepeat(meshName: string, textureType: string, repeatX: number, repeatY: number): void;
 }

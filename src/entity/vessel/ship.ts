@@ -15,6 +15,7 @@ import { createVesselGroup } from '../vessel-group';
 import type { IScene } from '../../graphics/types';
 import { generateGroupTextures } from '../../model/definitions/ship/textures';
 import { textureConfig } from '../../model/definitions/ship/definition';
+import { applyMeshTexture, applyMeshTextureRepeat } from '../../util/apply-mesh-texture';
 
 behaviorRegistry.register('vessel', {
   async create(id: string, def: InstanceDef, deps) {
@@ -162,13 +163,13 @@ function applyProceduralTextures(model: ModelEntity, scene: IScene): void {
       const textures = generateGroupTextures(groupName, groupConfig, w, h);
       if (textures.map && scene.createCanvasTexture) {
         const tex = scene.createCanvasTexture(textures.map);
-        model.root.setMeshTexture(groupName, 'map', tex);
+        applyMeshTexture(model.root, groupName, 'map', tex);
         const repeatX = groupName === 'hull' ? 3 : groupName === 'deck' ? 2 : 1;
-        model.root.setMeshTextureRepeat(groupName, 'map', repeatX, 1);
+        applyMeshTextureRepeat(model.root, groupName, 'map', repeatX, 1);
       }
       if (textures.alphaMap && scene.createCanvasTexture) {
         const tex = scene.createCanvasTexture(textures.alphaMap);
-        model.root.setMeshTexture(groupName, 'alphaMap', tex);
+        applyMeshTexture(model.root, groupName, 'alphaMap', tex);
       }
     }
   } catch {
