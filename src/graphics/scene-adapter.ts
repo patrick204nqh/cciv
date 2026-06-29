@@ -31,6 +31,7 @@ export class SceneAdapter implements IScene {
   private vendorCache = new Map<THREE.Object3D, string>();
   private _envColor: string | null = null;
   private _oceanClipmap: ClipmapGeometry | null = null;
+  private _oceanMesh: THREE.Mesh | null = null;
 
   constructor(
     private scene: THREE.Scene,
@@ -39,6 +40,10 @@ export class SceneAdapter implements IScene {
 
   onBeforeRender(cameraPosition: THREE.Vector3): void {
     this._oceanClipmap?.update(cameraPosition);
+    if (this._oceanMesh && this._oceanClipmap) {
+      this._oceanMesh.position.copy(this._oceanClipmap.offset);
+      this._oceanMesh.updateMatrix();
+    }
   }
 
   private wrap(obj: THREE.Object3D): ISceneObject {
@@ -102,6 +107,8 @@ export class SceneAdapter implements IScene {
       this._oceanClipmap = clipmap;
       const result = createTSLOceanMesh(clipmap.root, config as any);
       mesh = result.mesh;
+      mesh.position.copy(clipmap.offset);
+      this._oceanMesh = mesh;
     }
 
     const obj = this.wrap(mesh);
@@ -112,6 +119,7 @@ export class SceneAdapter implements IScene {
         (mesh.material as THREE.Material).dispose();
         this._oceanClipmap?.dispose();
         this._oceanClipmap = null;
+        this._oceanMesh = null;
       },
     };
   }

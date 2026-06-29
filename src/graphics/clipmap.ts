@@ -4,6 +4,7 @@ import type { ClipmapConfig } from './types';
 
 export interface ClipmapGeometry {
   readonly root: THREE.BufferGeometry;
+  readonly offset: THREE.Vector3;
   update(cameraPosition: THREE.Vector3): void;
   dispose(): void;
 }
@@ -80,30 +81,15 @@ export function createClipmapGeometry(config: ClipmapConfig): ClipmapGeometry {
   const merged = mergeGeometries(ringGeos);
   if (!merged) throw new Error('Failed to merge clipmap rings');
 
-  const lastRingRadius = prevRadius;
-
-  let prevSnappedX = 0;
-  let prevSnappedZ = 0;
+  const offset = new THREE.Vector3(0, 0, 0);
 
   return {
     root: merged,
+    offset,
 
     update(cameraPosition: THREE.Vector3): void {
-      const dx = cameraPosition.x - prevSnappedX;
-      const dz = cameraPosition.z - prevSnappedZ;
-
-      if (Math.abs(dx) > 0.01 || Math.abs(dz) > 0.01) {
-        const pos = merged.attributes.position;
-        const array = pos.array as Float32Array;
-        for (let i = 0; i < pos.count; i++) {
-          array[i * 3] += dx;
-          array[i * 3 + 2] += dz;
-        }
-        pos.needsUpdate = true;
-        merged.computeBoundingSphere();
-        prevSnappedX = cameraPosition.x;
-        prevSnappedZ = cameraPosition.z;
-      }
+      offset.x = cameraPosition.x;
+      offset.z = cameraPosition.z;
     },
 
     dispose(): void {
