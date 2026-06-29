@@ -1,4 +1,4 @@
-import { Object3D, Mesh, Camera, Raycaster, Vector2 } from 'three';
+import { Mesh, Camera, Raycaster, Vector2 } from 'three';
 import { TransformControls } from '../../three/addons';
 import type { ScenePlugin, PluginContext } from '../types';
 import type { ISceneObject } from '../../scene/types';
@@ -64,6 +64,12 @@ export const gizmosPlugin: ScenePlugin = (() => {
       controls.setSize(0.8);
       (controls as any).visible = false;
       ctx.scene.add(new SceneObject((controls as any)._root));
+
+      ctx.state.watch(s => s.activeLocation, () => {
+        controls.detach();
+        ctx.selectedObject = null;
+        useSelectionStore.getState().setSelected(null);
+      });
 
       ctx.renderer!.domElement.addEventListener('pointerdown', onPointerDown);
       controls.addEventListener('mouseDown', () => controls.enabled = false);
