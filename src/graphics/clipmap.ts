@@ -89,11 +89,8 @@ export function createClipmapGeometry(config: ClipmapConfig): ClipmapGeometry {
     root: merged,
 
     update(cameraPosition: THREE.Vector3): void {
-      const gridSize = 0.5;
-      const snappedX = Math.round(cameraPosition.x / gridSize) * gridSize;
-      const snappedZ = Math.round(cameraPosition.z / gridSize) * gridSize;
-      const dx = snappedX - prevSnappedX;
-      const dz = snappedZ - prevSnappedZ;
+      const dx = cameraPosition.x - prevSnappedX;
+      const dz = cameraPosition.z - prevSnappedZ;
 
       if (Math.abs(dx) > 0.01 || Math.abs(dz) > 0.01) {
         const pos = merged.attributes.position;
@@ -104,8 +101,8 @@ export function createClipmapGeometry(config: ClipmapConfig): ClipmapGeometry {
         }
         pos.needsUpdate = true;
         merged.computeBoundingSphere();
-        prevSnappedX = snappedX;
-        prevSnappedZ = snappedZ;
+        prevSnappedX = cameraPosition.x;
+        prevSnappedZ = cameraPosition.z;
       }
     },
 
