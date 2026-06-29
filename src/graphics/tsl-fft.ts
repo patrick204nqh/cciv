@@ -158,6 +158,35 @@ export function createGerstnerNormalFn(waveField: WaveField): ReturnType<typeof 
   });
 }
 
+export function createGerstnerJacobianFn(waveField: WaveField) {
+  return Fn(() => {
+    const p = positionLocal;
+    let dudx = float(0), dudz = float(0);
+    let dwdx = float(0), dwdz = float(0);
+
+    Loop(waveField.numWaves, ({ i }) => {
+      const d = waveField.dirArray.element(i);
+      const a = waveField.paramArray.element(i);
+      const dir = d.xy;
+      const k = d.z;
+      const omegaV = d.w;
+      const amp = a.x;
+      const Qi = a.y;
+      const ph = a.z;
+      const arg = k.mul(dir.x.mul(p.x).add(dir.y.mul(p.z))).sub(omegaV.mul(time)).add(ph);
+      const sinA = sin(arg);
+      const kQiAmp = k.mul(Qi).mul(amp);
+
+      dudx = dudx.sub(kQiAmp.mul(dir.x).mul(dir.x).mul(sinA));
+      dudz = dudz.sub(kQiAmp.mul(dir.x).mul(dir.y).mul(sinA));
+      dwdx = dwdx.sub(kQiAmp.mul(dir.y).mul(dir.x).mul(sinA));
+      dwdz = dwdz.sub(kQiAmp.mul(dir.y).mul(dir.y).mul(sinA));
+    });
+
+    return float(1).add(dudx).add(dwdz).add(dudx.mul(dwdz)).sub(dudz.mul(dwdx));
+  });
+}
+
 export function sampleWaveComponentsCPU(
   x: number, z: number, t: number,
   components: WaveComponentGPU[],
