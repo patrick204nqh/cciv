@@ -5,6 +5,7 @@ import { createOceanEntity } from './ocean';
 import { createSkyEntity } from './sky';
 import { createLightingEntity } from './lighting';
 import { createRainEntity } from './rain';
+import { createMistEntity } from './mist';
 import { entityRegistry } from '../entity-registry';
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
@@ -42,6 +43,11 @@ export function createEnvironmentEntity(env: EnvironmentState): SceneEntity {
       }
       if (effective.lighting) {
         const e = createLightingEntity(effective.lighting);
+        e.onAttach(scene, disposer);
+        subEntities.push(e);
+      }
+      if (effective.weather === 'fog' || effective.weather === 'storm') {
+        const e = createMistEntity();
         e.onAttach(scene, disposer);
         subEntities.push(e);
       }

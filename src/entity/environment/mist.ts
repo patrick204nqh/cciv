@@ -3,13 +3,13 @@ import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import { createPointMaterial } from '../../scene/scene-adapter';
 
-const DROP_COUNT = 6000;
-const SPREAD = 400;
-const HEIGHT = 250;
-const FALL_SPEED = 75;
-const DRIFT_X = 6;
+const COUNT = 200;
+const SPREAD = 600;
+const HEIGHT = 100;
+const BASE_SPEED = 2.5;
+const PARTICLE_SIZE = 50;
 
-function createRainDropTexture(scene: IScene): any {
+function createMistTexture(scene: IScene): any {
   const canvas = document.createElement('canvas');
   canvas.width = 64;
   canvas.height = 64;
@@ -17,8 +17,8 @@ function createRainDropTexture(scene: IScene): any {
 
   const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
   grad.addColorStop(0, 'rgba(255,255,255,1)');
-  grad.addColorStop(0.2, 'rgba(255,255,255,0.6)');
-  grad.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+  grad.addColorStop(0.3, 'rgba(255,255,255,0.8)');
+  grad.addColorStop(0.6, 'rgba(255,255,255,0.35)');
   grad.addColorStop(1, 'rgba(255,255,255,0)');
 
   ctx.fillStyle = grad;
@@ -27,37 +27,45 @@ function createRainDropTexture(scene: IScene): any {
   return scene.createCanvasTexture(canvas);
 }
 
-export function createRainEntity(): SceneEntity {
+export function createMistEntity(): SceneEntity {
   let points: import('../../scene/types').ISceneObject | null = null;
   let geo: GeometryHandle | null = null;
   let _scene: IScene | null = null;
   let positions: Float32Array;
+  let velocities: Float32Array;
 
   return {
-    id: 'rain',
+    id: 'mist',
 
     onAttach(scene, disposer?: Disposer) {
       _scene = scene;
       geo = scene.createBufferGeometry();
-      positions = new Float32Array(DROP_COUNT * 3);
+      positions = new Float32Array(COUNT * 3);
+      velocities = new Float32Array(COUNT * 3);
 
-      for (let i = 0; i < DROP_COUNT; i++) {
+      for (let i = 0; i < COUNT; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = BASE_SPEED * (0.5 + Math.random());
         positions[i * 3] = (Math.random() - 0.5) * SPREAD * 2;
-        positions[i * 3 + 1] = Math.random() * HEIGHT - 10;
+        positions[i * 3 + 1] = Math.random() * HEIGHT;
         positions[i * 3 + 2] = (Math.random() - 0.5) * SPREAD * 2;
+        velocities[i * 3] = Math.cos(angle) * speed;
+        velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.4;
+        velocities[i * 3 + 2] = Math.sin(angle) * speed;
       }
 
       scene.setAttribute(geo, 'position', positions, 3);
 
-      const tex = createRainDropTexture(scene);
+      const tex = createMistTexture(scene);
       const mat = createPointMaterial({
-        size: 5,
-        color: '#c0d8f0',
-        opacity: 0.5,
+        size: PARTICLE_SIZE,
+        color: '#c0d0dd',
+        opacity: 0.08,
         transparent: true,
         depthWrite: false,
         map: tex,
       });
+
       points = scene.createPoints(geo, mat);
       scene.add(points);
 
@@ -67,15 +75,19 @@ export function createRainEntity(): SceneEntity {
     onUpdate(dt: number) {
       if (!points || !geo || !_scene) return;
 
-      for (let i = 0; i < DROP_COUNT; i++) {
+      for (let i = 0; i < COUNT; i++) {
         const idx = i * 3;
-        positions[idx + 1] -= FALL_SPEED * dt;
-        positions[idx] -= DRIFT_X * dt;
-        if (positions[idx + 1] < -30) {
-          positions[idx] = (Math.random() - 0.5) * SPREAD * 2;
-          positions[idx + 1] = HEIGHT + Math.random() * 20;
-          positions[idx + 2] = (Math.random() - 0.5) * SPREAD * 2;
+        positions[idx] += velocities[idx] * dt;
+        positions[idx + 1] += velocities[idx + 1] * dt;
+        positions[idx + 2] += velocities[idx + 2] * dt;
+
+        if (positions[idx] > SPREAD) positions[idx] -= SPREAD * 2;
+        if (positions[idx] < -SPREAD) positions[idx] += SPREAD * 2;
+        if (positions[idx + 1] < 0 || positions[idx + 1] > HEIGHT) {
+          velocities[idx + 1] *= -1;
         }
+        if (positions[idx + 2] > SPREAD) positions[idx + 2] -= SPREAD * 2;
+        if (positions[idx + 2] < -SPREAD) positions[idx + 2] += SPREAD * 2;
       }
 
       _scene.markAttributeDirty(geo, 'position');

@@ -54,6 +54,9 @@ export interface IScene extends SceneHandle {
   setIndex(geo: GeometryHandle, data: Uint16Array): void;
   /** Flag a geometry attribute as needing a GPU upload. */
   markAttributeDirty(geo: GeometryHandle, name: string): void;
+
+  /** Create a texture from a canvas element. */
+  createCanvasTexture(canvas: HTMLCanvasElement): any;
 }
 
 export interface IMaterial {

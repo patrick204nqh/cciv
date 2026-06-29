@@ -94,6 +94,12 @@ export class SceneAdapter implements IScene {
     if (attr) attr.needsUpdate = true;
   }
 
+  createCanvasTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    return tex;
+  }
+
   get fog(): FogSpec | null {
     const f = this.scene.fog;
     if (!f) return null;
@@ -143,6 +149,7 @@ export function createPointMaterial(opts: {
   transparent?: boolean;
   depthWrite?: boolean;
   vertexColors?: boolean;
+  map?: THREE.Texture | null;
 }): IMaterial {
   const mat = new THREE.PointsMaterial({
     size: opts.size,
@@ -152,6 +159,7 @@ export function createPointMaterial(opts: {
     transparent: opts.transparent ?? false,
     depthWrite: opts.depthWrite ?? true,
     vertexColors: opts.vertexColors ?? false,
+    map: opts.map ?? null,
   });
   return { _vendor: mat, dispose: () => mat.dispose() } as any;
 }
