@@ -1,7 +1,7 @@
 import { Kernel } from './kernel';
 import { entityManager } from './entity/manager';
 import { GlbLoader } from './model/glb-loader';
-import { ModelLoaderImpl } from './model/loader';
+import { ModelLoaderImpl } from './model/model-loader';
 import { ModelCatalogReader } from './model/catalog';
 import { WorldLoader } from './model/world-loader';
 import { createInstanceManager } from './entity/instances/manager';
@@ -46,7 +46,7 @@ async function main() {
 
   const glbLoader = new GlbLoader();
   const catalog = new ModelCatalogReader(manifest);
-  const modelLoader = new ModelLoaderImpl(glbLoader, catalog);
+  const modelLoader = new ModelLoaderImpl(glbLoader, catalog, scene);
   const worldLoader = new WorldLoader();
 
   const worldConfig = LOCATION_PRESETS[CCIV_WORLD.locations[0]];

@@ -1,5 +1,4 @@
 import type { ModelDefinition } from '../../types';
-import type { GroupTextureConfig } from './textures';
 
 import hullPos from './data/hull_pos.json';
 import hullNml from './data/hull_nml.json';
@@ -37,7 +36,7 @@ import aftUv from './data/aft_uv.json';
 import aftIdx from './data/aft_idx.json';
 import aftUv2 from './data/aft_uv2.json';
 
-const model: ModelDefinition = {
+const definition: ModelDefinition = {
   groups: {
     hull: {
       type: 'data', positions: hullPos, normals: hullNml, uvs: hullUv, indices: hullIdx,
@@ -70,19 +69,13 @@ const model: ModelDefinition = {
   },
 
   transform: { scale: 2.7 },
-  metadata: { license: 'CC0', sourceUrl: 'Derived from ship_pinnace (Poly Haven)' },
+  metadata: {
+    license: 'CC0',
+    sourceUrl: 'Derived from ship_pinnace (Poly Haven). All geometry from source data.',
+    polyCount: 168317,
+  },
 };
 
-export default model;
+export default definition;
 
-// Texture generation config — drives procedural Canvas2D textures at runtime.
-// One entry per group that should receive a generated texture.
-export const textureConfig: Record<string, GroupTextureConfig> = {
-  hull: { color: 0x1c160e, roughness: 0.92 },
-  deck: { color: 0x887050, roughness: 0.88, metalness: 0 },
-  sails: { color: 0xf5edd9, roughness: 1, metalness: 0, transparent: true, alphaTest: 0.5 },
-  rigging: { color: 0x3a2818, roughness: 0.9 },
-  details: { color: 0x2e1c0c, roughness: 0.9 },
-  interior: { color: 0x1a1008, roughness: 0.95, metalness: 0 },
-  aft: { color: 0x1c160e, roughness: 0.85 },
-};
+export { textureConfig } from './textures';

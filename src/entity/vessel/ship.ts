@@ -14,7 +14,7 @@ import { createWakeEntity } from './wake';
 import { createVesselGroup } from '../vessel-group';
 import type { IScene } from '../../graphics/types';
 import { generateGroupTextures } from '../../model/definitions/ship/textures';
-import { textureConfig } from '../../model/definitions/ship/model';
+import { textureConfig } from '../../model/definitions/ship/definition';
 
 behaviorRegistry.register('vessel', {
   async create(id: string, def: InstanceDef, deps) {

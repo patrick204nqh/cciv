@@ -1,12 +1,13 @@
 import type { ModelLoader, ModelCatalogEntry } from './types';
 import { ModelLoadError } from './types';
 import type { ModelEntity, ModelDefinition } from './types';
+import type { IScene } from '../graphics/types';
 import { SceneObject } from '../graphics/object';
 import { GlbLoader } from './glb-loader';
 import { ModelCatalogReader } from './catalog';
-import { modelRegistry } from './registry';
+import { modelRegistry } from './active-registry';
 import { Disposer } from '../util/disposer';
-import { buildModelFromDefinition } from './code-loader';
+import { buildModelFromDefinition } from './model-builder';
 import { modelDefinitions } from './definitions/registry';
 
 function buildModelEntity(
@@ -37,13 +38,20 @@ export class ModelLoaderImpl implements ModelLoader {
   private cache = new Map<string, ModelEntity>();
   private glbLoader: GlbLoader;
   private catalog: ModelCatalogReader;
+  private scene: IScene | null = null;
 
   constructor(
     glbLoader?: GlbLoader,
     catalog?: ModelCatalogReader,
+    scene?: IScene,
   ) {
     this.glbLoader = glbLoader ?? new GlbLoader();
     this.catalog = catalog ?? new ModelCatalogReader();
+    this.scene = scene ?? null;
+  }
+
+  setScene(scene: IScene): void {
+    this.scene = scene;
   }
 
   setCatalog(catalog: ModelCatalogReader): void {
@@ -56,7 +64,9 @@ export class ModelLoaderImpl implements ModelLoader {
 
     const def = modelDefinitions[ref];
     if (def) {
-      const entity = buildModelFromDefinition(ref, def);
+      const scene = this.scene;
+      if (!scene) throw new ModelLoadError(`IScene not set — cannot build model "${ref}"`, ref);
+      const entity = buildModelFromDefinition(ref, def, scene);
       modelRegistry.register(entity);
       this.cache.set(ref, entity);
       return entity;
@@ -87,7 +97,7 @@ export class ModelLoaderImpl implements ModelLoader {
 
     const metadata = {
       id: ref,
-      source: 'extracted' as const,
+      source: 'code-defined' as const,
       license: entry.license,
       polyCount: entry.polyCount,
     };

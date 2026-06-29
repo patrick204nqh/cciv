@@ -57,6 +57,12 @@ export class SceneAdapter implements IScene {
     _registeredMaterials.set(material, vendor);
   }
 
+  createGroup(name?: string): ISceneObject {
+    const group = new THREE.Group();
+    if (name) group.name = name;
+    return this.wrap(group);
+  }
+
   createMesh(geometry: GeometryHandle, material: IMaterial): ISceneObject {
     const vendorMat = _registeredMaterials.get(material);
     if (!vendorMat) throw new Error('Material not registered with the scene gate');
@@ -125,6 +131,37 @@ export class SceneAdapter implements IScene {
     const attr = resolveBuffer(geo).attributes[name];
     if (!attr) return null;
     return attr.array instanceof Float32Array ? attr.array : new Float32Array(attr.array);
+  }
+
+  createStandardMaterial(spec: {
+    color?: number | string;
+    roughness?: number;
+    metalness?: number;
+    transparent?: boolean;
+    alphaTest?: number;
+    side?: number;
+  }): IMaterial {
+    const mat = new THREE.MeshStandardMaterial();
+    if (spec.color != null) {
+      const c = typeof spec.color === 'number' ? spec.color : parseInt(spec.color.replace('#', ''), 16);
+      mat.color.setHex(c);
+    }
+    if (spec.roughness != null) mat.roughness = spec.roughness;
+    if (spec.metalness != null) mat.metalness = spec.metalness;
+    if (spec.transparent) mat.transparent = true;
+    if (spec.alphaTest != null) { mat.alphaTest = spec.alphaTest; }
+    if (spec.side != null) mat.side = spec.side;
+    const handle: IMaterial = {
+      color: typeof spec.color === 'number' ? `#${spec.color.toString(16).padStart(6, '0')}` : spec.color,
+      roughness: spec.roughness ?? 1,
+      metalness: spec.metalness ?? 0,
+      opacity: 1,
+      transparent: spec.transparent ?? false,
+      side: spec.side ?? THREE.FrontSide,
+      dispose: () => mat.dispose(),
+    };
+    _registeredMaterials.set(handle, mat);
+    return handle;
   }
 
   createCanvasTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
@@ -201,6 +238,37 @@ export function createPointMaterial(opts: {
     side: THREE.FrontSide,
     roughness: 1,
     metalness: 0,
+    dispose: () => mat.dispose(),
+  };
+  _registeredMaterials.set(handle, mat);
+  return handle;
+}
+
+export function createStandardMaterial(spec: {
+  color?: number | string;
+  roughness?: number;
+  metalness?: number;
+  transparent?: boolean;
+  alphaTest?: number;
+  side?: number;
+}): IMaterial {
+  const mat = new THREE.MeshStandardMaterial();
+  if (spec.color != null) {
+    const c = typeof spec.color === 'number' ? spec.color : parseInt(spec.color.replace('#', ''), 16);
+    mat.color.setHex(c);
+  }
+  if (spec.roughness != null) mat.roughness = spec.roughness;
+  if (spec.metalness != null) mat.metalness = spec.metalness;
+  if (spec.transparent) mat.transparent = true;
+  if (spec.alphaTest != null) { mat.alphaTest = spec.alphaTest; }
+  if (spec.side != null) mat.side = spec.side;
+  const handle: IMaterial = {
+    color: typeof spec.color === 'number' ? `#${spec.color.toString(16).padStart(6, '0')}` : spec.color,
+    roughness: spec.roughness ?? 1,
+    metalness: spec.metalness ?? 0,
+    opacity: 1,
+    transparent: spec.transparent ?? false,
+    side: spec.side ?? THREE.FrontSide,
     dispose: () => mat.dispose(),
   };
   _registeredMaterials.set(handle, mat);

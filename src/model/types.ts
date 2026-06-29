@@ -1,16 +1,7 @@
-import type { ISceneObject } from '../graphics/types';
+import type { ISceneObject, IMaterial } from '../graphics/types';
 import type { SceneEntity } from '../entity/types';
 
-export interface MaterialSpec {
-  color?: number;
-  roughness?: number;
-  metalness?: number;
-  transparent?: boolean;
-  alphaTest?: number;
-  side?: 'front' | 'back' | 'double';
-}
-
-export type ModelSource = 'extracted' | 'procedural' | 'composite';
+export type ModelSource = 'code-defined';
 
 export interface ModelEntity {
   readonly id: string;
@@ -26,6 +17,15 @@ export interface ModelEntity {
   clone(): ModelEntity;
 }
 
+export interface MaterialSpec {
+  color?: number;
+  roughness?: number;
+  metalness?: number;
+  transparent?: boolean;
+  alphaTest?: number;
+  side?: 'front' | 'back' | 'double';
+}
+
 export interface DataGroup {
   type: 'data';
   positions: number[];
@@ -36,14 +36,58 @@ export interface DataGroup {
   material?: Partial<MaterialSpec>;
 }
 
-export type GroupDefinition = DataGroup;
+export interface HullGroup {
+  type: 'hull';
+  stations: {
+    z: number;
+    sheerY: number;
+    keelY: number;
+    halfBreadths: number[];
+  }[];
+  material?: Partial<MaterialSpec>;
+  subdivisions?: number;
+  stationSubdivisions?: number;
+}
+
+export interface ExtrudedGroup {
+  type: 'extruded';
+  outline: [number, number][];
+  y: number;
+  yHeight: number;
+  material?: Partial<MaterialSpec>;
+}
+
+export interface BillboardGroup {
+  type: 'billboard';
+  width: number;
+  height: number;
+  origin: [number, number, number];
+  belly: number;
+  segmentsW?: number;
+  segmentsH?: number;
+  material?: Partial<MaterialSpec>;
+}
+
+export interface RiggingGroup {
+  type: 'rigging';
+  segments: {
+    from: [number, number, number];
+    to: [number, number, number];
+    radius: number;
+  }[];
+  material?: Partial<MaterialSpec>;
+}
+
+export type GroupDefinition = DataGroup | HullGroup | ExtrudedGroup | BillboardGroup | RiggingGroup;
 
 export interface ModelDefinition {
   groups: Record<string, GroupDefinition>;
+  material?: Partial<MaterialSpec>;
   transform?: TransformSpec;
   metadata?: {
     license?: string;
     sourceUrl?: string;
+    polyCount?: number;
   };
 }
 

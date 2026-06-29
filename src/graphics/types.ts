@@ -55,6 +55,7 @@ export interface IScene extends SceneHandle {
   background: string | null;
   getObjectByName(name: string): ISceneObject | undefined;
   traverse(fn: (obj: ISceneObject) => void): void;
+  createGroup(name?: string): ISceneObject;
   createMesh(geometry: GeometryHandle, material: IMaterial): ISceneObject;
 
   createDirectionalLight(color: string, intensity: number): ISceneObject;
@@ -80,6 +81,16 @@ export interface IScene extends SceneHandle {
 
   /** Register an externally-created material so the gate can resolve it. */
   registerMaterial(material: IMaterial, vendor: any): void;
+
+  /** Create a MeshStandardMaterial from a spec. Returns IMaterial. */
+  createStandardMaterial(spec: {
+    color?: number | string;
+    roughness?: number;
+    metalness?: number;
+    transparent?: boolean;
+    alphaTest?: number;
+    side?: number;
+  }): IMaterial;
 }
 
 export interface IMaterial {
