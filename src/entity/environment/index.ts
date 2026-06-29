@@ -6,6 +6,7 @@ import { createSkyEntity } from './sky';
 import { createLightingEntity } from './lighting';
 import { createRainEntity } from './rain';
 import { createMistEntity } from './mist';
+import { createTerrainEntity } from './terrain';
 import { entityRegistry } from '../entity-registry';
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
@@ -16,6 +17,13 @@ entityRegistry.register({
   async match(config: WorldConfig, _modelLoader: ModelLoader) {
     if (!config.environment.ocean) return { entities: [], errors: [] };
     return { entities: [createEnvironmentEntity(config.environment)], errors: [] };
+  },
+});
+
+entityRegistry.register({
+  async match(config: WorldConfig, _modelLoader: ModelLoader) {
+    if (!config.environment.terrain) return { entities: [], errors: [] };
+    return { entities: [createTerrainEntity(config.environment.terrain)], errors: [] };
   },
 });
 

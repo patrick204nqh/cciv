@@ -1,3 +1,6 @@
+import type { Vec3Like } from '../graphics/types';
+import type { ISceneObject } from '../graphics/types';
+
 export interface PhysicsWorldConfig {
   gravity?: number;
   fixedDt?: number;
@@ -8,6 +11,30 @@ export interface PhysicsBodyConfig {
   shape: TrimeshShape | BoxShape | ConvexHullShape;
   position?: [number, number, number];
   quaternion?: [number, number, number, number];
+}
+
+export interface IPhysicsWorld {
+  readonly gravity: number;
+  readonly fixedDt: number;
+  step(dt: number): void;
+  createBody(config: PhysicsBodyConfig): IPhysicsBody;
+  addBody(body: IPhysicsBody): void;
+  removeBody(body: IPhysicsBody): void;
+  reset(): void;
+  dispose(): void;
+}
+
+export interface IPhysicsBody {
+  readonly position: Vec3Like;
+  readonly velocity: Vec3Like;
+  readonly quaternion: Vec3Like & { w: number };
+  setPosition(x: number, y: number, z: number): void;
+  setVelocity(x: number, y: number, z: number): void;
+  applyLocalForce(x: number, y: number, z: number): void;
+  setTorque(x: number, y: number, z: number): void;
+  setDamping(linear: number, angular: number): void;
+  syncTransform(target: ISceneObject): void;
+  dispose(): void;
 }
 
 export interface TrimeshShape {

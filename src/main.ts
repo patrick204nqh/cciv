@@ -3,9 +3,7 @@ import { entityManager } from './entity/manager';
 import { GlbLoader } from './model/glb-loader';
 import { ModelLoaderImpl } from './model/model-loader';
 import { ModelCatalogReader } from './model/catalog';
-import { WorldLoader } from './model/world-loader';
 import { createInstanceManager } from './entity/instances/manager';
-import { LOCATION_PRESETS, CCIV_WORLD } from './state/worlds';
 import { inspectorPlugin } from './plugins/inspector';
 import { gizmosPlugin } from './plugins/gizmos';
 import { snapshotPlugin } from './plugins/snapshot';
@@ -19,6 +17,7 @@ import { physicsDebugPlugin } from './plugins/physics-debug';
 import { environmentEditorPlugin } from './plugins/environment-editor';
 import { mountReactShell } from './ui/main';
 import { bridgeStore } from './ui/bridge';
+
 async function main() {
   const canvasContainer = mountReactShell();
   const kernel = new Kernel({ container: canvasContainer });
@@ -33,7 +32,6 @@ async function main() {
   kernel.registerPlugin(physicsDebugPlugin);
   kernel.registerPlugin(environmentEditorPlugin);
   kernel.registerPlugin(environmentControllerPlugin);
-  initEnvController(kernel.scene);
   const { scene, store } = kernel;
 
   let manifest: Record<string, any> = {};
@@ -47,21 +45,11 @@ async function main() {
   const glbLoader = new GlbLoader();
   const catalog = new ModelCatalogReader(manifest);
   const modelLoader = new ModelLoaderImpl(glbLoader, catalog, scene);
-  const worldLoader = new WorldLoader();
 
-  const worldConfig = LOCATION_PRESETS[CCIV_WORLD.locations[0]];
-  const { entities } = await worldLoader.load(worldConfig, modelLoader, store);
-  for (const entity of entities) {
-    entityManager.attach(entity, scene);
-  }
+  kernel.setModelLoader(modelLoader);
+  initEnvController(kernel.worldController);
+  await kernel.worldController.commit();
 
-  const allRefs = new Set<string>();
-  for (const preset of Object.values(LOCATION_PRESETS)) {
-    for (const def of Object.values(preset.instances)) {
-      allRefs.add(def.ref);
-    }
-  }
-  await modelLoader.preload(Array.from(allRefs));
   entityManager.attach(createInstanceManager(modelLoader, scene, store), scene);
 
   await kernel.init();

@@ -9,6 +9,14 @@ export interface WaveComponent {
   phase: number
 }
 
+export interface TerrainConfig {
+  size: number
+  segments: number
+  heightScale: number
+  heightData: Float32Array
+  color: string
+}
+
 export interface EnvironmentState {
   weather?: WeatherType
   sky?: {
@@ -34,6 +42,7 @@ export interface EnvironmentState {
     pointLights: { enabled: boolean; intensity: number; color: string; position: [number, number, number]; range: number }[]
   }
   fog: { type: 'exp2' | 'linear'; color: string; density: number }
+  terrain?: TerrainConfig
 }
 
 export interface MaterialOverride {

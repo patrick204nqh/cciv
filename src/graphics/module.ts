@@ -5,7 +5,7 @@ import type { IScene } from '../graphics/types';
 import { SceneAdapter } from '../graphics/scene-adapter';
 import { OrbitControls } from '../three/addons';
 import { createOrbitControls } from '../controls/orbitControls';
-import type { IRenderer, ICamera, Vec3Like } from './types';
+import type { IRenderer, ICamera, ICameraControls, Vec3Like } from './types';
 
 export interface RenderingModuleOptions {
   container?: HTMLElement;
@@ -17,7 +17,7 @@ export interface RenderingModuleOptions {
 export class RenderingModule {
   readonly _renderer: any;
   readonly _camera: PerspectiveCamera;
-  readonly controls: OrbitControls;
+  readonly controls: ICameraControls;
   readonly sceneHandle: IScene;
   private _scene: Scene;
   private container: HTMLElement;
@@ -73,7 +73,14 @@ export class RenderingModule {
     this._camera = opts?.camera ?? new PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000);
     this._camera.position.set(140, 65, -90);
 
-    this.controls = createOrbitControls(this._camera, this._renderer.domElement);
+    const rawControls = createOrbitControls(this._camera, this._renderer.domElement);
+    this.controls = {
+      get target() { return rawControls.target as unknown as Vec3Like; },
+      set autoRotate(v: boolean) { rawControls.autoRotate = v; },
+      get autoRotate() { return rawControls.autoRotate; },
+      update: () => rawControls.update(),
+      dispose: () => rawControls.dispose(),
+    };
 
     window.addEventListener('resize', this.onResize);
   }

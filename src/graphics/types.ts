@@ -13,6 +13,14 @@ export interface ICamera {
   updateProjectionMatrix(): void;
 }
 
+export interface ICameraControls {
+  /** Camera look-at target. x/y/z are directly writable. */
+  readonly target: Vec3Like;
+  autoRotate: boolean;
+  update(): void;
+  dispose(): void;
+}
+
 export interface Vec3Like {
   x: number; y: number; z: number;
 }

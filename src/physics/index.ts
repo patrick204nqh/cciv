@@ -6,5 +6,6 @@ export { SailForceSolver } from './sail';
 export { PhysicsDebugRenderer } from './debug';
 export { createHullCollider, computeConvexHull } from './hull-collider';
 export { VesselPhysics } from './vessel-physics';
+export { extractHullData } from './hull-extractor';
 export type { VesselPhysicsConfig, VesselPhysicsState } from './vessel-physics';
-export type { PhysicsWorldConfig, PhysicsBodyConfig, BuoyancyConfig, HydrodynamicsConfig } from './types';
+export type { PhysicsWorldConfig, PhysicsBodyConfig, BuoyancyConfig, HydrodynamicsConfig, IPhysicsWorld, IPhysicsBody } from './types';

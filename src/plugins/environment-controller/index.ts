@@ -1,22 +1,24 @@
-import { entityManager } from '../../entity/manager';
-import { createEnvironmentEntity } from '../../entity/environment';
-import { setWaveConfig } from '../../environment/wave-surface';
-import { computeWaves } from '../../environment/wave-config';
 import { computeEffectiveEnvironment } from '../../state/environment-utils';
 import type { ScenePlugin, PluginContext } from '../types';
 import type { EnvironmentState, WeatherType } from '../../state/types';
 import type { FogSpec } from '../../graphics/types';
+import type { WorldController } from '../../controller/world-controller';
 
+let _worldController: WorldController | null = null;
 let _scene: import('../../graphics/types').IScene | null = null;
 
+export function initEnvController(wc: WorldController): void {
+  _worldController = wc;
+}
+
 interface TransitionState {
-  fromFog: FogSpec;
-  toFog: FogSpec;
-  fromBg: string;
-  toBg: string;
-  elapsed: number;
-  duration: number;
-  toEnv: EnvironmentState;
+  fromFog: FogSpec
+  toFog: FogSpec
+  fromBg: string
+  toBg: string
+  elapsed: number
+  duration: number
+  toEnv: EnvironmentState
 }
 
 let _transition: TransitionState | null = null;
@@ -35,39 +37,14 @@ function lerpColor(a: string, b: string, t: number): string {
   return `#${((rr << 16) | (rg << 8) | rb).toString(16).padStart(6, '0')}`;
 }
 
-export function initEnvController(scene: import('../../graphics/types').IScene): void {
-  _scene = scene;
-}
-
-function rebuildEnvironment(env: EnvironmentState): void {
-  const s = _scene;
-  if (!s) return;
-
-  const current = entityManager.getEntities();
-  for (const e of current) {
-    if (e.id === 'environment' || e.id === 'rain' || e.id === 'mist') entityManager.detach(e);
-  }
-
-  const effective = computeEffectiveEnvironment(env);
-  const waves = computeWaves(effective.waves);
-  setWaveConfig(waves);
-
-  s.fog = effective.fog;
-  s.background = effective.sky?.gradientTop ?? s.background;
-
-  entityManager.attach(createEnvironmentEntity(env), s);
-}
-
 function getActiveEnvironment(ctx: PluginContext): EnvironmentState {
   const loc = ctx.state.get('activeLocation') as string;
   const envs = ctx.state.get('locations') as Record<string, { environment: EnvironmentState }>;
   return envs[loc]?.environment;
 }
 
-/** Apply the current environment state immediately (used by environment editor). */
 export function applyEnvironment(ctx: PluginContext): void {
-  const env = getActiveEnvironment(ctx);
-  if (env) rebuildEnvironment(env);
+  _worldController?.commit();
 }
 
 export const environmentControllerPlugin: ScenePlugin = {
@@ -77,30 +54,28 @@ export const environmentControllerPlugin: ScenePlugin = {
   priority: 100,
 
   init(ctx: PluginContext) {
+    _scene = ctx.scene;
     const initEnv = getActiveEnvironment(ctx);
     if (initEnv) {
       const initEffective = computeEffectiveEnvironment(initEnv);
-      if (_scene) {
-        _scene.fog = initEffective.fog;
-        if (initEffective.sky) {
-          _scene.background = initEffective.sky.gradientTop;
-        }
+      ctx.scene.fog = initEffective.fog;
+      if (initEffective.sky) {
+        ctx.scene.background = initEffective.sky.gradientTop;
       }
     }
 
     let _lastLocation = ctx.state.get('activeLocation') as string;
     let _lastWeather: WeatherType = initEnv?.weather ?? 'clear';
 
-    ctx.state.watch(s => ({
+    ctx.state.watch((s: any) => ({
       loc: s.activeLocation,
       weather: s.locations[s.activeLocation]?.environment.weather ?? 'clear',
-    }), ({ loc, weather }) => {
+    }), ({ loc, weather }: { loc: string; weather: WeatherType }) => {
       if (loc !== _lastLocation) {
         _lastLocation = loc;
         _lastWeather = weather;
         _transition = null;
-        const env = getActiveEnvironment(ctx);
-        if (env) rebuildEnvironment(env);
+        _worldController?.commit();
         return;
       }
 
@@ -109,10 +84,10 @@ export const environmentControllerPlugin: ScenePlugin = {
 
       const env = getActiveEnvironment(ctx);
       if (!env) return;
-      const toEnv = { ...env, weather };
+      const toEnv: EnvironmentState = { ...env, weather };
       const toEffective = computeEffectiveEnvironment(toEnv);
-      const fromFog = _scene?.fog ?? toEffective.fog;
-      const fromBg = _scene?.background ?? toEffective.sky?.gradientTop ?? '#406888';
+      const fromFog = ctx.scene.fog ?? toEffective.fog;
+      const fromBg = ctx.scene.background ?? toEffective.sky?.gradientTop ?? '#406888';
       const toBg = toEffective.sky?.gradientTop ?? fromBg;
 
       _transition = {
@@ -134,18 +109,24 @@ export const environmentControllerPlugin: ScenePlugin = {
     const t = Math.min(_transition.elapsed / _transition.duration, 1);
 
     const { fromFog, toFog, fromBg, toBg } = _transition;
+
     _scene.fog = {
       type: fromFog.type,
       color: lerpColor(fromFog.color, toFog.color, t),
-      density: fromFog.density + (toFog.density - fromFog.density) * t,
+      density: fromFog.density !== undefined && toFog.density !== undefined
+        ? fromFog.density + (toFog.density - fromFog.density) * t
+        : fromFog.density,
     };
+
     _scene.background = lerpColor(fromBg, toBg, t);
 
     if (t >= 1) {
-      rebuildEnvironment(_transition.toEnv);
       _transition = null;
+      _worldController?.commit();
     }
   },
 
-  destroy() {},
+  destroy() {
+    _worldController = null;
+  },
 };

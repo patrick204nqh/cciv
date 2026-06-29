@@ -1,156 +1,148 @@
-import {
-  Group, Mesh, Object3D, BufferGeometry, BufferAttribute,
-  MeshBasicMaterial, Material as TResinMaterial,
-} from 'three';
+import { MeshBasicMaterial } from 'three';
 import * as CANNON from 'cannon-es';
-import type { ISceneObject } from '../graphics/types';
-import { SceneObject } from '../graphics/object';
+import type { IScene, ISceneObject, IMaterial, GeometryHandle } from '../graphics/types';
+import type { IPhysicsBody } from './types';
 
 export class PhysicsDebugRenderer {
-  private meshes = new Map<CANNON.Body, Mesh>();
-  private _root: Group;
+  private meshes = new Map<IPhysicsBody, ISceneObject>()
+  private root: ISceneObject
+  private scene: IScene
 
-  get root(): ISceneObject {
-    return new SceneObject(this._root);
+  constructor(scene: IScene) {
+    this.scene = scene
+    this.root = scene.createGroup('physics-debug')
+    this.root.visible = false
+    scene.add(this.root)
   }
 
-  get visible(): boolean {
-    return this._root.visible;
+  getRoot(): ISceneObject {
+    return this.root
   }
 
-  constructor() {
-    this._root = new Group();
-    this._root.visible = false;
-  }
-
-  sync(bodies: readonly CANNON.Body[]): void {
-    const existing = new Set(this.meshes.keys());
+  sync(bodies: readonly IPhysicsBody[]): void {
+    const existing = new Set(this.meshes.keys())
 
     for (const body of bodies) {
       if (!existing.has(body)) {
-        this.trackBody(body);
+        this.trackBody(body)
       } else {
-        existing.delete(body);
+        existing.delete(body)
       }
     }
 
     for (const body of existing) {
-      this.untrackBody(body);
+      this.untrackBody(body)
     }
 
     for (const [body, mesh] of this.meshes) {
-      mesh.position.set(body.position.x, body.position.y, body.position.z);
-      mesh.quaternion.set(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w);
+      const p = body.position
+      const q = body.quaternion
+      mesh.position.x = p.x
+      mesh.position.y = p.y
+      mesh.position.z = p.z
+      mesh.rotation.x = q.x
+      mesh.rotation.y = q.y
+      mesh.rotation.z = q.z
     }
   }
 
   show(): void {
-    this._root.visible = true;
+    this.root.visible = true
   }
 
   hide(): void {
-    this._root.visible = false;
+    this.root.visible = false
   }
 
   toggle(): void {
-    this._root.visible = !this._root.visible;
+    this.root.visible = !this.root.visible
   }
 
   dispose(): void {
     for (const mesh of this.meshes.values()) {
-      mesh.geometry.dispose();
-      (mesh.material as TResinMaterial).dispose();
+      mesh.dispose()
+      this.root.removeChild(mesh)
     }
-    this.meshes.clear();
-    this._root.removeFromParent();
+    this.meshes.clear()
+    this.scene.remove(this.root)
   }
 
-  private trackBody(body: CANNON.Body): void {
-    const mesh = this.buildWireframe(body);
-    if (!mesh) return;
-    this.meshes.set(body, mesh);
-    this._root.add(mesh);
+  private trackBody(body: IPhysicsBody): void {
+    const mesh = this.buildWireframe(body)
+    if (!mesh) return
+    this.meshes.set(body, mesh)
+    this.root.addChild(mesh)
   }
 
-  private untrackBody(body: CANNON.Body): void {
-    const mesh = this.meshes.get(body);
-    if (!mesh) return;
-    this._root.remove(mesh);
-    mesh.geometry.dispose();
-    (mesh.material as TResinMaterial).dispose();
-    this.meshes.delete(body);
+  private untrackBody(body: IPhysicsBody): void {
+    const mesh = this.meshes.get(body)
+    if (!mesh) return
+    this.root.removeChild(mesh)
+    mesh.dispose()
+    this.meshes.delete(body)
   }
 
-  private buildWireframe(body: CANNON.Body): Mesh | null {
-    const shape = body.shapes[0];
+  private buildWireframe(body: IPhysicsBody): ISceneObject | null {
+    const rawBody = (body as any).getVendorBody() as CANNON.Body
+    if (!rawBody) return null
+    const shape = rawBody.shapes[0]
     if (shape instanceof CANNON.Trimesh) {
-      return this._buildTrimeshWireframe(shape);
+      return this.buildTrimeshWireframe(shape)
     }
     if (shape instanceof CANNON.ConvexPolyhedron) {
-      return this._buildConvexWireframe(shape);
+      return this.buildConvexWireframe(shape)
     }
-    return null;
+    return null
   }
 
-  private _buildTrimeshWireframe(shape: CANNON.Trimesh): Mesh {
-    const verts = shape.vertices;
-    const indices = shape.indices;
-    const positions = new Float32Array(indices.length * 3);
-    for (let i = 0; i < indices.length; i++) {
-      const idx = indices[i] * 3;
-      positions[i * 3] = verts[idx];
-      positions[i * 3 + 1] = verts[idx + 1];
-      positions[i * 3 + 2] = verts[idx + 2];
+  private buildTrimeshWireframe(shape: CANNON.Trimesh): ISceneObject {
+    const positions = new Float32Array(shape.indices.length * 3)
+    for (let i = 0; i < shape.indices.length; i++) {
+      const idx = shape.indices[i] * 3
+      positions[i * 3] = shape.vertices[idx]
+      positions[i * 3 + 1] = shape.vertices[idx + 1]
+      positions[i * 3 + 2] = shape.vertices[idx + 2]
     }
-    const geo = new BufferGeometry();
-    geo.setAttribute('position', new BufferAttribute(positions, 3));
-
-    const mat = new MeshBasicMaterial({
-      color: 0x00ff00,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.35,
-      depthWrite: false,
-    });
-
-    return new Mesh(geo, mat);
+    const geo = this.scene.createBufferGeometry()
+    this.scene.setAttribute(geo, 'position', positions, 3)
+    const vendorMat = new MeshBasicMaterial({ color: 0x00ff00, wireframe: true, transparent: true, opacity: 0.35, depthWrite: false })
+    const imat: IMaterial = { color: '#00ff00', opacity: 0.35, transparent: true, roughness: 1, metalness: 0, side: 0, dispose() { vendorMat.dispose() } }
+    this.scene.registerMaterial(imat, vendorMat)
+    const mesh = this.scene.createMesh(geo, imat)
+    mesh.name = 'physics-wireframe'
+    return mesh
   }
 
-  private _buildConvexWireframe(shape: CANNON.ConvexPolyhedron): Mesh {
-    const verts = shape.vertices;
-    const faces = shape.faces;
-    const edgeSet = new Set<string>();
-    const edgeList: number[] = [];
+  private buildConvexWireframe(shape: CANNON.ConvexPolyhedron): ISceneObject {
+    const edgeList: number[] = []
+    const edgeSet = new Set<string>()
 
-    for (const face of faces) {
+    for (const face of shape.faces) {
       for (let i = 0; i < face.length; i++) {
-        const a = face[i];
-        const b = face[(i + 1) % face.length];
-        const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+        const a = face[i]
+        const b = face[(i + 1) % face.length]
+        const key = a < b ? `${a}:${b}` : `${b}:${a}`
         if (!edgeSet.has(key)) {
-          edgeSet.add(key);
-          const ax = verts[a * 3], ay = verts[a * 3 + 1], az = verts[a * 3 + 2];
-          const bx = verts[b * 3], by = verts[b * 3 + 1], bz = verts[b * 3 + 2];
-          edgeList.push(ax, ay, az, bx, by, bz);
+          edgeSet.add(key)
+          const ax = shape.vertices[a * 3] as unknown as number
+          const ay = shape.vertices[a * 3 + 1] as unknown as number
+          const az = shape.vertices[a * 3 + 2] as unknown as number
+          const bx = shape.vertices[b * 3] as unknown as number
+          const by = shape.vertices[b * 3 + 1] as unknown as number
+          const bz = shape.vertices[b * 3 + 2] as unknown as number
+          edgeList.push(ax, ay, az, bx, by, bz)
         }
       }
     }
 
-    const idx = new Uint16Array(edgeList.length / 3);
-    for (let i = 0; i < idx.length; i++) idx[i] = i;
-
-    const geo = new BufferGeometry();
-    geo.setAttribute('position', new BufferAttribute(new Float32Array(edgeList), 3));
-    geo.setIndex(new BufferAttribute(idx, 1));
-
-    const mat = new MeshBasicMaterial({
-      color: 0x00ff88,
-      wireframe: false,
-      transparent: true,
-      opacity: 0.5,
-      depthWrite: false,
-    });
-
-    return new Mesh(geo, mat);
+    const positions = new Float32Array(edgeList)
+    const geo = this.scene.createBufferGeometry()
+    this.scene.setAttribute(geo, 'position', positions, 3)
+    const vendorMat = new MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.5, depthWrite: false })
+    const imat: IMaterial = { color: '#00ff88', opacity: 0.5, transparent: true, roughness: 1, metalness: 0, side: 0, dispose() { vendorMat.dispose() } }
+    this.scene.registerMaterial(imat, vendorMat)
+    const mesh = this.scene.createMesh(geo, imat)
+    mesh.name = 'physics-wireframe'
+    return mesh
   }
 }

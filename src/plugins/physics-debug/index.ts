@@ -13,8 +13,7 @@ export const physicsDebugPlugin: ScenePlugin = (() => {
     priority: 100,
 
     init(ctx: PluginContext) {
-      renderer = new PhysicsDebugRenderer();
-      ctx.scene.add(renderer.root);
+      renderer = new PhysicsDebugRenderer(ctx.scene);
 
       onKey = (e: KeyboardEvent) => {
         if (e.key === '`' || e.key === 'F3') {
@@ -26,7 +25,7 @@ export const physicsDebugPlugin: ScenePlugin = (() => {
     },
 
     render() {
-      renderer.sync(physicsWorld.allBodies);
+      renderer.sync(physicsWorld.bodies);
     },
 
     destroy() {

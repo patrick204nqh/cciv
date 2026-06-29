@@ -1,11 +1,10 @@
-import type { PluginStateAPI } from './plugin-state-api';
-import type { PluginSceneAPI } from './plugin-scene-api';
-import type { IRenderer, ICamera } from '../graphics/types';
+import type { IScene, IRenderer, ICamera } from '../graphics/types';
 import type { ISceneObject } from '../graphics/types';
+import type { StateStore } from '../state/store';
 
 export interface PluginContext {
-  readonly scene: PluginSceneAPI
-  readonly state: PluginStateAPI
+  readonly scene: IScene
+  readonly state: StateStore
   readonly mode: 'edit' | 'play'
   readonly renderer?: IRenderer
   readonly camera?: ICamera

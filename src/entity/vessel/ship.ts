@@ -13,9 +13,7 @@ import { createSprayEntity } from './spray';
 import { createWakeEntity } from './wake';
 import { createVesselGroup } from '../vessel-group';
 import type { IScene } from '../../graphics/types';
-import { generateGroupTextures } from '../../model/definitions/ship/textures';
-import { textureConfig } from '../../model/definitions/ship/definition';
-import { applyMeshTexture, applyMeshTextureRepeat } from '../../util/apply-mesh-texture';
+import { applyProceduralTextures } from './texture-applicator';
 
 behaviorRegistry.register('vessel', {
   async create(id: string, def: InstanceDef, deps) {
@@ -57,29 +55,9 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
 
       applyProceduralTextures(model, scene);
 
-      const hullResult = extractHullData(model);
-      if (!hullResult) return;
-
-      model.root.updateWorldMatrix(true, true);
-      const rootMat = model.root.getWorldMatrix();
-      if (!rootMat) return;
-
-      const bodyPos = model.root.worldPosition;
-
-      const bfPos = new Float32Array(hullResult.positions.length);
-      for (let i = 0; i < hullResult.positions.length; i += 3) {
-        const wx = hullResult.positions[i] * hullResult.matrix[0] + hullResult.positions[i + 1] * hullResult.matrix[4] + hullResult.positions[i + 2] * hullResult.matrix[8] + hullResult.matrix[12];
-        const wy = hullResult.positions[i] * hullResult.matrix[1] + hullResult.positions[i + 1] * hullResult.matrix[5] + hullResult.positions[i + 2] * hullResult.matrix[9] + hullResult.matrix[13];
-        const wz = hullResult.positions[i] * hullResult.matrix[2] + hullResult.positions[i + 1] * hullResult.matrix[6] + hullResult.positions[i + 2] * hullResult.matrix[10] + hullResult.matrix[14];
-        bfPos[i] = wx - bodyPos.x;
-        bfPos[i + 1] = wy - bodyPos.y;
-        bfPos[i + 2] = wz - bodyPos.z;
-      }
-
-      const wp = model.root.worldPosition;
       const config: VesselPhysicsConfig = {
-        hullPositions: bfPos,
-        hullIndices: hullResult.indices,
+        hullPositions: new Float32Array(0),
+        hullIndices: new Uint16Array(0),
         mass: SHIP_MASS,
         maxSpeed: MAX_SPEED,
         maxThrust: MAX_THRUST,
@@ -95,9 +73,7 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
         sail: { area: SAIL_AREA, liftCoeff: 0.6, dragCoeff: 0.3 },
       };
 
-      physics = new VesselPhysics(config);
-      physics.setPosition(wp.x, wp.y, wp.z);
-
+      physics = VesselPhysics.fromModel(model.root, config);
       vesselControls.registerVessel(id);
 
       if (disposer) {
@@ -147,40 +123,3 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
 }
 
 export { createVesselEntity as createShipEntity };
-
-interface HullExtractResult {
-  positions: Float32Array;
-  indices: Uint16Array | Uint32Array;
-  matrix: Float32Array;
-}
-
-function applyProceduralTextures(model: ModelEntity, scene: IScene): void {
-  try {
-    const w = 512;
-    const h = 512;
-
-    for (const [groupName, groupConfig] of Object.entries(textureConfig)) {
-      const textures = generateGroupTextures(groupName, groupConfig, w, h);
-      if (textures.map && scene.createCanvasTexture) {
-        const tex = scene.createCanvasTexture(textures.map);
-        applyMeshTexture(model.root, groupName, 'map', tex);
-        const repeatX = groupName === 'hull' ? 3 : groupName === 'deck' ? 2 : 1;
-        applyMeshTextureRepeat(model.root, groupName, 'map', repeatX, 1);
-      }
-      if (textures.alphaMap && scene.createCanvasTexture) {
-        const tex = scene.createCanvasTexture(textures.alphaMap);
-        applyMeshTexture(model.root, groupName, 'alphaMap', tex);
-      }
-    }
-  } catch {
-    // Canvas not available (headless/test environment) — skip procedural textures.
-  }
-}
-
-function extractHullData(model: ModelEntity): HullExtractResult | null {
-  const hullChild = model.root.findChild((c) => c.name === 'hull', true);
-  if (!hullChild) return null;
-  const data = hullChild.getGeometryData();
-  if (!data) return null;
-  return { ...data, matrix: hullChild.getWorldMatrix() };
-}

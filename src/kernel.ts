@@ -1,12 +1,10 @@
 import { RenderingModule, RenderingModuleOptions } from './graphics/module';
 import { StateStore } from './state/store';
-import { LocationTracker } from './state/location-tracker';
 import { PluginManager } from './plugins/plugin-manager';
-import { createPluginStateAPI } from './plugins/plugin-state-api';
-import { createPluginSceneAPI } from './plugins/plugin-scene-api';
 import { createDefaultState } from './state/defaults';
 import { entityManager } from './entity/manager';
 import { FollowCamera } from './controls/follow-camera';
+import { WorldController } from './controller/world-controller';
 import type { PluginContext, ScenePlugin } from './plugins/types';
 import type { ISceneObject } from './graphics/types';
 
@@ -17,9 +15,9 @@ export class Kernel {
   readonly store: StateStore
   readonly plugins: PluginManager
   readonly followCamera: FollowCamera
+  readonly worldController: WorldController
   private _mode: 'edit' | 'play' = 'edit'
   selectedObject: ISceneObject | null = null
-  private locationTracker: LocationTracker
 
   get mode() { return this._mode }
   get scene() { return this.rendering.sceneHandle }
@@ -43,9 +41,9 @@ export class Kernel {
 
     this.store = new StateStore(createDefaultState())
     this.plugins = new PluginManager()
-    this.locationTracker = new LocationTracker(this.store)
     this.followCamera = new FollowCamera()
     this.followCamera.init(this.rendering.controls)
+    this.worldController = new WorldController(this.rendering.sceneHandle, this.store)
   }
 
   private onBeforeRender(dt: number): void {
@@ -57,8 +55,8 @@ export class Kernel {
     const self = this;
     const r = this.rendering;
     return {
-      scene: createPluginSceneAPI(r.sceneHandle),
-      state: createPluginStateAPI(this.store),
+      scene: r.sceneHandle,
+      state: this.store,
       get mode() { return self.mode; },
       renderer: r.renderer,
       camera: r.camera,
@@ -78,7 +76,10 @@ export class Kernel {
   async init(): Promise<void> {
     const ctx = this.createPluginContext()
     this.plugins.init(ctx, this.mode)
-    this.locationTracker.start()
+  }
+
+  setModelLoader(loader: import('./model/types').ModelLoader): void {
+    this.worldController.setModelLoader(loader)
   }
 
   async startLoop(): Promise<void> {

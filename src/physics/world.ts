@@ -1,11 +1,13 @@
 import * as CANNON from 'cannon-es';
-import type { PhysicsWorldConfig } from './types';
+import { PhysicsBody } from './body';
+import type { PhysicsWorldConfig, IPhysicsWorld, IPhysicsBody, PhysicsBodyConfig } from './types';
 
 const DEFAULT_FIXED_DT = 1 / 60;
 
-export class PhysicsWorld {
+export class PhysicsWorld implements IPhysicsWorld {
   private world: CANNON.World;
   private _fixedDt: number;
+  private _bodies: IPhysicsBody[] = [];
 
   get fixedDt(): number {
     return this._fixedDt;
@@ -15,13 +17,8 @@ export class PhysicsWorld {
     return this.world.gravity.length();
   }
 
-  get allBodies(): readonly CANNON.Body[] {
-    return this.world.bodies;
-  }
-
-  /** @internal Gate-internal access to the raw cannon-es world. */
-  get _world(): CANNON.World {
-    return this.world;
+  get bodies(): readonly IPhysicsBody[] {
+    return this._bodies;
   }
 
   constructor(config?: PhysicsWorldConfig) {
@@ -37,10 +34,35 @@ export class PhysicsWorld {
     this.world.step(this._fixedDt, dt, 3);
   }
 
+  createBody(config: PhysicsBodyConfig): IPhysicsBody {
+    return new PhysicsBody(config, this);
+  }
+
+  addBody(body: IPhysicsBody): void {
+    const raw = (body as any).getVendorBody();
+    if (raw) this.world.addBody(raw);
+    if (!this._bodies.includes(body)) this._bodies.push(body);
+  }
+
+  removeBody(body: IPhysicsBody): void {
+    const raw = (body as any).getVendorBody();
+    if (raw) this.world.removeBody(raw);
+    const idx = this._bodies.indexOf(body);
+    if (idx !== -1) this._bodies.splice(idx, 1);
+  }
+
+  getVendorWorld(): CANNON.World {
+    return this.world;
+  }
+
   reset(): void {
     while (this.world.bodies.length) {
       this.world.removeBody(this.world.bodies[0]);
     }
+  }
+
+  dispose(): void {
+    this.reset();
   }
 }
 
