@@ -8,22 +8,27 @@ const mockCanvas = { width: 32, height: 32, getContext: () => ({
 vi.stubGlobal('document', { createElement: () => mockCanvas });
 
 import { createSprayEntity } from './spray';
+import type { StateStore } from '../../state/store';
+
+const mockStore = {
+  get: () => undefined,
+} as any as StateStore;
 
 describe('createSprayEntity', () => {
   it('creates an entity with id "spray"', () => {
-    const entity = createSprayEntity();
+    const entity = createSprayEntity(mockStore);
     expect(entity.id).toBe('spray');
   });
 
   it('attaches a points system to the scene', () => {
     const scene = { add: vi.fn(), createPoints: vi.fn().mockReturnValue({ dispose: vi.fn() }), createBufferGeometry: vi.fn().mockReturnValue({ attributes: {} }), setAttribute: vi.fn(), markAttributeDirty: vi.fn() } as any;
-    const entity = createSprayEntity();
+    const entity = createSprayEntity(mockStore);
     entity.onAttach(scene);
     expect(scene.add).toHaveBeenCalled();
   });
 
   it('defines onUpdate and onDetach', () => {
-    const entity = createSprayEntity();
+    const entity = createSprayEntity(mockStore);
     expect(typeof entity.onUpdate).toBe('function');
     expect(typeof entity.onDetach).toBe('function');
   });

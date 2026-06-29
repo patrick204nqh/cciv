@@ -24,7 +24,7 @@ behaviorRegistry.register('vessel', {
     return [createCompositeEntity(
       id,
       createVesselEntity(model, id, deps.store),
-      createSprayEntity(id),
+      createSprayEntity(deps.store, id),
       createWakeEntity(id),
     )];
   },

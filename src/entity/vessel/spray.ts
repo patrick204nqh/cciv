@@ -1,11 +1,11 @@
 import type { SceneEntity } from '../types';
 import type { GeometryHandle, IScene } from '../../graphics/types';
 import type { Disposer } from '../../util/disposer';
-import { PositionTracker } from '../../util/position-tracker';
 import { bus } from '../../util/event-bus';
 import { createPointMaterial } from '../../graphics/scene-adapter';
+import type { StateStore } from '../../state/store';
 
-const MAX_PARTICLES = 300;
+const MAX_PARTICLES = 500;
 const BOW_OFFSET = { x: 0, y: 4, z: 56 };
 
 interface Particle {
@@ -15,15 +15,18 @@ interface Particle {
   maxLife: number;
 }
 
-export function createSprayEntity(vesselId?: string): SceneEntity {
+export function createSprayEntity(store?: StateStore, vesselId?: string): SceneEntity {
   const particles: Particle[] = [];
   let positions: Float32Array;
   let colors: Float32Array;
   let geo: GeometryHandle | null = null;
   let _scene: IScene | null = null;
   let pointsObj: any;
-  let tracker: PositionTracker | null = null;
+  let prevSpeedPos = { x: 0, y: 0, z: 0 };
   let lastPos = { x: 0, y: 0, z: 0 };
+  let windDx = 0;
+  let windDz = 0;
+  let emitRateMul = 1;
 
   function emit(px: number, py: number, pz: number) {
     for (let i = 0; i < particles.length; i++) {
@@ -31,9 +34,9 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
       particles[i] = {
         pos: { x: px, y: py, z: pz },
         vel: {
-          x: (Math.random() - 0.5) * 6,
+          x: (Math.random() - 0.5) * 6 + windDx,
           y: Math.random() * 8 + 2,
-          z: (Math.random() - 0.5) * 4,
+          z: (Math.random() - 0.5) * 4 + windDz,
         },
         life: 1,
         maxLife: 0.6 + Math.random() * 0.8,
@@ -44,9 +47,9 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
       particles.push({
         pos: { x: px, y: py, z: pz },
         vel: {
-          x: (Math.random() - 0.5) * 6,
+          x: (Math.random() - 0.5) * 6 + windDx,
           y: Math.random() * 8 + 2,
-          z: (Math.random() - 0.5) * 4,
+          z: (Math.random() - 0.5) * 4 + windDz,
         },
         life: 1,
         maxLife: 0.6 + Math.random() * 0.8,
@@ -88,12 +91,28 @@ export function createSprayEntity(vesselId?: string): SceneEntity {
 
     onUpdate(dt: number) {
       if (!pointsObj || !geo || !_scene) return;
+
+      const locations = store?.get('locations') as Record<string, any> | undefined
+      const activeLoc = store?.get('activeLocation') as string | undefined
+      const env = activeLoc ? locations?.[activeLoc]?.environment : undefined
+      const wind = env?.wind
+      const weather = env?.weather as string | undefined
+
+      if (wind) {
+        windDx = Math.sin(wind.direction) * 2
+        windDz = -Math.cos(wind.direction) * 2
+      }
+      if (weather === 'storm') emitRateMul = 4
+      else if (weather === 'fog') emitRateMul = 0.2
+      else emitRateMul = 1
+
       const speed = Math.sqrt(
-        (lastPos.x - (tracker?.lastPos?.x ?? lastPos.x)) ** 2 +
-        (lastPos.y - (tracker?.lastPos?.y ?? lastPos.y)) ** 2 +
-        (lastPos.z - (tracker?.lastPos?.z ?? lastPos.z)) ** 2
+        (lastPos.x - prevSpeedPos.x) ** 2 +
+        (lastPos.y - prevSpeedPos.y) ** 2 +
+        (lastPos.z - prevSpeedPos.z) ** 2
       ) / Math.max(dt, 0.001);
-      if (speed > 0.5) {
+      prevSpeedPos = { ...lastPos };
+      if (speed > 0.5 && Math.random() < emitRateMul * dt * 8) {
         emit(
           lastPos.x + BOW_OFFSET.x,
           lastPos.y + BOW_OFFSET.y,
