@@ -7,6 +7,7 @@ import { SkyMesh } from 'three/addons/objects/SkyMesh.js';
 import { createTSLOceanMesh } from './tsl-ocean';
 import { createClipmapGeometry } from './clipmap';
 import type { ClipmapGeometry } from './clipmap';
+import { worldOffset } from './tsl-fft';
 
 const _registeredMaterials = new WeakMap<IMaterial, THREE.Material>();
 
@@ -40,6 +41,9 @@ export class SceneAdapter implements IScene {
 
   onBeforeRender(cameraPosition: THREE.Vector3): void {
     this._oceanClipmap?.update(cameraPosition);
+    if (this._oceanClipmap) {
+      worldOffset.value.set(this._oceanClipmap.offset.x, this._oceanClipmap.offset.z);
+    }
     if (this._oceanMesh && this._oceanClipmap) {
       this._oceanMesh.position.copy(this._oceanClipmap.offset);
       this._oceanMesh.updateMatrix();
