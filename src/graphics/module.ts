@@ -58,7 +58,8 @@ export class RenderingModule {
     this._scene.background = new Color(0x5080a0);
 
     this._renderer = opts?.renderer ?? (() => {
-      const r = new WebGPURenderer({ antialias: true, forceWebGL: true });
+      const supportsWebGPU = typeof navigator !== 'undefined' && 'gpu' in navigator;
+      const r = new WebGPURenderer({ antialias: true, forceWebGL: !supportsWebGPU });
       r.setPixelRatio(Math.min(devicePixelRatio, 2));
       r.setSize(innerWidth, innerHeight);
       r.shadowMap.enabled = true;
@@ -103,6 +104,8 @@ export class RenderingModule {
       prevTime = now;
 
       this.onBeforeRender?.(dt);
+
+      (this.sceneHandle as any).onBeforeRender?.(this._camera.position);
 
       this.controls.update();
       this._renderer.render(this._scene, this._camera);

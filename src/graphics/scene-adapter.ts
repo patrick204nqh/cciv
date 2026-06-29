@@ -4,7 +4,9 @@ import type { IScene, ISceneObject, SceneHandle, FogSpec, IMaterial, MaterialSpe
 import { GeometryHandle } from './types';
 import { SceneObject } from './object';
 import { SkyMesh } from 'three/addons/objects/SkyMesh.js';
-import { createTSLWaterMesh } from './tsl-water';
+import { createTSLOceanMesh } from './tsl-ocean';
+import { createClipmapGeometry } from './clipmap';
+import type { ClipmapGeometry } from './clipmap';
 
 const _registeredMaterials = new WeakMap<IMaterial, THREE.Material>();
 
@@ -28,11 +30,16 @@ export class SceneAdapter implements IScene {
   private idCache = new Map<string, ISceneObject>();
   private vendorCache = new Map<THREE.Object3D, string>();
   private _envColor: string | null = null;
+  private _oceanClipmap: ClipmapGeometry | null = null;
 
   constructor(
     private scene: THREE.Scene,
     private renderer?: any,
   ) {}
+
+  onBeforeRender(cameraPosition: THREE.Vector3): void {
+    this._oceanClipmap?.update(cameraPosition);
+  }
 
   private wrap(obj: THREE.Object3D): ISceneObject {
     const id = obj.uuid;
@@ -74,16 +81,38 @@ export class SceneAdapter implements IScene {
     return this.wrap(obj);
   }
 
-  createWater(geometry: GeometryHandle, config: IWaterConfig): IWater {
-    const vendorGeo = resolveBuffer(geometry);
-    const { mesh, nodeMaterial } = createTSLWaterMesh(vendorGeo, {
-      color: config.color,
-      waves: config.waves,
-    });
+  createWater(config: IWaterConfig, geometry?: GeometryHandle): IWater {
+    let mesh: THREE.Mesh;
+
+    if (geometry) {
+      const vendorGeo = resolveBuffer(geometry);
+      const result = createTSLOceanMesh(vendorGeo, config);
+      mesh = result.mesh;
+    } else {
+      const clipmapCfg = 'clipmap' in config ? (config as any).clipmap : {
+        rings: [
+          { segments: 32, radius: 50 },
+          { segments: 32, radius: 150 },
+          { segments: 16, radius: 400 },
+          { segments: 8, radius: 1500 },
+        ],
+        overlap: 2,
+      };
+      const clipmap = createClipmapGeometry(clipmapCfg);
+      this._oceanClipmap = clipmap;
+      const result = createTSLOceanMesh(clipmap.root, config as any);
+      mesh = result.mesh;
+    }
+
     const obj = this.wrap(mesh);
     return {
       get object() { return obj; },
-      dispose: () => { mesh.geometry.dispose(); nodeMaterial.dispose(); },
+      dispose: () => {
+        mesh.geometry.dispose();
+        (mesh.material as THREE.Material).dispose();
+        this._oceanClipmap?.dispose();
+        this._oceanClipmap = null;
+      },
     };
   }
 

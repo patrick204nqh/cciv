@@ -17,6 +17,13 @@ export interface ComputedWave {
   speed: number;
 }
 
+export interface JONSWAPParams {
+  windSpeed: number;
+  windDirection: [number, number];
+  fetch: number;
+  peakEnhancement: number;
+}
+
 const G = 9.8;
 
 export function computeWaves(components: WaveComponent[]): ComputedWave[] {

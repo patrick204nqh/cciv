@@ -1,6 +1,7 @@
 import type { ComputedWave } from '../../environment/wave-config';
 import { computeWaves } from '../../environment/wave-config';
-import { setWaveConfig } from '../../environment/wave-surface';
+import { setWaveConfig, setJONSWAPComponents } from '../../environment/wave-surface';
+import { generateJONSWAPComponents } from '../../graphics/tsl-fft';
 import { computeEffectiveEnvironment } from '../../state/environment-utils';
 import { createOceanEntity } from './ocean';
 import { createSkyEntity } from './sky';
@@ -12,7 +13,7 @@ import { createCompositeEntity } from '../composite';
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 import type { EnvironmentState } from '../../state/types';
-import type { ISkyConfig, WaveData } from '../../graphics/types';
+import type { ISkyConfig, WaveData, OceanConfig } from '../../graphics/types';
 
 export function createEnvironmentEntity(
   env: EnvironmentState | { effective: ReturnType<typeof computeEffectiveEnvironment>; waves: ComputedWave[] },
@@ -33,10 +34,27 @@ export function createEnvironmentEntity(
   const subEntities: SceneEntity[] = [];
 
   if (effective.ocean) {
-    subEntities.push(createOceanEntity(effective.ocean.extent, effective.ocean.gridSize, {
+    const oceanConfig: OceanConfig = {
       color: effective.ocean.color,
       waves: waveData,
-    }));
+      fft: {
+        cascadeSize: [256, 128],
+        windSpeed: effective.wind?.speed ?? 10,
+        windDirection: [Math.sin(effective.wind?.direction ?? 0), -Math.cos(effective.wind?.direction ?? 0)],
+        fetch: 50000,
+        peakEnhancement: 3.3,
+      },
+      clipmap: {
+        rings: [
+          { segments: 32, radius: 50 },
+          { segments: 32, radius: 150 },
+          { segments: 16, radius: 400 },
+          { segments: 8, radius: 1500 },
+        ],
+        overlap: 2,
+      },
+    };
+    subEntities.push(createOceanEntity(oceanConfig));
   }
   if (effective.sky) {
     subEntities.push(createSkyEntity(skyConfigFromEnv(effective)));
@@ -58,6 +76,17 @@ export function createEnvironmentEntity(
 
     onAttach(scene, disposer?: Disposer) {
       setWaveConfig(waves);
+      if (effective.wind) {
+        const windAngle = effective.wind.direction;
+        const fftComponents = generateJONSWAPComponents({
+          cascadeSize: [256, 128],
+          windSpeed: effective.wind.speed,
+          windDirection: [Math.sin(windAngle), -Math.cos(windAngle)],
+          fetch: 50000,
+          peakEnhancement: 3.3,
+        });
+        setJONSWAPComponents(fftComponents);
+      }
       composite.onAttach(scene, disposer);
     },
 
