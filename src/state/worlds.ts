@@ -10,6 +10,7 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
   'north-sea': {
     environment: {
       sky: { gradientTop: '#5588bb', gradientBottom: '#87ceeb', horizonOffset: 0 },
+      wind: { speed: 12, direction: 0.8 },
       waves: [
         { direction: [0.7, 0.7], amplitude: 1.4, frequency: 0.157, steepness: 0.45, speed: 1, phase: 0 },
         { direction: [0.26, 0.97], amplitude: 0.9, frequency: 0.251, steepness: 0.45, speed: 1, phase: 0.8 },
@@ -68,6 +69,7 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
   'caribbean': {
     environment: {
       sky: { gradientTop: '#ff8844', gradientBottom: '#44bbdd', horizonOffset: 0 },
+      wind: { speed: 8, direction: 0.5 },
       waves: [
         { direction: [0.0, 1.0], amplitude: 0.8, frequency: 0.120, steepness: 0.35, speed: 0.8, phase: 0 },
         { direction: [0.5, 0.87], amplitude: 0.5, frequency: 0.200, steepness: 0.35, speed: 0.8, phase: 1.2 },
@@ -126,6 +128,7 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
   'arctic': {
     environment: {
       sky: { gradientTop: '#8899aa', gradientBottom: '#ccddee', horizonOffset: 0.02 },
+      wind: { speed: 5, direction: 0.7 },
       waves: [
         { direction: [0.71, 0.71], amplitude: 0.6, frequency: 0.100, steepness: 0.30, speed: 0.5, phase: 0 },
         { direction: [-0.26, 0.97], amplitude: 0.4, frequency: 0.180, steepness: 0.30, speed: 0.5, phase: 0.5 },
@@ -189,6 +192,7 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
   'sunset': {
     environment: {
       sky: { gradientTop: '#cc4466', gradientBottom: '#ff9966', horizonOffset: -0.01 },
+      wind: { speed: 6, direction: 1.0 },
       waves: [
         { direction: [0.87, 0.5], amplitude: 0.5, frequency: 0.110, steepness: 0.30, speed: 0.6, phase: 0 },
         { direction: [0.97, 0.26], amplitude: 0.3, frequency: 0.190, steepness: 0.30, speed: 0.6, phase: 0.3 },
@@ -247,6 +251,7 @@ export const LOCATION_PRESETS: Record<string, LocationPreset> = {
   'storm': {
     environment: {
       sky: { gradientTop: '#2a2a3a', gradientBottom: '#4a4a5a', horizonOffset: 0.03 },
+      wind: { speed: 25, direction: 0.8 },
       waves: [
         { direction: [0.7, 0.7], amplitude: 3.5, frequency: 0.100, steepness: 0.55, speed: 1.8, phase: 0 },
         { direction: [0.26, 0.97], amplitude: 2.8, frequency: 0.180, steepness: 0.55, speed: 1.8, phase: 1.2 },

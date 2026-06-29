@@ -4,11 +4,12 @@ import { bus } from '../../event-bus';
 import type { ModelEntity } from '../../model/types';
 import { waveSurface } from '../../environment/wave-surface';
 import type { Disposer } from '../../util/disposer';
-import { PhysicsBody, HydrodynamicsSolver, physicsWorld, createHullCollider } from '../../physics';
+import { PhysicsBody, HydrodynamicsSolver, SailForceSolver, physicsWorld, createHullCollider } from '../../physics';
 import { ShipControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/ship-controls';
 import { activeVessel } from '../../controls/active-vessel';
 import { behaviorRegistry } from '../behavior-registry';
 import type { InstanceDef } from '../../state/types';
+import type { StateStore } from '../../state/store';
 import { createSprayEntity } from './spray';
 import { createWakeEntity } from './wake';
 import { createVesselGroup } from '../vessel-group';
@@ -23,7 +24,7 @@ behaviorRegistry.register('vessel', {
     r.scale = { x: tf.scale, y: tf.scale, z: tf.scale };
     return [createVesselGroup(
       id,
-      createVesselEntity(model, id),
+      createVesselEntity(model, id, deps.store),
       createSprayEntity(id),
       createWakeEntity(id),
     )];
@@ -37,14 +38,16 @@ export const BUOYANCY_DENSITY = 1.0;
 export const HULL_DRAG = 0.4;
 export const HULL_SLAM = 0.3;
 export const HULL_ADDED_MASS = 1.5;
+export const SAIL_AREA = 120;
 export const MAX_SPEED = 18;
 
 const _localForce = new CANNON.Vec3();
 
-export function createVesselEntity(model: ModelEntity, vesselId?: string): SceneEntity {
+export function createVesselEntity(model: ModelEntity, vesselId?: string, store?: StateStore): SceneEntity {
   const id = vesselId ?? 'vessel';
   let physicsBody: PhysicsBody | null = null;
   let hydrodynamics: HydrodynamicsSolver | null = null;
+  let sailForce: SailForceSolver | null = null;
   let controls: ShipControls | null = null;
 
   return {
@@ -93,6 +96,8 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
         addedMassFactor: HULL_ADDED_MASS,
       });
 
+      sailForce = new SailForceSolver({ area: SAIL_AREA, liftCoeff: 0.6, dragCoeff: 0.3 });
+
       controls = new ShipControls(id);
       controls.start();
 
@@ -104,6 +109,8 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
           physicsBody = null;
           hydrodynamics?.dispose();
           hydrodynamics = null;
+          sailForce?.dispose();
+          sailForce = null;
           controls?.dispose();
           controls = null;
           activeVessel.unregister(id);
@@ -128,6 +135,16 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string): Scene
       if (t !== 0) {
         _localForce.set(0, 0, t * MAX_THRUST);
         physicsBody.body.applyLocalForce(_localForce);
+      }
+
+      if (sailForce && t > 0 && store) {
+        const env = store.get('environment');
+        const wind = env.wind;
+        if (wind) {
+          const wDirX = Math.sin(wind.direction);
+          const wDirZ = -Math.cos(wind.direction);
+          sailForce.apply(physicsBody.body, wind.speed, wDirX, wDirZ, t);
+        }
       }
 
       physicsBody.body.torque.set(0, controls.steer * MAX_STEER_TORQUE, 0);

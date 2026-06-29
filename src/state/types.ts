@@ -1,5 +1,14 @@
 export type WeatherType = 'clear' | 'cloudy' | 'storm' | 'fog'
 
+export interface WaveComponent {
+  direction: [number, number]
+  amplitude: number
+  frequency: number
+  steepness: number
+  speed: number
+  phase: number
+}
+
 export interface EnvironmentState {
   weather?: WeatherType
   sky?: {
@@ -7,14 +16,11 @@ export interface EnvironmentState {
     gradientBottom: string
     horizonOffset: number
   }
-  waves: {
-    direction: [number, number]
-    amplitude: number
-    frequency: number
-    steepness: number
+  wind?: {
     speed: number
-    phase: number
-  }[]
+    direction: number
+  }
+  waves: WaveComponent[]
   ocean?: {
     color: string
     opacity: number
