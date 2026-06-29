@@ -1,5 +1,5 @@
 import { bus } from '../../util/event-bus';
-import { activeVessel } from '../../controls/active-vessel';
+import { vesselControls } from '../../controls/vessel-controls';
 import type { ScenePlugin } from '../types';
 import { useShipHudStore } from '../../ui/stores/ship-hud-store';
 
@@ -25,7 +25,7 @@ export const shipHudPlugin: ScenePlugin = (() => {
 
     init() {
       unsubPosition = bus.on('entity:position-changed', (ev) => {
-        if (ev.entityId === activeVessel.activeId) {
+        if (ev.entityId === vesselControls.activeId) {
           currentHeading = quatToHeading(ev.qx, ev.qy, ev.qz, ev.qw);
           const vx = ev.vx ?? 0;
           const vy = ev.vy ?? 0;

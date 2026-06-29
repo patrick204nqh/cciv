@@ -5,8 +5,7 @@ import { waveSurface } from '../../environment/wave-surface';
 import type { Disposer } from '../../util/disposer';
 import { VesselPhysics } from '../../physics';
 import type { VesselPhysicsConfig } from '../../physics';
-import { ShipControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/ship-controls';
-import { activeVessel } from '../../controls/active-vessel';
+import { vesselControls, MAX_THRUST, MAX_STEER_TORQUE } from '../../controls/vessel-controls';
 import { behaviorRegistry } from '../behavior-registry';
 import type { InstanceDef } from '../../state/types';
 import type { StateStore } from '../../state/store';
@@ -47,7 +46,6 @@ export const MAX_SPEED = 18;
 export function createVesselEntity(model: ModelEntity, vesselId?: string, store?: StateStore): SceneEntity {
   const id = vesselId ?? 'vessel';
   let physics: VesselPhysics | null = null;
-  let controls: ShipControls | null = null;
 
   return {
     id,
@@ -99,27 +97,22 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
       physics = new VesselPhysics(config);
       physics.setPosition(wp.x, wp.y, wp.z);
 
-      controls = new ShipControls(id);
-      controls.start();
-
-      activeVessel.register(id);
+      vesselControls.registerVessel(id);
 
       if (disposer) {
         disposer.add(() => {
           physics?.dispose();
           physics = null;
-          controls?.dispose();
-          controls = null;
-          activeVessel.unregister(id);
+          vesselControls.unregisterVessel(id);
         });
       }
     },
 
     onUpdate(dt: number) {
-      if (!physics || !controls) return;
+      if (!physics) return;
 
-      const t = controls.throttle;
-      physics.setControls(t, controls.steer);
+      const t = vesselControls.throttle(id);
+      physics.setControls(t, vesselControls.steer(id));
 
       if (t > 0 && store) {
         const locations = store.get('locations');

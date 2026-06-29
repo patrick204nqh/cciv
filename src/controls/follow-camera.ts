@@ -1,5 +1,5 @@
 import { bus } from '../util/event-bus';
-import { activeVessel } from './active-vessel';
+import { vesselControls } from './vessel-controls';
 import type { OrbitControls } from '../three/addons';
 
 const FOLLOW_LERP = 0.06;
@@ -18,7 +18,7 @@ export class FollowCamera {
   init(controls: OrbitControls): void {
     this.controls = controls;
     this._unsubPosition = bus.on('entity:position-changed', (ev) => {
-      if (ev.entityId === activeVessel.activeId) {
+      if (ev.entityId === vesselControls.activeId) {
         this.vesselPos = { x: ev.x, y: ev.y, z: ev.z };
         this.vesselQuat = { x: ev.qx, y: ev.qy, z: ev.qz, w: ev.qw };
 
