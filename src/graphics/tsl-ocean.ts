@@ -3,7 +3,7 @@ import {
   time, positionLocal, cameraPosition, positionWorld, normalWorld,
   vec3, vec4, float, Fn, Loop,
   sin, cos, dot, length, normalize, mix, clamp, pow,
-  uniformArray, color,
+  uniformArray, color, vertexColor,
 } from 'three/tsl';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 import type { OceanConfig } from './types';
@@ -41,6 +41,8 @@ export function createTSLOceanMesh(
     return depthColor.mul(viewFactor);
   });
 
+  const hasColors = geometry.attributes.color !== undefined;
+
   const material = new MeshStandardNodeMaterial();
   material.positionNode = positionFn(positionLocal);
   material.normalNode = normalFn();
@@ -49,6 +51,11 @@ export function createTSLOceanMesh(
   material.metalness = 0;
   material.envMapIntensity = 1.0;
   material.side = THREE.DoubleSide;
+  if (hasColors) {
+    const clipAlpha = vertexColor().z;
+    material.opacityNode = clipAlpha;
+    material.transparent = true;
+  }
 
   const mesh = new THREE.Mesh(geometry, material);
   return { mesh, nodeMaterial: material };

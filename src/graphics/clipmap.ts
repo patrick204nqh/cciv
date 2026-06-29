@@ -13,19 +13,29 @@ function generateRing(
   outerRadius: number,
   radialSegments: number,
   thetaSegments: number,
+  overlap: number,
+  isFirst: boolean,
+  isLast: boolean,
 ): THREE.BufferGeometry {
   const positions: number[] = [];
   const uvs: number[] = [];
+  const colors: number[] = [];
   const indices: number[] = [];
 
   for (let j = 0; j <= radialSegments; j++) {
     const r = innerRadius + (outerRadius - innerRadius) * (j / radialSegments);
+    const span = outerRadius - innerRadius;
+    const innerFade = isFirst ? 1 : THREE.MathUtils.smoothstep((r - innerRadius) / overlap, 0, 1);
+    const outerFade = isLast ? 1 : THREE.MathUtils.smoothstep((outerRadius - r) / overlap, 0, 1);
+    const alpha = innerFade * outerFade;
+
     for (let i = 0; i <= thetaSegments; i++) {
       const theta = (i / thetaSegments) * Math.PI * 2;
       const x = r * Math.cos(theta);
       const z = r * Math.sin(theta);
       positions.push(x, 0, z);
       uvs.push(i / thetaSegments, j / radialSegments);
+      colors.push(1, 1, alpha);
     }
   }
 
@@ -41,6 +51,7 @@ function generateRing(
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geo.setIndex(indices);
   geo.computeVertexNormals();
   return geo;
@@ -49,13 +60,18 @@ function generateRing(
 export function createClipmapGeometry(config: ClipmapConfig): ClipmapGeometry {
   const ringGeos: THREE.BufferGeometry[] = [];
   let prevRadius = 0;
+  const totalRings = config.rings.length;
 
-  for (const ringSpec of config.rings) {
+  for (let idx = 0; idx < totalRings; idx++) {
+    const ringSpec = config.rings[idx];
     const geo = generateRing(
       prevRadius,
       ringSpec.radius,
       Math.max(2, Math.round(ringSpec.segments / 2)),
       ringSpec.segments,
+      config.overlap,
+      idx === 0,
+      idx === totalRings - 1,
     );
     ringGeos.push(geo);
     prevRadius = ringSpec.radius;
