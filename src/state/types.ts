@@ -10,7 +10,7 @@ export interface WaveComponent {
 }
 
 export interface EnvironmentState {
-  weather?: WeatherType
+  weather: WeatherType
   sky?: {
     gradientTop: string
     gradientBottom: string
@@ -71,7 +71,6 @@ export interface AppState {
   activeLocation: string
   dirtyLocations: string[]
   time: { speed: number; paused: boolean; elapsed: number }
-  environment: EnvironmentState
   instances: InstanceState
   locations: Record<string, LocationPreset>
 }

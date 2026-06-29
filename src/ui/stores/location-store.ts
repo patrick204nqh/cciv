@@ -23,15 +23,23 @@ export const useLocationStore = create<LocationState>((set) => ({
 
 let _ctx: PluginContext | null = null;
 
+function getWeatherPath(): string {
+  const loc = _ctx!.state.get('activeLocation') as string;
+  return `locations.${loc}.environment.weather`;
+}
+
 export function initLocationCtx(ctx: PluginContext) {
   _ctx = ctx;
-  useLocationStore.getState().updateActive(ctx.state.get('activeLocation') as string);
-  useLocationStore.getState().setWeather((ctx.state.get('environment.weather') as WeatherType) ?? 'clear');
+  const loc = ctx.state.get('activeLocation') as string;
+  const envs = ctx.state.get('locations') as Record<string, { environment: { weather?: WeatherType } }>;
+  const weather = envs[loc]?.environment?.weather ?? 'clear';
+  useLocationStore.getState().updateActive(loc);
+  useLocationStore.getState().setWeather(weather);
 }
 
 export function setWeather(weather: WeatherType) {
   if (!_ctx) return;
-  _ctx.state.set('environment.weather', weather);
+  _ctx.state.set(getWeatherPath(), weather);
   useLocationStore.setState({ weather });
 }
 
@@ -42,29 +50,10 @@ export function switchLocation(locationId: string) {
   if (!preset) return;
 
   useLocationStore.setState({ transitioning: true });
-  const prevEnv = _ctx.state.get('environment') as unknown as Record<string, unknown>;
 
-  const start = performance.now();
-  const duration = 2000;
-  function tick() {
-    const t = Math.min((performance.now() - start) / duration, 1);
-    const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  _ctx.state.set('activeLocation', locationId);
+  _ctx.state.set('instances', structuredClone(preset.instances));
 
-      const currFog = (_ctx!.state.get as (p: string) => unknown)('environment.fog') as Record<string, unknown>;
-    if (typeof currFog.density === 'number' && prevEnv.fog && typeof prevEnv.fog === 'object') {
-      const prevDensity = (prevEnv.fog as Record<string, unknown>).density as number;
-      const nextDensity = preset.environment.fog.density;
-      _ctx!.state.set('environment.fog.density', prevDensity + (nextDensity - prevDensity) * ease);
-    }
-
-    if (t >= 1) {
-      _ctx!.state.set('environment', preset.environment as unknown as Record<string, unknown>);
-      _ctx!.state.set('instances', preset.instances as unknown as Record<string, unknown>);
-      _ctx!.state.set('activeLocation', locationId);
-      useLocationStore.setState({ transitioning: false, activeLocation: locationId });
-    } else {
-      requestAnimationFrame(tick);
-    }
-  }
-  tick();
+  const weather = (_ctx.state.get(`locations.${locationId}.environment.weather`) as WeatherType) ?? 'clear';
+  useLocationStore.setState({ transitioning: false, activeLocation: locationId, weather });
 }

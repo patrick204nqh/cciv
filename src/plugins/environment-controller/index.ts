@@ -8,7 +8,6 @@ import type { EnvironmentState, WeatherType } from '../../state/types';
 import type { FogSpec } from '../../scene/types';
 
 let _scene: import('../../scene/types').IScene | null = null;
-let _currentWeather: WeatherType = 'clear';
 
 interface TransitionState {
   fromFog: FogSpec;
@@ -46,7 +45,7 @@ function rebuildEnvironment(env: EnvironmentState): void {
 
   const current = entityManager.getEntities();
   for (const e of current) {
-    if (e.id === 'environment' || e.id === 'rain') entityManager.detach(e);
+    if (e.id === 'environment' || e.id === 'rain' || e.id === 'mist') entityManager.detach(e);
   }
 
   const effective = computeEffectiveEnvironment(env);
@@ -59,6 +58,18 @@ function rebuildEnvironment(env: EnvironmentState): void {
   entityManager.attach(createEnvironmentEntity(env), s);
 }
 
+function getActiveEnvironment(ctx: PluginContext): EnvironmentState {
+  const loc = ctx.state.get('activeLocation') as string;
+  const envs = ctx.state.get('locations') as Record<string, { environment: EnvironmentState }>;
+  return envs[loc]?.environment;
+}
+
+/** Apply the current environment state immediately (used by environment editor). */
+export function applyEnvironment(ctx: PluginContext): void {
+  const env = getActiveEnvironment(ctx);
+  if (env) rebuildEnvironment(env);
+}
+
 export const environmentControllerPlugin: ScenePlugin = {
   id: 'environment-controller',
   label: 'Environment Controller',
@@ -66,23 +77,39 @@ export const environmentControllerPlugin: ScenePlugin = {
   priority: 100,
 
   init(ctx: PluginContext) {
-    _currentWeather = (ctx.state.get('environment.weather') as WeatherType) ?? 'clear';
-
-    const initEnv = ctx.state.get('environment') as EnvironmentState;
-    const initEffective = computeEffectiveEnvironment(initEnv);
-    if (_scene) {
-      _scene.fog = initEffective.fog;
-      if (initEffective.sky) {
-        _scene.background = initEffective.sky.gradientTop;
+    const initEnv = getActiveEnvironment(ctx);
+    if (initEnv) {
+      const initEffective = computeEffectiveEnvironment(initEnv);
+      if (_scene) {
+        _scene.fog = initEffective.fog;
+        if (initEffective.sky) {
+          _scene.background = initEffective.sky.gradientTop;
+        }
       }
     }
 
-    ctx.state.watch(s => s.environment.weather, (w) => {
-      if (w === _currentWeather) return;
-      _currentWeather = w ?? 'clear';
+    let _lastLocation = ctx.state.get('activeLocation') as string;
+    let _lastWeather: WeatherType = initEnv?.weather ?? 'clear';
 
-      const baseEnv = ctx.state.get('environment') as EnvironmentState;
-      const toEnv = { ...baseEnv, weather: _currentWeather };
+    ctx.state.watch(s => ({
+      loc: s.activeLocation,
+      weather: s.locations[s.activeLocation]?.environment.weather ?? 'clear',
+    }), ({ loc, weather }) => {
+      if (loc !== _lastLocation) {
+        _lastLocation = loc;
+        _lastWeather = weather;
+        _transition = null;
+        const env = getActiveEnvironment(ctx);
+        if (env) rebuildEnvironment(env);
+        return;
+      }
+
+      if (weather === _lastWeather) return;
+      _lastWeather = weather;
+
+      const env = getActiveEnvironment(ctx);
+      if (!env) return;
+      const toEnv = { ...env, weather };
       const toEffective = computeEffectiveEnvironment(toEnv);
       const fromFog = _scene?.fog ?? toEffective.fog;
       const fromBg = _scene?.background ?? toEffective.sky?.gradientTop ?? '#406888';
@@ -97,13 +124,6 @@ export const environmentControllerPlugin: ScenePlugin = {
         duration: 2,
         toEnv,
       };
-    });
-
-    ctx.state.watch(s => s.activeLocation, () => {
-      _transition = null;
-      const env = ctx.state.get('environment') as EnvironmentState;
-      const merged = { ...env, weather: _currentWeather };
-      rebuildEnvironment(merged);
     });
   },
 

@@ -19,9 +19,9 @@ describe('StateStore', () => {
   it('sets a nested dotted path', () => {
     const store = new StateStore(createDefaultState());
     const fn = vi.fn();
-    store.subscribe('environment.sky.gradientTop', fn);
-    store.set('environment.sky.gradientTop', '#ff0000');
-    expect(fn).toHaveBeenCalledWith('#ff0000', 'environment.sky.gradientTop');
+    store.subscribe('locations.north-sea.environment.sky.gradientTop', fn);
+    store.set('locations.north-sea.environment.sky.gradientTop', '#ff0000');
+    expect(fn).toHaveBeenCalledWith('#ff0000', 'locations.north-sea.environment.sky.gradientTop');
   });
 
   it('notifies subscribers on parent paths', () => {
@@ -55,7 +55,7 @@ describe('StateStore', () => {
 
   it('select returns nested typed value', () => {
     const store = new StateStore(createDefaultState());
-    const color = store.select(s => s.environment.sky.gradientTop);
+    const color = store.select(s => s.locations[s.activeLocation].environment.sky.gradientTop);
     expect(color).toBe('#5588bb');
   });
 
@@ -79,8 +79,8 @@ describe('StateStore', () => {
   it('does not match similar but different paths', () => {
     const store = new StateStore(createDefaultState());
     const fn = vi.fn();
-    store.subscribe('environment.fog', fn);
-    store.set('environment.foggy', 'anything');
+    store.subscribe('locations.north-sea.environment.fog', fn);
+    store.set('locations.north-sea.environment.foggy', 'anything');
     expect(fn).not.toHaveBeenCalled();
   });
 
@@ -89,16 +89,18 @@ describe('StateStore', () => {
   it('notifies child subscribers when parent path is set', () => {
     const store = new StateStore(createDefaultState());
     const fn = vi.fn();
-    store.subscribe('environment.sky', fn);
-    store.set('environment', createDefaultState().environment);
+    const locEnv = store.get('locations')['north-sea'].environment;
+    store.subscribe('locations.north-sea.environment.sky', fn);
+    store.set('locations.north-sea.environment', locEnv);
     expect(fn).toHaveBeenCalled();
   });
 
   it('notifies grandchild subscribers when parent path is set', () => {
     const store = new StateStore(createDefaultState());
     const fn = vi.fn();
-    store.subscribe('environment.sky.gradientTop', fn);
-    store.set('environment', createDefaultState().environment);
+    const locEnv = store.get('locations')['north-sea'].environment;
+    store.subscribe('locations.north-sea.environment.sky.gradientTop', fn);
+    store.set('locations.north-sea.environment', locEnv);
     expect(fn).toHaveBeenCalled();
   });
 });

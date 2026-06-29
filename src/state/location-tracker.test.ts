@@ -15,7 +15,7 @@ describe('LocationTracker', () => {
 
   it('marks location dirty when environment changes', () => {
     expect(store.get('dirtyLocations')).toEqual([]);
-    store.set('environment.fog.color', '#ff0000');
+    store.set('locations.north-sea.environment.fog.color', '#ff0000');
     expect(store.get('dirtyLocations')).toEqual(['north-sea']);
   });
 
@@ -27,7 +27,7 @@ describe('LocationTracker', () => {
 
   it('does not add duplicate dirty locations', () => {
     expect(store.get('dirtyLocations')).toEqual([]);
-    store.set('environment.fog.color', '#ff0000');
+    store.set('locations.north-sea.environment.fog.color', '#ff0000');
     store.set('instances.ship.transform.position', [10, 20, 30]);
     expect(store.get('dirtyLocations')).toEqual(['north-sea']);
   });
@@ -35,16 +35,16 @@ describe('LocationTracker', () => {
   it('cleans up subscription on stop()', () => {
     const spy = vi.spyOn(store, 'subscribe');
     tracker.stop();
-    store.set('environment.fog.color', '#ff0000');
+    store.set('locations.north-sea.environment.fog.color', '#ff0000');
     expect(store.get('dirtyLocations')).toEqual([]);
   });
 
   it('handles activeLocation changes correctly', () => {
     // Setup a second location
     const initialState = createDefaultState();
+    const northEnv = initialState.locations['north-sea'].environment;
     initialState.locations['south-sea'] = {
-      id: 'south-sea',
-      environment: initialState.environment,
+      environment: structuredClone(northEnv),
       instances: {},
     };
     store = new StateStore(initialState);
@@ -54,11 +54,11 @@ describe('LocationTracker', () => {
     store.set('activeLocation', 'south-sea');
     expect(store.get('dirtyLocations')).toEqual([]);
 
-    store.set('environment.fog.color', '#00ff00'); // Change in south-sea
+    store.set('locations.south-sea.environment.fog.color', '#00ff00'); // Change in south-sea
     expect(store.get('dirtyLocations')).toEqual(['south-sea']);
 
     store.set('activeLocation', 'north-sea');
-    store.set('environment.sky.gradientBottom', '#0000ff'); // Change in north-sea
+    store.set('locations.north-sea.environment.sky.gradientBottom', '#0000ff'); // Change in north-sea
     expect(store.get('dirtyLocations')).toEqual(['south-sea', 'north-sea']);
   });
 });

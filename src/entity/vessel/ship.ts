@@ -138,8 +138,10 @@ export function createVesselEntity(model: ModelEntity, vesselId?: string, store?
       }
 
       if (sailForce && t > 0 && store) {
-        const env = store.get('environment');
-        const wind = env.wind;
+        const locations = store.get('locations');
+        const activeLoc = store.get('activeLocation');
+        const env = locations[activeLoc]?.environment;
+        const wind = env?.wind;
         if (wind) {
           const wDirX = Math.sin(wind.direction);
           const wDirZ = -Math.cos(wind.direction);

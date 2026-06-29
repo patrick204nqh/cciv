@@ -10,15 +10,15 @@ import type { ScenePlugin } from './plugins/types';
 describe('StateStore integration', () => {
   it('stores and retrieves values by dotted path', () => {
     const store = new StateStore(createDefaultState());
-    expect(store.get('environment.sky.gradientTop')).toBe('#5588bb');
+    expect(store.get('locations.north-sea.environment.sky.gradientTop')).toBe('#5588bb');
   });
 
   it('notifies subscribers on change', () => {
     const store = new StateStore(createDefaultState());
     const fn = vi.fn();
-    store.subscribe('environment.sky.gradientTop', fn);
-    store.set('environment.sky.gradientTop', '#ff0000');
-    expect(fn).toHaveBeenCalledWith('#ff0000', 'environment.sky.gradientTop');
+    store.subscribe('locations.north-sea.environment.sky.gradientTop', fn);
+    store.set('locations.north-sea.environment.sky.gradientTop', '#ff0000');
+    expect(fn).toHaveBeenCalledWith('#ff0000', 'locations.north-sea.environment.sky.gradientTop');
   });
 });
 

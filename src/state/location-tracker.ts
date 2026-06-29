@@ -8,10 +8,9 @@ export class LocationTracker {
   start(): void {
     this.unsubscribe = this.store.subscribe('', (_, path) => {
       if (
-        path === 'environment' ||
         path === 'instances' ||
-        path.startsWith('environment.') ||
-        path.startsWith('instances.')
+        path.startsWith('instances.') ||
+        path.startsWith('locations.')
       ) {
         this.markDirty();
       }
