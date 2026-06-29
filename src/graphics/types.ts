@@ -92,10 +92,42 @@ export interface WaveData {
   phase: number;
 }
 
-export interface IWaterConfig {
+export interface WaveCascade {
+  size: number;
+  resolution: number;
+  windSpeed: number;
+  windDirection: [number, number];
+  fetch: number;
+  peakEnhancement: number;
+}
+
+export interface FFTConfig {
+  cascadeSize: [number, number];
+  windSpeed: number;
+  windDirection: [number, number];
+  fetch: number;
+  peakEnhancement: number;
+  swellComponents?: WaveData[];
+}
+
+export interface ClipmapRingSpec {
+  segments: number;
+  radius: number;
+}
+
+export interface ClipmapConfig {
+  rings: ClipmapRingSpec[];
+  overlap: number;
+}
+
+export interface OceanConfig {
   color: string;
+  fft: FFTConfig;
+  clipmap: ClipmapConfig;
   waves: WaveData[];
 }
+
+export interface IWaterConfig extends OceanConfig {}
 
 export interface IWater {
   readonly object: ISceneObject;
@@ -134,7 +166,7 @@ export interface ISceneGraph extends SceneHandle {
   createPoints(geometry: GeometryHandle, material: IMaterial): ISceneObject;
   /** Wrap a vendor (Three.js) Object3D into an ISceneObject. Used by GLB loading. */
   wrapObject3D(obj: any): ISceneObject;
-  createWater(geometry: GeometryHandle, config?: IWaterConfig): IWater;
+  createWater(config: IWaterConfig, geometry?: GeometryHandle): IWater;
   createSky(config?: ISkyConfig): ISceneObject;
   flushEnvironment(): void;
 }
