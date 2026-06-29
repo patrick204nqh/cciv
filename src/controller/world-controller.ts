@@ -85,6 +85,7 @@ export class WorldController {
     const envResult = buildEnvironment(config.environment)
     this.scene.fog = envResult.fog
     this.scene.background = envResult.background
+    this.scene.environment = envResult.environmentColor
     allEntities.push(envResult.entity)
 
     const loadResult = await this.worldLoader.load(config, loader, this.store)
@@ -117,6 +118,7 @@ export class WorldController {
     const envResult = buildEnvironment(config.environment)
     this.scene.fog = envResult.fog
     this.scene.background = envResult.background
+    this.scene.environment = envResult.environmentColor
 
     onProgress?.({ phase: 'attaching' })
     entityManager.attach(envResult.entity, this.scene)

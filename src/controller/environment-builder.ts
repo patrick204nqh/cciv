@@ -10,15 +10,19 @@ export interface EnvironmentBuildResult {
   entity: SceneEntity
   fog: FogSpec
   background: string
+  environmentColor: string
 }
 
 export function buildEnvironment(env: EnvironmentState): EnvironmentBuildResult {
   const effective = computeEffectiveEnvironment(env);
   const waves = computeWaves(effective.waves);
   setWaveConfig(waves);
+  const bgColor = effective.sky?.gradientTop ?? '#406888';
+  const envColor = effective.lighting?.hemisphere?.skyColor ?? bgColor;
   return {
     entity: createEnvironmentEntity(env),
     fog: effective.fog,
-    background: effective.sky?.gradientTop ?? '#406888',
+    background: bgColor,
+    environmentColor: envColor,
   };
 }

@@ -15,8 +15,10 @@ describe('EntityManager', () => {
       remove: vi.fn(),
       fog: null,
       background: null,
+      environment: null,
       getObjectByName: vi.fn(),
       traverse: vi.fn(),
+      flushEnvironment: vi.fn(),
     };
     entity = {
       id: 'test',

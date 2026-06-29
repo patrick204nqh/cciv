@@ -56,7 +56,6 @@ export class RenderingModule {
     this._scene = new Scene();
     this._scene.fog = new FogExp2(0x406888, 0.0018);
     this._scene.background = new Color(0x5080a0);
-    this.sceneHandle = new SceneAdapter(this._scene);
 
     this._renderer = opts?.renderer ?? (() => {
       const r = new WebGPURenderer({ antialias: true, forceWebGL: true });
@@ -69,6 +68,8 @@ export class RenderingModule {
       this.container.appendChild(r.domElement);
       return r;
     })();
+
+    this.sceneHandle = new SceneAdapter(this._scene, this._renderer);
 
     this._camera = opts?.camera ?? new PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000);
     this._camera.position.set(140, 65, -90);
@@ -93,6 +94,7 @@ export class RenderingModule {
 
   async startLoop(): Promise<void> {
     await this._renderer.init();
+    this.sceneHandle.flushEnvironment();
     let prevTime = performance.now();
     const loop = () => {
       requestAnimationFrame(loop);

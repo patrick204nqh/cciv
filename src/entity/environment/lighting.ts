@@ -1,10 +1,15 @@
 import type { SceneEntity } from '../types';
 import type { Disposer } from '../../util/disposer';
 
+interface PointLightCfg {
+  enabled: boolean; intensity: number; color: string; position: [number, number, number]; range: number
+}
+
 interface LightingCfg {
   sun: { enabled: boolean; intensity: number; color: string; azimuth: number; elevation: number };
   hemisphere: { enabled: boolean; skyColor: string; groundColor: string; intensity: number };
   fill: { enabled: boolean; intensity: number; color: string };
+  pointLights?: PointLightCfg[];
 }
 
 function sunPosition(azimuth: number, elevation: number, dist = 160): { x: number; y: number; z: number } {
@@ -41,6 +46,14 @@ export function createLightingEntity(cfg?: LightingCfg): SceneEntity {
       if (c.fill.enabled) {
         const ambient = scene.createAmbientLight(c.fill.color, c.fill.intensity);
         scene.add(ambient);
+      }
+
+      if (c.pointLights) {
+        for (const pl of c.pointLights) {
+          if (!pl.enabled) continue;
+          const light = scene.createPointLight(pl.color, pl.intensity, pl.range, pl.position);
+          scene.add(light);
+        }
       }
 
       if (disposer) {

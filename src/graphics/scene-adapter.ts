@@ -27,8 +27,12 @@ function resolveBuffer(handle: GeometryHandle): THREE.BufferGeometry {
 export class SceneAdapter implements IScene {
   private idCache = new Map<string, ISceneObject>();
   private vendorCache = new Map<THREE.Object3D, string>();
+  private _envColor: string | null = null;
 
-  constructor(private scene: THREE.Scene) {}
+  constructor(
+    private scene: THREE.Scene,
+    private renderer?: any,
+  ) {}
 
   private wrap(obj: THREE.Object3D): ISceneObject {
     const id = obj.uuid;
@@ -138,6 +142,12 @@ export class SceneAdapter implements IScene {
     return this.wrap(new THREE.HemisphereLight(new THREE.Color(skyColor), new THREE.Color(groundColor), intensity));
   }
 
+  createPointLight(color: string, intensity: number, range: number, position: [number, number, number]): ISceneObject {
+    const light = new THREE.PointLight(new THREE.Color(color), intensity, range);
+    light.position.set(position[0], position[1], position[2]);
+    return this.wrap(light);
+  }
+
   createPlaneGeometry(width: number, height: number, segW: number, segH: number): GeometryHandle {
     const geo = new THREE.PlaneGeometry(width, height, segW, segH);
     geo.rotateX(-Math.PI / 2);
@@ -238,6 +248,30 @@ export class SceneAdapter implements IScene {
 
   set background(v: string | null) {
     this.scene.background = v ? new THREE.Color(v) : null;
+  }
+
+  get environment(): string | null {
+    return this._envColor;
+  }
+
+  set environment(color: string | null) {
+    this._envColor = color;
+  }
+
+  flushEnvironment(): void {
+    if (!this._envColor) {
+      this.scene.environment = null;
+      return;
+    }
+    const glRenderer = new THREE.WebGLRenderer({ antialias: false });
+    glRenderer.setSize(16, 16);
+    const pmrem = new THREE.PMREMGenerator(glRenderer);
+    const envScene = new THREE.Scene();
+    envScene.background = new THREE.Color(this._envColor);
+    const envTexture = pmrem.fromScene(envScene).texture;
+    pmrem.dispose();
+    glRenderer.dispose();
+    this.scene.environment = envTexture;
   }
 
   getObjectByName(name: string): ISceneObject | undefined {

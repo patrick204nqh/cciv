@@ -112,6 +112,7 @@ export interface ISkyConfig {
 
 export interface ILightFactory {
   createDirectionalLight(color: string, intensity: number): ISceneObject;
+  createPointLight(color: string, intensity: number, range: number, position: [number, number, number]): ISceneObject;
   createAmbientLight(color: string, intensity: number): ISceneObject;
   createHemisphereLight(skyColor: string, groundColor: string, intensity: number): ISceneObject;
 }
@@ -119,6 +120,7 @@ export interface ILightFactory {
 export interface ISceneGraph extends SceneHandle {
   fog: FogSpec | null;
   background: string | null;
+  environment: string | null;
   getObjectByName(name: string): ISceneObject | undefined;
   traverse(fn: (obj: ISceneObject) => void): void;
   createGroup(name?: string): ISceneObject;
@@ -128,6 +130,7 @@ export interface ISceneGraph extends SceneHandle {
   wrapObject3D(obj: any): ISceneObject;
   createWater(geometry: GeometryHandle, config?: IWaterConfig): IWater;
   createSky(config?: ISkyConfig): ISceneObject;
+  flushEnvironment(): void;
 }
 
 export interface IScene extends ISceneGraph, IGeometryFactory, IMaterialFactory, ILightFactory {}

@@ -45,6 +45,7 @@ function createMockScene(): IScene {
   return {
     fog: null,
     background: null,
+    environment: null,
     add() {},
     remove() {},
     getObjectByName() { return undefined; },
@@ -60,6 +61,7 @@ function createMockScene(): IScene {
       return m;
     },
     createDirectionalLight() { return makeObj('light', false); },
+    createPointLight() { return makeObj('pointLight', false); },
     createAmbientLight() { return makeObj('ambient', false); },
     createHemisphereLight() { return makeObj('hemi', false); },
     createPlaneGeometry() { return new GeometryHandle(); },
@@ -84,6 +86,9 @@ function createMockScene(): IScene {
         dispose() {},
       };
     },
+    createWater() { return { object: makeObj('water', true), dispose() {} }; },
+    createSky() { return makeObj('sky', false); },
+    flushEnvironment() {},
     [Symbol.toStringTag]: 'IScene',
   } as IScene;
 }
