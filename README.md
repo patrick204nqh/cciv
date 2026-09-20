@@ -35,13 +35,6 @@ npm run dev       # start dev server
 
 ## Document registry
 
-| Path | Contents |
+| File | Contents |
 |---|---|
-| `docs/design/invariants.md` | Locked architectural golden rules (read before changes) |
-| `docs/design/architecture.md` | Layer compliance audit, module map, ADR index |
-| `docs/adr/` | Architecture Decision Records (ADR-001 through ADR-012) |
-| `docs/product/vision.md` | Product direction, audience, non-goals |
-| `docs/references/` | External model geometry references |
-| `docs/superpowers/` | Feature specs and implementation plans (historical) |
-| `CONTEXT.md` | Domain glossary for AI agents and developers |
-| `AGENTS.md` | AI agent instructions |
+| `AGENTS.md` | AI agent instructions — structure, commands, conventions, design invariant checks |

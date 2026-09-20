@@ -1,7 +1,7 @@
 # CCIV Project
 
-Design invariants: `docs/design/invariants.md` — read before any change (locked).
-Architecture reference: `docs/design/architecture.md` — layer audit, file map, ADR index.
+Design invariants: the 8 locked golden rules (layer discipline, gates) — see
+the "Design invariant checks" section below; read before any change.
 
 ## Structure
 
@@ -81,7 +81,7 @@ Add new sources by appending to `SOURCES` in `bin/dev:19-27`.
 
 ## Design invariant checks
 
-Before every code change, read `docs/design/invariants.md` (the 8 golden rules). During and after the change, flag any violations:
+Before every code change, apply the 8 golden rules below. During and after the change, flag any violations:
 
 | Rule | What to check |
 |---|---|
@@ -94,4 +94,4 @@ Before every code change, read `docs/design/invariants.md` (the 8 golden rules).
 | 7 | Does the code match surrounding patterns in the same layer? |
 | 8 | Is the module's interface complete, or does it need future patches? |
 
-If a violation is unavoidable, stop and propose updating `docs/design/invariants.md` — never silently bypass a golden rule.
+If a violation is unavoidable, stop and propose updating these rules — never silently bypass a golden rule.
